@@ -1,0 +1,147 @@
+package bo.edu.uagrm.tienda.entity;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+
+import org.hibernate.annotations.BatchSize;
+
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Index;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OrderColumn;
+import jakarta.persistence.Table;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+// Un producto de la ferretería (HU-07). Nunca se borra: se desactiva
+@Entity
+@Table(name = "producto", indexes = @Index(name = "idx_producto_fecha_alta", columnList = "fecha_alta"))
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+public class Producto {
+
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(name = "id_producto")
+	private Long idProducto;
+
+	// Se asigna en la misma transacción, después del primer guardado, porque lleva el número del producto
+	@Column(length = 20, unique = true)
+	private String codigo;
+
+	@Column(nullable = false, length = 120)
+	private String nombre;
+
+	@Column(length = 60)
+	private String marca;
+
+	@Column(length = 1000)
+	private String descripcion;
+
+	@Column(nullable = false, precision = 7, scale = 2)
+	private BigDecimal precio;
+
+	@Enumerated(EnumType.STRING)
+	@Column(nullable = false, length = 10)
+	private UnidadVenta unidad;
+
+	@ManyToOne(fetch = FetchType.LAZY, optional = false)
+	@JoinColumn(name = "id_categoria", nullable = false)
+	private Categoria categoria;
+
+	@Column(nullable = false)
+	private boolean activo;
+
+	@Column(name = "fecha_alta", nullable = false)
+	private LocalDateTime fechaAlta;
+
+	@ElementCollection
+	@CollectionTable(name = "producto_caracteristica", joinColumns = @JoinColumn(name = "id_producto"))
+	@OrderColumn(name = "posicion")
+	private List<Caracteristica> ficha = new ArrayList<>();
+
+	// Nombres de archivo que generó AlmacenImagenes, en orden: el primero es la imagen principal. Se cargan de a
+	// página para la lista, en vez de una consulta por producto
+	@ElementCollection
+	@BatchSize(size = 20)
+	@CollectionTable(name = "producto_imagen", joinColumns = @JoinColumn(name = "id_producto"))
+	@OrderColumn(name = "posicion")
+	@Column(name = "imagen", nullable = false, length = 64)
+	private List<String> imagenes = new ArrayList<>();
+
+	public static Producto crear(String nombre, String marca, String descripcion, BigDecimal precio,
+			UnidadVenta unidad, Categoria categoria, List<Caracteristica> ficha, LocalDateTime fechaAlta) {
+		Producto producto = new Producto();
+		producto.editar(nombre, marca, descripcion, precio, unidad, categoria, ficha);
+		producto.activo = true;
+		producto.fechaAlta = Objects.requireNonNull(fechaAlta);
+		return producto;
+	}
+
+	public void editar(String nombre, String marca, String descripcion, BigDecimal precio, UnidadVenta unidad,
+			Categoria categoria, List<Caracteristica> ficha) {
+		this.nombre = Objects.requireNonNull(nombre).strip();
+		this.marca = sinVacio(marca);
+		this.descripcion = sinVacio(descripcion);
+		this.precio = Objects.requireNonNull(precio);
+		this.unidad = Objects.requireNonNull(unidad);
+		this.categoria = Objects.requireNonNull(categoria);
+		this.ficha.clear();
+		this.ficha.addAll(ficha);
+	}
+
+	public void asignarCodigo(String codigo) {
+		if (this.codigo != null) {
+			throw new IllegalStateException("El código de un producto no cambia");
+		}
+		this.codigo = Objects.requireNonNull(codigo);
+	}
+
+	public List<Caracteristica> getFicha() {
+		return Collections.unmodifiableList(ficha);
+	}
+
+	public List<String> getImagenes() {
+		return Collections.unmodifiableList(imagenes);
+	}
+
+	public void agregarImagen(String imagen) {
+		imagenes.add(Objects.requireNonNull(imagen));
+	}
+
+	public void quitarImagen(String imagen) {
+		imagenes.remove(imagen);
+	}
+
+	public void ordenarImagenes(List<String> orden) {
+		imagenes.clear();
+		imagenes.addAll(orden);
+	}
+
+	public void activar() {
+		activo = true;
+	}
+
+	public void desactivar() {
+		activo = false;
+	}
+
+	private static String sinVacio(String texto) {
+		return texto == null || texto.isBlank() ? null : texto.strip();
+	}
+}

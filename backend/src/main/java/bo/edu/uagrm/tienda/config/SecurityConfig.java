@@ -48,7 +48,7 @@ public class SecurityConfig {
 						// rige desde la siguiente
 						.requestMatchers("/api/usuarios/**").hasRole("ADMINISTRADOR")
 						// Lo que lee el catálogo es público; la gestión de la tienda es del Administrador (HU-06)
-						.requestMatchers(HttpMethod.GET, "/api/categorias/**").permitAll()
+						.requestMatchers(HttpMethod.GET, "/api/categorias/**", "/api/productos/**").permitAll()
 						.requestMatchers("/api/gestion/**").hasRole("ADMINISTRADOR")
 						.anyRequest().authenticated())
 				// El 401 y el 403 pasan por ManejadorErrores para salir con el mismo formato que el resto de la

@@ -116,17 +116,54 @@ export class CategoriasPage {
 		await this.operar(() => this.categorias.quitarImagen(categoria.idCategoria));
 	}
 
+	// Una categoría con productos no se borra: se ofrece ocultarla (HU-07 RF-12, HU-06 RF-10). El conteo de la
+	// lista puede estar viejo, así que el rechazo del backend lleva al mismo ofrecimiento
 	protected async borrar(categoria: CategoriaGestion): Promise<void> {
+		if (categoria.productos > 0) {
+			await this.ofrecerOcultar(categoria);
+			return;
+		}
 		const confirmado = await this.dialogo().abrir({
 			titulo: `¿Borrar «${categoria.nombre}»?`,
 			mensaje: 'La categoría y su imagen se borran para siempre.',
 			confirmar: 'Borrar',
 		});
-		if (confirmado && (await this.operar(() => this.categorias.borrar(categoria.idCategoria)))) {
+		if (!confirmado) {
+			return;
+		}
+		this.aviso.set('');
+		try {
+			await this.categorias.borrar(categoria.idCategoria);
+			this.recurso.reload();
 			// Si era la que se estaba editando, ya no hay nada que editar
 			if (this.editando()?.idCategoria === categoria.idCategoria) {
 				this.cancelarEdicion();
 			}
+		} catch (error: unknown) {
+			const problema = comoError(error);
+			if (problema.codigo === 'CATEGORIA_CON_PRODUCTOS') {
+				this.recurso.reload();
+				await this.ofrecerOcultar(categoria);
+			} else {
+				this.aviso.set(mensajeDeError(problema));
+			}
+		}
+	}
+
+	private async ofrecerOcultar(categoria: CategoriaGestion): Promise<void> {
+		if (!categoria.visible) {
+			this.aviso.set(`«${categoria.nombre}» tiene productos y no se puede borrar. Ya está oculta.`);
+			return;
+		}
+		const ocultar = await this.dialogo().abrir({
+			titulo: `«${categoria.nombre}» tiene productos`,
+			mensaje:
+				'Una categoría con productos no se borra, para no perder su historial. ' +
+				'Puedes ocultarla: sus productos se conservan.',
+			confirmar: 'Ocultar',
+		});
+		if (ocultar) {
+			await this.operar(() => this.categorias.cambiarVisibilidad(categoria.idCategoria, false));
 		}
 	}
 

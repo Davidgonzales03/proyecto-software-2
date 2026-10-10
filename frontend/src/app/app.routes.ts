@@ -65,5 +65,22 @@ export const routes: Routes = [
     data: { rol: 'ADMINISTRADOR' },
     loadComponent: () => import('./features/categorias/categorias.page').then((m) => m.CategoriasPage),
   },
+  {
+    path: 'productos',
+    title: `Productos · ${MARCA.nombre}`,
+    canActivate: [rolGuard],
+    data: { rol: 'ADMINISTRADOR' },
+    loadComponent: () => import('./features/productos/productos.page').then((m) => m.ProductosPage),
+  },
+  // «nuevo» o el número del producto: la misma pantalla, así al crear pasa a
+  // editar sin volver a construirse
+  {
+    path: 'productos/:id',
+    title: `Producto · ${MARCA.nombre}`,
+    canActivate: [rolGuard],
+    canDeactivate: [cambiosSinGuardarGuard],
+    data: { rol: 'ADMINISTRADOR' },
+    loadComponent: () => import('./features/producto/producto.page').then((m) => m.ProductoPage),
+  },
   { path: '**', redirectTo: '' },
 ];

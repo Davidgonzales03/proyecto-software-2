@@ -186,13 +186,14 @@ describe('AppComponent', () => {
       expect(enlaces[0].querySelector('svg')?.getAttribute('aria-hidden')).toBe('true');
     });
 
-    // HU-06 RF-1: la gestión de categorías también es del administrador
-    it('un administrador ve Inicio, Usuarios y Categorías', async () => {
+    // HU-06 RF-1, HU-07 RF-1: la gestión de categorías y la de productos también son del administrador
+    it('un administrador ve Inicio, Usuarios, Categorías y Productos', async () => {
       const fijo = await en('/');
 
-      expect(nombres(enlacesDelMenu(fijo))).toEqual(['Inicio', 'Usuarios', 'Categorías']);
+      expect(nombres(enlacesDelMenu(fijo))).toEqual(['Inicio', 'Usuarios', 'Categorías', 'Productos']);
       expect(enlacesDelMenu(fijo)[1].getAttribute('href')).toBe('/usuarios');
       expect(enlacesDelMenu(fijo)[2].getAttribute('href')).toBe('/categorias');
+      expect(enlacesDelMenu(fijo)[3].getAttribute('href')).toBe('/productos');
     });
 
     it('un empleado ve solo «Inicio»', async () => {

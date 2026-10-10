@@ -21,12 +21,14 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import bo.edu.uagrm.tienda.dto.CategoriaRequest;
 import bo.edu.uagrm.tienda.entity.Categoria;
+import bo.edu.uagrm.tienda.exception.CategoriaConProductosException;
 import bo.edu.uagrm.tienda.exception.CategoriaExistenteException;
 import bo.edu.uagrm.tienda.exception.CategoriaNoEncontradaException;
 import bo.edu.uagrm.tienda.exception.ImagenInvalidaException;
 import bo.edu.uagrm.tienda.repository.CategoriaRepository;
+import bo.edu.uagrm.tienda.repository.ProductoRepository;
 
-// HU-06: gestión de categorías
+// HU-06: gestión de categorías (y HU-07: las que tienen productos)
 @ExtendWith(MockitoExtension.class)
 class CategoriaServiceTest {
 
@@ -38,11 +40,14 @@ class CategoriaServiceTest {
 	@Mock
 	private AlmacenImagenes almacen;
 
+	@Mock
+	private ProductoRepository productoRepository;
+
 	private CategoriaService servicio;
 
 	@BeforeEach
 	void crearServicio() {
-		servicio = new CategoriaService(categoriaRepository, almacen);
+		servicio = new CategoriaService(categoriaRepository, productoRepository, almacen);
 	}
 
 	private void guardaComoViene() {
@@ -146,6 +151,20 @@ class CategoriaServiceTest {
 
 		then(categoriaRepository).should().delete(plomeria);
 		then(almacen).should().borrar(IMAGEN);
+	}
+
+	// HU-07 RF-12, HU-06 RF-10: activos o no, con productos no se borra ni pierde su imagen
+	@Test
+	void categoriaConProductosNoSeBorra() {
+		Categoria jardin = bloqueada(5, "Jardín");
+		jardin.cambiarImagen(IMAGEN);
+		given(productoRepository.existsByCategoria_IdCategoria(5L)).willReturn(true);
+
+		assertThatThrownBy(() -> servicio.borrar(5L))
+				.isInstanceOfSatisfying(CategoriaConProductosException.class,
+						ex -> assertThat(ex.getCodigo()).isEqualTo("CATEGORIA_CON_PRODUCTOS"));
+		then(categoriaRepository).should(never()).delete(any());
+		then(almacen).shouldHaveNoInteractions();
 	}
 
 	// HU-06 RF-9: sin imagen no hay archivo que borrar

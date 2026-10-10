@@ -1,0 +1,299 @@
+// Formulario, botones y avisos de _formulario.scss; acá la ficha y las fotos
+@use '../../../styles/formulario';
+@use '../../../styles/pagina';
+
+:host {
+	@include pagina.pagina-angosta(760px);
+	display: flex;
+	flex-direction: column;
+	gap: var(--app-espacio-6);
+}
+
+h1 {
+	margin: 0;
+	overflow-wrap: anywhere;
+}
+
+h2 {
+	margin: 0;
+	font-size: 22px;
+}
+
+// Las tarjetas ocupan todo el ancho de la pantalla
+.tarjeta {
+	max-width: none;
+	margin: 0;
+}
+
+.volver {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--app-espacio-2);
+	align-self: flex-start;
+	min-height: var(--app-area-tocable);
+	color: var(--app-texto-suave);
+	font-size: 14px;
+	text-decoration: none;
+}
+
+.volver:hover {
+	color: var(--app-texto);
+}
+
+.icono {
+	width: 18px;
+	height: 18px;
+}
+
+.titulo {
+	display: flex;
+	flex-direction: column;
+	gap: var(--app-espacio-1);
+}
+
+.codigo {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--app-espacio-3);
+	margin: 0;
+	font-family: var(--app-familia-datos);
+	font-size: 14px;
+	color: var(--app-texto-suave);
+}
+
+// El estado no depende solo del color: círculo para activo, cuadrado para inactivo
+.estado {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--app-espacio-2);
+	color: var(--app-exito);
+}
+
+.estado::before {
+	content: '';
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	background: currentColor;
+}
+
+.estado.desactivada {
+	color: var(--app-error);
+}
+
+.estado.desactivada::before {
+	border-radius: 1px;
+}
+
+// Sin avisos, las regiones salen del flujo para no sumar un hueco, pero siguen
+// en el árbol de accesibilidad (como en _lista.scss)
+.avisos:not(:has(.aviso)) {
+	position: absolute;
+}
+
+.avisos {
+	display: flex;
+	flex-direction: column;
+	gap: var(--app-espacio-2);
+}
+
+.fila {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: var(--app-espacio-4);
+}
+
+.campo {
+	min-width: 0;
+}
+
+select,
+textarea {
+	font: inherit;
+	font-size: 15px;
+	min-height: var(--app-area-tocable);
+	padding: var(--app-espacio-3);
+	border: 1px solid var(--app-borde-control);
+	border-radius: var(--app-radio-control);
+	background-color: var(--app-fondo);
+	color: var(--app-texto);
+	width: 100%;
+}
+
+textarea {
+	resize: vertical;
+}
+
+select[aria-invalid='true'],
+textarea[aria-invalid='true'] {
+	border-color: var(--app-error);
+	border-width: 2px;
+}
+
+.ficha {
+	display: flex;
+	flex-direction: column;
+	gap: var(--app-espacio-3);
+	margin: 0;
+	padding: 0;
+	border: none;
+}
+
+legend {
+	margin-bottom: var(--app-espacio-2);
+	padding: 0;
+	font-family: var(--app-familia-datos);
+	font-size: 12px;
+	font-weight: 500;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	color: var(--app-texto-suave);
+}
+
+.par {
+	display: grid;
+	grid-template-columns: minmax(0, 2fr) minmax(0, 3fr) var(--app-area-tocable);
+	gap: var(--app-espacio-3);
+	align-items: start;
+}
+
+// El botón de quitar queda a la altura de los campos, debajo de las etiquetas
+.par .quitar {
+	margin-top: calc(12px * 1.5 + var(--app-espacio-1));
+	padding: 0;
+	justify-content: center;
+}
+
+.boton.secundario {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--app-espacio-2);
+	background: transparent;
+	border-color: var(--app-borde-control);
+	color: var(--app-texto);
+}
+
+.boton.secundario:hover:not([disabled]) {
+	background: var(--app-superficie-alta);
+}
+
+.boton.peligro {
+	color: var(--app-error);
+}
+
+.agregar {
+	align-self: flex-start;
+}
+
+.acciones {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--app-espacio-3);
+}
+
+.contador {
+	margin-left: var(--app-espacio-2);
+	font-family: var(--app-familia-datos);
+	font-size: 13px;
+	font-weight: 400;
+	color: var(--app-texto-suave);
+}
+
+.ayuda,
+.cargando {
+	margin: 0;
+	color: var(--app-texto-suave);
+	font-size: 14px;
+}
+
+.fotos {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+	gap: var(--app-espacio-4);
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.foto {
+	display: flex;
+	flex-direction: column;
+	gap: var(--app-espacio-2);
+}
+
+.foto img {
+	width: 100%;
+	aspect-ratio: 1;
+	object-fit: cover;
+	border: 1px solid var(--app-borde);
+	border-radius: var(--app-radio-control);
+	background: var(--app-superficie-alta);
+}
+
+// La principal se distingue con un marco y su rótulo, no solo con el color
+.foto:first-child img {
+	border: 2px solid var(--app-acento-texto);
+}
+
+.acciones-foto {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--app-espacio-2);
+	align-items: center;
+}
+
+.principal {
+	font-family: var(--app-familia-datos);
+	font-size: 12px;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	color: var(--app-acento-texto);
+}
+
+// El input de archivo se usa con su etiqueta «Subir foto»; queda accesible pero fuera de la vista
+.archivo {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	opacity: 0;
+}
+
+.archivo:disabled + .boton {
+	opacity: 0.6;
+	cursor: default;
+}
+
+// El título recibe el foco después de cambiar las fotos, sin marco propio
+#titulo-fotos:focus {
+	outline: none;
+}
+
+// Con teclado, el foco está en el input invisible: se muestra en su etiqueta, que es lo que se ve
+.archivo:focus-visible + .boton {
+	outline: 3px solid var(--app-acento-texto);
+	outline-offset: 2px;
+}
+
+.tarjeta-error {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: var(--app-espacio-3);
+}
+
+@media (max-width: 640px) {
+	.fila {
+		grid-template-columns: 1fr;
+	}
+
+	.par {
+		grid-template-columns: minmax(0, 1fr) var(--app-area-tocable);
+	}
+
+	// En el celular el valor va debajo del nombre, con el botón de quitar al lado del nombre
+	.par .campo:nth-child(2) {
+		grid-column: 1;
+		grid-row: 2;
+	}
+}

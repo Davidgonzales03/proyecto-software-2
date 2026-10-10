@@ -1,0 +1,173 @@
+<div class="encabezado">
+  <h1>Productos</h1>
+  <a class="boton" routerLink="/productos/nuevo">
+    <svg lucidePlus class="icono" aria-hidden="true"></svg>
+    Nuevo producto
+  </a>
+</div>
+
+<form class="filtros" role="search" aria-label="Filtrar productos" (submit)="$event.preventDefault()">
+  <div class="campo busqueda">
+    <label for="filtro-texto">Buscar</label>
+    <input
+      id="filtro-texto"
+      name="texto"
+      type="search"
+      autocomplete="off"
+      spellcheck="false"
+      placeholder="Nombre, código o marca…"
+      [value]="textoEscrito()"
+      (input)="alEscribir($any($event.target).value)"
+    />
+  </div>
+
+  <div class="campo">
+    <label for="filtro-categoria">Categoría</label>
+    <select id="filtro-categoria" name="categoria" (change)="alElegirCategoria($any($event.target).value)">
+      <option value="" [selected]="filtros().categoria === null">Todas</option>
+      @for (categoria of categorias(); track categoria.idCategoria) {
+        <option [value]="categoria.idCategoria" [selected]="filtros().categoria === categoria.idCategoria">
+          {{ categoria.nombre }}
+        </option>
+      }
+    </select>
+  </div>
+
+  <div class="campo">
+    <label for="filtro-estado">Estado</label>
+    <select id="filtro-estado" name="activo" (change)="alElegirEstado($any($event.target).value)">
+      <option value="" [selected]="filtros().activo === null">Todos</option>
+      <option value="true" [selected]="filtros().activo === true">Activos</option>
+      <option value="false" [selected]="filtros().activo === false">Inactivos</option>
+    </select>
+  </div>
+</form>
+
+<!-- Regiones siempre presentes: un lector de pantalla anuncia lo que aparece
+     dentro, pero no una región que se crea junto con su texto -->
+<div class="avisos">
+  <div role="alert">
+    @if (avisoDeError()) {
+      <p class="aviso">{{ avisoDeError() }}</p>
+    }
+  </div>
+  <div role="status">
+    @if (avisoDeExito()) {
+      <p class="aviso exito">{{ avisoDeExito() }}</p>
+    }
+  </div>
+</div>
+
+@if (pagina(); as pagina) {
+  @if (pagina.contenido.length === 0 && pagina.pagina > 0 && pagina.totalElementos > 0) {
+    <div class="vacio" role="status">
+      <p>Esta página no existe.</p>
+      <button type="button" class="secundario" (click)="irAPagina(0)">Ir a la primera página</button>
+    </div>
+  } @else if (pagina.contenido.length === 0) {
+    <p class="vacio" role="status">No hay productos con esos filtros.</p>
+  } @else {
+    <div class="contenedor-tabla">
+      <table>
+        <caption class="solo-lectores">Productos de la tienda</caption>
+        <thead>
+          <tr>
+            <th scope="col"><span class="solo-lectores">Imagen</span></th>
+            <th scope="col">Código</th>
+            <th scope="col">Producto</th>
+            <th scope="col">Categoría</th>
+            <th scope="col">Precio</th>
+            <th scope="col">Estado</th>
+            <th scope="col">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (producto of pagina.contenido; track producto.idProducto) {
+            <tr [class.inactivo]="!producto.activo">
+              <td class="miniatura">
+                @if (urlDeImagen(producto); as url) {
+                  <img [src]="url" alt="" width="48" height="48" loading="lazy" />
+                } @else {
+                  <svg lucidePackage class="icono" aria-hidden="true"></svg>
+                }
+              </td>
+              <td data-etiqueta="Código" class="codigo">{{ producto.codigo }}</td>
+              <th scope="row" data-etiqueta="Producto">
+                <span>
+                  {{ producto.nombre }}
+                  @if (producto.marca) {
+                    <span class="marca">{{ producto.marca }}</span>
+                  }
+                </span>
+              </th>
+              <td data-etiqueta="Categoría">{{ producto.categoria }}</td>
+              <td data-etiqueta="Precio" class="numero">
+                <span>
+                  {{ precio(producto.precio) }}
+                  <span class="unidad">/ {{ nombresDeUnidad[producto.unidad].toLowerCase() }}</span>
+                </span>
+              </td>
+              <td data-etiqueta="Estado">
+                <span class="estado" [class.desactivada]="!producto.activo">
+                  {{ producto.activo ? 'Activo' : 'Inactivo' }}
+                </span>
+              </td>
+              <td data-etiqueta="Acciones">
+                <div class="acciones">
+                  <a
+                    class="boton secundario"
+                    [routerLink]="['/productos', producto.idProducto]"
+                    [attr.aria-label]="'Editar ' + producto.nombre"
+                  >
+                    Editar
+                  </a>
+                  <button
+                    type="button"
+                    class="secundario"
+                    [attr.aria-label]="(producto.activo ? 'Desactivar ' : 'Activar ') + producto.nombre"
+                    [disabled]="procesando().has(producto.idProducto)"
+                    (click)="alCambiarActivo(producto)"
+                  >
+                    {{ producto.activo ? 'Desactivar' : 'Activar' }}
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  <nav class="paginacion" aria-label="Páginas de la lista">
+    <button
+      type="button"
+      class="secundario"
+      [disabled]="pagina.pagina === 0"
+      (click)="irAPagina(pagina.pagina - 1)"
+    >
+      Anterior
+    </button>
+    <p class="numero">
+      Página {{ pagina.pagina + 1 }} de {{ pagina.totalPaginas || 1 }} ·
+      {{ pagina.totalElementos }} {{ pagina.totalElementos === 1 ? 'producto' : 'productos' }}
+    </p>
+    <button
+      type="button"
+      class="secundario"
+      [disabled]="pagina.pagina + 1 >= pagina.totalPaginas"
+      (click)="irAPagina(pagina.pagina + 1)"
+    >
+      Siguiente
+    </button>
+  </nav>
+} @else if (errorDeCarga()) {
+  <div class="tarjeta-error">
+    <p class="aviso" role="alert">{{ errorDeCarga() }}</p>
+    <button type="button" class="secundario" (click)="listado.reload()">Reintentar</button>
+  </div>
+} @else {
+  <p class="cargando" role="status">Cargando productos…</p>
+}
+
+<app-dialogo-confirmacion />
