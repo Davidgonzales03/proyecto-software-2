@@ -67,8 +67,10 @@ class CategoriasFalso {
   quitarImagen() {
     return this.respuesta;
   }
+  respuestaDeBorrar: Promise<void> = Promise.resolve();
   async borrar(id: number) {
     this.borradas.push(id);
+    return this.respuestaDeBorrar;
   }
   urlDeImagen(id: number) {
     return `/api/categorias/${id}/imagen`;
@@ -248,6 +250,49 @@ describe('CategoriasPage', () => {
 
     expect(categorias.imagenes).toEqual([{ id: 4, archivo }]);
     expect(texto()).toContain('Ese archivo no es una imagen JPG, PNG o WebP.');
+  });
+
+  // HU-07 RF-12, HU-06 RF-10: con productos no se ofrece borrar, sino ocultar
+  it('una categoría con productos ofrece ocultarla en vez de borrarla', async () => {
+    categorias.recurso.value.set([{ ...JARDIN, productos: 3 }, PLOMERIA]);
+    await fijo.whenStable();
+    expect(texto()).toContain('3 productos');
+
+    botonDeFila('Jardín', 'Borrar').click();
+    await fijo.whenStable();
+    expect(dialogo().textContent).toContain('«Jardín» tiene productos');
+    (dialogo().querySelector('button.principal') as HTMLButtonElement).click();
+    await asentar();
+
+    expect(categorias.borradas).toEqual([]);
+    expect(categorias.visibilidades).toEqual([{ id: 4, visible: false }]);
+  });
+
+  // HU-07 RF-12: el conteo de la lista estaba viejo y el backend la rechaza
+  it('si el backend responde que tiene productos, ofrece ocultarla', async () => {
+    categorias.respuestaDeBorrar = Promise.reject({ status: 409, detail: 'x', codigo: 'CATEGORIA_CON_PRODUCTOS' });
+    botonDeFila('Jardín', 'Borrar').click();
+    await fijo.whenStable();
+    (dialogo().querySelector('button.principal') as HTMLButtonElement).click();
+    await asentar();
+
+    expect(dialogo().textContent).toContain('«Jardín» tiene productos');
+    (dialogo().querySelector('button.principal') as HTMLButtonElement).click();
+    await asentar();
+
+    expect(categorias.visibilidades).toEqual([{ id: 4, visible: false }]);
+  });
+
+  // HU-07 RF-12: si ya está oculta, solo se explica
+  it('una categoría oculta con productos solo explica por qué no se borra', async () => {
+    categorias.recurso.value.set([JARDIN, { ...PLOMERIA, productos: 1 }]);
+    await fijo.whenStable();
+
+    botonDeFila('Plomería', 'Borrar').click();
+    await asentar();
+
+    expect(texto()).toContain('«Plomería» tiene productos y no se puede borrar. Ya está oculta.');
+    expect(categorias.borradas).toEqual([]);
   });
 
   // HU-06 RF-9: la categoría que se estaba editando ya no existe

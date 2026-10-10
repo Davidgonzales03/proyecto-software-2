@@ -1,0 +1,291 @@
+<a class="volver" routerLink="/productos">
+  <svg lucideArrowLeft class="icono" aria-hidden="true"></svg>
+  Productos
+</a>
+
+@if (direccionInvalida()) {
+  <h1>Producto</h1>
+  <p class="aviso" role="alert">Esa dirección no es la de un producto.</p>
+} @else if (!esNuevo() && producto() === undefined) {
+  <h1>Producto</h1>
+  @if (errorDeCarga()) {
+    <div class="tarjeta-error">
+      <p class="aviso" role="alert">{{ errorDeCarga() }}</p>
+      <button type="button" class="boton secundario" (click)="recurso.reload()">Reintentar</button>
+    </div>
+  } @else {
+    <p class="cargando" role="status">Cargando el producto…</p>
+  }
+} @else {
+  @let actual = producto();
+  <div class="titulo">
+    <h1>{{ esNuevo() ? 'Nuevo producto' : actual?.nombre }}</h1>
+    @if (actual && !esNuevo()) {
+      <p class="codigo">
+        {{ actual.codigo }}
+        <span class="estado" [class.desactivada]="!actual.activo">{{ actual.activo ? 'Activo' : 'Inactivo' }}</span>
+      </p>
+    }
+  </div>
+
+  <!-- Regiones siempre presentes: un lector de pantalla anuncia lo que aparece
+       dentro, pero no una región que se crea junto con su texto -->
+  <div class="avisos">
+    <div role="alert">
+      @if (avisoDeError()) {
+        <p class="aviso">{{ avisoDeError() }}</p>
+      }
+    </div>
+    <div role="status">
+      @if (avisoDeExito()) {
+        <p class="aviso exito">{{ avisoDeExito() }}</p>
+      }
+    </div>
+  </div>
+
+  <form class="tarjeta" (submit)="guardar($event)" novalidate aria-labelledby="titulo-datos">
+    <h2 id="titulo-datos">Datos</h2>
+
+    <div class="campo">
+      @let errorNombre = mensaje(formulario.nombre(), 'nombre');
+      <label for="nombre">Nombre</label>
+      <input
+        id="nombre"
+        type="text"
+        autocomplete="off"
+        [formField]="formulario.nombre"
+        [attr.aria-invalid]="errorNombre ? 'true' : null"
+        [attr.aria-describedby]="errorNombre ? 'error-nombre' : null"
+      />
+      @if (errorNombre) {
+        <p class="error" id="error-nombre">{{ errorNombre }}</p>
+      }
+    </div>
+
+    <div class="fila">
+      <div class="campo">
+        @let errorMarca = mensaje(formulario.marca(), 'marca');
+        <label for="marca">Marca <span class="opcional">(opcional)</span></label>
+        <input
+          id="marca"
+          type="text"
+          autocomplete="off"
+          [formField]="formulario.marca"
+          [attr.aria-invalid]="errorMarca ? 'true' : null"
+          [attr.aria-describedby]="errorMarca ? 'error-marca' : null"
+        />
+        @if (errorMarca) {
+          <p class="error" id="error-marca">{{ errorMarca }}</p>
+        }
+      </div>
+
+      <div class="campo">
+        @let errorCategoria = mensaje(formulario.idCategoria(), 'idCategoria');
+        <label for="idCategoria">Categoría</label>
+        <select
+          id="idCategoria"
+          [formField]="formulario.idCategoria"
+          [attr.aria-invalid]="errorCategoria ? 'true' : null"
+          [attr.aria-describedby]="errorCategoria ? 'error-categoria' : null"
+        >
+          <option value="">Elige una…</option>
+          @for (categoria of categorias(); track categoria.idCategoria) {
+            <option [value]="'' + categoria.idCategoria">
+              {{ categoria.nombre }}{{ categoria.visible ? '' : ' (oculta)' }}
+            </option>
+          }
+        </select>
+        @if (errorCategoria) {
+          <p class="error" id="error-categoria">{{ errorCategoria }}</p>
+        }
+      </div>
+    </div>
+
+    <div class="fila">
+      <div class="campo">
+        @let errorPrecio = mensaje(formulario.precio(), 'precio');
+        <label for="precio">Precio (Bs)</label>
+        <input
+          id="precio"
+          type="text"
+          inputmode="decimal"
+          autocomplete="off"
+          placeholder="420,50"
+          [formField]="formulario.precio"
+          [attr.aria-invalid]="errorPrecio ? 'true' : null"
+          [attr.aria-describedby]="errorPrecio ? 'error-precio' : null"
+        />
+        @if (errorPrecio) {
+          <p class="error" id="error-precio">{{ errorPrecio }}</p>
+        }
+      </div>
+
+      <div class="campo">
+        <label for="unidad">Unidad de venta</label>
+        <select id="unidad" [formField]="formulario.unidad">
+          @for (unidad of unidades; track unidad) {
+            <option [value]="unidad">{{ nombresDeUnidad[unidad] }}</option>
+          }
+        </select>
+      </div>
+    </div>
+
+    <div class="campo">
+      @let errorDescripcion = mensaje(formulario.descripcion(), 'descripcion');
+      <label for="descripcion">Descripción <span class="opcional">(opcional)</span></label>
+      <textarea
+        id="descripcion"
+        rows="4"
+        [formField]="formulario.descripcion"
+        [attr.aria-invalid]="errorDescripcion ? 'true' : null"
+        [attr.aria-describedby]="errorDescripcion ? 'error-descripcion' : null"
+      ></textarea>
+      @if (errorDescripcion) {
+        <p class="error" id="error-descripcion">{{ errorDescripcion }}</p>
+      }
+    </div>
+
+    <fieldset class="ficha">
+      <legend>Ficha técnica <span class="opcional">(opcional, hasta {{ maximoDatos }} datos)</span></legend>
+      @for (par of formulario.ficha; track $index; let i = $index) {
+        @let errorDato = mensajeDelDato(par.nombre());
+        @let errorValor = mensajeDelDato(par.valor());
+        <div class="par">
+          <div class="campo">
+            <label [for]="'dato-nombre-' + i">Dato {{ i + 1 }}</label>
+            <input
+              [id]="'dato-nombre-' + i"
+              type="text"
+              autocomplete="off"
+              placeholder="Potencia"
+              [formField]="par.nombre"
+              [attr.aria-invalid]="errorDato ? 'true' : null"
+              [attr.aria-describedby]="errorDato ? 'error-dato-nombre-' + i : null"
+            />
+            @if (errorDato) {
+              <p class="error" [id]="'error-dato-nombre-' + i">{{ errorDato }}</p>
+            }
+          </div>
+          <div class="campo">
+            <label [for]="'dato-valor-' + i">Valor</label>
+            <input
+              [id]="'dato-valor-' + i"
+              type="text"
+              autocomplete="off"
+              placeholder="750 W"
+              [formField]="par.valor"
+              [attr.aria-invalid]="errorValor ? 'true' : null"
+              [attr.aria-describedby]="errorValor ? 'error-dato-valor-' + i : null"
+            />
+            @if (errorValor) {
+              <p class="error" [id]="'error-dato-valor-' + i">{{ errorValor }}</p>
+            }
+          </div>
+          <button
+            type="button"
+            class="boton secundario quitar"
+            [id]="'quitar-dato-' + i"
+            [attr.aria-label]="'Quitar el dato ' + (i + 1)"
+            (click)="quitarDato(i)"
+          >
+            <svg lucideTrash2 class="icono" aria-hidden="true"></svg>
+          </button>
+        </div>
+      }
+      <button
+        type="button"
+        id="agregar-dato"
+        class="boton secundario agregar"
+        [disabled]="formulario.ficha().value().length >= maximoDatos"
+        (click)="agregarDato()"
+      >
+        <svg lucidePlus class="icono" aria-hidden="true"></svg>
+        Agregar dato
+      </button>
+    </fieldset>
+
+    <div class="acciones">
+      <button type="submit" class="boton" [disabled]="guardando()">
+        {{ guardando() ? 'Guardando…' : esNuevo() ? 'Crear producto' : 'Guardar cambios' }}
+      </button>
+    </div>
+  </form>
+
+  <section class="tarjeta" aria-labelledby="titulo-fotos">
+    <h2 id="titulo-fotos" tabindex="-1">Fotos <span class="contador">{{ fotos().length }} de {{ maximoFotos }}</span></h2>
+    @if (actual === undefined || esNuevo()) {
+      <p class="ayuda">Crea el producto para subir sus fotos.</p>
+    } @else {
+      <p class="ayuda">
+        La primera es la principal: es la que se ve en la lista y en el catálogo. JPG, PNG o WebP de hasta 2 MB.
+      </p>
+
+      <div class="avisos">
+        <div role="alert">
+          @if (errorDeFotos()) {
+            <p class="aviso">{{ errorDeFotos() }}</p>
+          }
+        </div>
+        <div role="status">
+          @if (exitoDeFotos()) {
+            <p class="aviso exito">{{ exitoDeFotos() }}</p>
+          }
+        </div>
+      </div>
+
+      @if (fotos().length > 0) {
+        <ol class="fotos">
+          @for (imagen of fotos(); track imagen; let i = $index) {
+            <li class="foto">
+              <img [src]="urlDeFoto(imagen)" [alt]="'Foto ' + (i + 1) + ' de ' + actual.nombre" />
+              <div class="acciones-foto">
+                @if (i === 0) {
+                  <span class="principal">Principal</span>
+                } @else {
+                  <button
+                    type="button"
+                    class="boton secundario"
+                    [attr.aria-label]="'Hacer principal la foto ' + (i + 1)"
+                    [disabled]="operandoFotos()"
+                    (click)="hacerPrincipal(imagen)"
+                  >
+                    Hacer principal
+                  </button>
+                }
+                <button
+                  type="button"
+                  class="boton secundario peligro"
+                  [attr.aria-label]="'Quitar la foto ' + (i + 1)"
+                  [disabled]="operandoFotos()"
+                  (click)="quitarFoto(imagen, i)"
+                >
+                  Quitar
+                </button>
+              </div>
+            </li>
+          }
+        </ol>
+      }
+
+      @if (fotos().length < maximoFotos) {
+        <div>
+          <input
+            id="foto-nueva"
+            class="archivo"
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            [disabled]="operandoFotos()"
+            (change)="elegirFoto($event)"
+          />
+          <label class="boton secundario" for="foto-nueva">
+            {{ operandoFotos() ? 'Subiendo…' : 'Subir foto' }}
+          </label>
+        </div>
+      } @else {
+        <p class="ayuda">Ya tiene {{ maximoFotos }} fotos: quita una para subir otra.</p>
+      }
+    }
+  </section>
+}
+
+<app-dialogo-confirmacion />

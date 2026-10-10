@@ -1,0 +1,154 @@
+// La tabla, la paginación, los avisos y el botón secundario vienen de
+// _lista.scss; acá quedan los filtros, la miniatura, el estado y las acciones
+@use '../../../styles/lista';
+
+:host {
+	display: flex;
+	flex-direction: column;
+	gap: var(--app-espacio-6);
+}
+
+.encabezado {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--app-espacio-3);
+}
+
+h1 {
+	margin: 0;
+}
+
+// Los enlaces con forma de botón: «Nuevo producto» (principal) y «Editar»
+a.boton {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--app-espacio-2);
+	min-height: var(--app-area-tocable);
+	padding: var(--app-espacio-2) var(--app-espacio-4);
+	border: 1px solid transparent;
+	border-radius: var(--app-radio-control);
+	background: var(--app-ambar);
+	color: var(--app-sobre-ambar);
+	font-size: 14px;
+	font-weight: 600;
+	text-decoration: none;
+	transition: background-color var(--app-transicion);
+}
+
+a.boton:hover {
+	background: var(--app-ambar-fuerte);
+}
+
+a.boton.secundario {
+	border-color: var(--app-borde-control);
+	background: transparent;
+	color: var(--app-texto);
+}
+
+a.boton.secundario:hover {
+	border-color: var(--app-texto-suave);
+	background: var(--app-superficie-alta);
+}
+
+.icono {
+	width: 18px;
+	height: 18px;
+}
+
+.filtros {
+	display: grid;
+	grid-template-columns: minmax(0, 2fr) repeat(2, minmax(0, 1fr));
+	gap: var(--app-espacio-4);
+	align-items: end;
+}
+
+.miniatura {
+	width: 64px;
+}
+
+.miniatura img,
+.miniatura .icono {
+	display: block;
+	width: 48px;
+	height: 48px;
+	border-radius: var(--app-radio-control);
+	object-fit: cover;
+	background: var(--app-superficie-alta);
+	color: var(--app-texto-suave);
+}
+
+.miniatura .icono {
+	padding: var(--app-espacio-3);
+}
+
+.codigo {
+	font-family: var(--app-familia-datos);
+	font-size: 13px;
+	white-space: nowrap;
+}
+
+.marca,
+.unidad {
+	display: block;
+	color: var(--app-texto-suave);
+	font-size: 12.5px;
+	font-weight: 400;
+}
+
+.unidad {
+	display: inline;
+}
+
+tr.inactivo th,
+tr.inactivo .codigo {
+	color: var(--app-texto-suave);
+}
+
+// El estado no depende solo del color: círculo para activo, cuadrado para
+// inactivo, y siempre con su texto (como en «Usuarios»)
+.estado {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--app-espacio-2);
+	color: var(--app-exito);
+	white-space: nowrap;
+}
+
+.estado::before {
+	content: '';
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	background: currentColor;
+}
+
+.estado.desactivada {
+	color: var(--app-error);
+}
+
+.estado.desactivada::before {
+	border-radius: 1px;
+}
+
+.acciones {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--app-espacio-2);
+}
+
+@media (max-width: 640px) {
+	.filtros {
+		grid-template-columns: 1fr;
+	}
+
+	// En la tarjeta del celular la imagen va arriba, sin etiqueta
+	td.miniatura {
+		width: auto;
+	}
+
+	td.miniatura::before {
+		content: none;
+	}
+}

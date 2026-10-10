@@ -2,6 +2,7 @@ package bo.edu.uagrm.tienda.controller;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -24,8 +25,8 @@ import bo.edu.uagrm.tienda.service.CategoriaService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
-// Solo el Administrador llega acá (SecurityConfig → /api/gestion/**). Los productos de cada categoría se cuentan
-// desde HU-07; hasta entonces, 0
+// Solo el Administrador llega acá (SecurityConfig → /api/gestion/**). Cada categoría dice cuántos productos tiene,
+// activos o no (HU-07 RF-13)
 @RestController
 @RequestMapping("/api/gestion/categorias")
 @RequiredArgsConstructor
@@ -35,13 +36,15 @@ public class GestionCategoriasController {
 
 	@GetMapping
 	public List<CategoriaGestionResponse> listar() {
-		return categoriaService.todas().stream().map(GestionCategoriasController::respuesta).toList();
+		Map<Long, Long> productos = categoriaService.productosPorCategoria();
+		return categoriaService.todas().stream().map(categoria -> CategoriaGestionResponse.from(categoria,
+				productos.getOrDefault(categoria.getIdCategoria(), 0L))).toList();
 	}
 
 	@PostMapping
 	@ResponseStatus(HttpStatus.CREATED)
 	public CategoriaGestionResponse crear(@Valid @RequestBody CategoriaRequest solicitud) {
-		return respuesta(categoriaService.crear(solicitud));
+		return CategoriaGestionResponse.from(categoriaService.crear(solicitud), 0);
 	}
 
 	@PutMapping("/{idCategoria}")
@@ -73,7 +76,7 @@ public class GestionCategoriasController {
 		categoriaService.borrar(idCategoria);
 	}
 
-	private static CategoriaGestionResponse respuesta(Categoria categoria) {
-		return CategoriaGestionResponse.from(categoria, 0);
+	private CategoriaGestionResponse respuesta(Categoria categoria) {
+		return CategoriaGestionResponse.from(categoria, categoriaService.productos(categoria.getIdCategoria()));
 	}
 }

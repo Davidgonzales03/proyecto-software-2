@@ -5,7 +5,7 @@ export interface CategoriaGestion {
 	descripcion: string | null;
 	tieneImagen: boolean;
 	visible: boolean;
-	// Cuántos productos tiene: 0 hasta HU-07
+	// Cuántos productos tiene, activos o no (HU-07)
 	productos: number;
 }
 

@@ -107,10 +107,18 @@ describe('PanelPage', () => {
     expect(crear().querySelector('a[href="/categorias"]')?.textContent).toContain('Categorías');
   });
 
+  // HU-07 RF-1
+  it('el administrador tiene el acceso a productos', () => {
+    sesion.iniciar(sesionCon('ADMINISTRADOR'));
+
+    expect(crear().querySelector('a[href="/productos"]')?.textContent).toContain('Productos');
+  });
+
   // HU-06 RF-1
   it('un cliente no ve el acceso a categorías', () => {
     sesion.iniciar(sesionCon('CLIENTE'));
 
     expect(crear().querySelector('a[href="/categorias"]')).toBeNull();
+    expect(crear().querySelector('a[href="/productos"]')).toBeNull();
   });
 });

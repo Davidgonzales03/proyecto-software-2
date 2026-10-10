@@ -49,6 +49,8 @@ describe('rutas', () => {
   beforeAll(async () => {
     await import('./features/inicio-sesion/inicio-sesion.page');
     await import('./features/categorias/categorias.page');
+    await import('./features/productos/productos.page');
+    await import('./features/producto/producto.page');
   }, 60_000);
 
   afterEach(() => localStorage.clear());
@@ -81,6 +83,14 @@ describe('rutas', () => {
   it('la gestión de categorías es solo del administrador', async () => {
     expect(await navegarComo('ADMINISTRADOR', '/categorias')).toBe('/categorias');
     expect(await navegarComo('EMPLEADO', '/categorias')).toBe('/');
+  });
+
+  // HU-07 RF-1: la gestión de productos es del administrador
+  it('la gestión de productos es solo del administrador', async () => {
+    expect(await navegarComo('ADMINISTRADOR', '/productos')).toBe('/productos');
+    expect(await navegarComo('ADMINISTRADOR', '/productos/nuevo')).toBe('/productos/nuevo');
+    expect(await navegarComo('EMPLEADO', '/productos')).toBe('/');
+    expect(await navegarComo('CLIENTE', '/productos/7')).toBe('/');
   });
 
   // HU-05 RF-1

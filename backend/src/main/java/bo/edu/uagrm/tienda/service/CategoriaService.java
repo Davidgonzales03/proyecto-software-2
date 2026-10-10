@@ -1,20 +1,22 @@
 package bo.edu.uagrm.tienda.service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionSynchronization;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import bo.edu.uagrm.tienda.dto.CategoriaRequest;
 import bo.edu.uagrm.tienda.entity.Categoria;
+import bo.edu.uagrm.tienda.exception.CategoriaConProductosException;
 import bo.edu.uagrm.tienda.exception.CategoriaExistenteException;
 import bo.edu.uagrm.tienda.exception.CategoriaNoEncontradaException;
 import bo.edu.uagrm.tienda.exception.ImagenInvalidaException;
 import bo.edu.uagrm.tienda.repository.CategoriaRepository;
+import bo.edu.uagrm.tienda.repository.ProductoRepository;
 import lombok.RequiredArgsConstructor;
 
 // Categorías del catálogo (HU-06; decisiones.md → Categorías del catálogo)
@@ -23,6 +25,7 @@ import lombok.RequiredArgsConstructor;
 public class CategoriaService {
 
 	private final CategoriaRepository categoriaRepository;
+	private final ProductoRepository productoRepository;
 	private final AlmacenImagenes almacen;
 
 	@Transactional(readOnly = true)
@@ -33,6 +36,18 @@ public class CategoriaService {
 	@Transactional(readOnly = true)
 	public List<Categoria> todas() {
 		return categoriaRepository.findAllByOrderByNombreClave();
+	}
+
+	// Cuántos productos tiene cada categoría, activos o no (HU-07 RF-13); las que no tienen ninguno no figuran
+	@Transactional(readOnly = true)
+	public Map<Long, Long> productosPorCategoria() {
+		return productoRepository.contarPorCategoria().stream().collect(Collectors.toMap(
+				ProductoRepository.ConteoPorCategoria::idCategoria, ProductoRepository.ConteoPorCategoria::productos));
+	}
+
+	@Transactional(readOnly = true)
+	public long productos(Long idCategoria) {
+		return productoRepository.countByCategoria_IdCategoria(idCategoria);
 	}
 
 	@Transactional
@@ -65,12 +80,16 @@ public class CategoriaService {
 		return categoria;
 	}
 
-	// RF-10 (no borrar una categoría con productos) se agrega en HU-07, cuando existan los productos
+	// Con productos, activos o no, no se borra: se oculta (HU-06 RF-10, HU-07 RF-12). Dar de alta o mover un
+	// producto bloquea la categoría, así que ninguno llega mientras se borra
 	@Transactional
 	public void borrar(Long idCategoria) {
 		Categoria categoria = bloquear(idCategoria);
+		if (productoRepository.existsByCategoria_IdCategoria(idCategoria)) {
+			throw new CategoriaConProductosException();
+		}
 		categoriaRepository.delete(categoria);
-		alTerminar(categoria.getImagen(), null);
+		ArchivosAlTerminar.borrar(almacen, categoria.getImagen(), null);
 	}
 
 	// El formato sale del contenido, no del nombre ni del tipo que declara el navegador (decisiones.md → Imágenes
@@ -82,7 +101,7 @@ public class CategoriaService {
 		Categoria categoria = bloquear(idCategoria);
 		String anterior = categoria.getImagen();
 		String nueva = almacen.guardar(contenido, formato);
-		alTerminar(anterior, nueva);
+		ArchivosAlTerminar.borrar(almacen, anterior, nueva);
 		categoria.cambiarImagen(nueva);
 		return categoria;
 	}
@@ -90,7 +109,7 @@ public class CategoriaService {
 	@Transactional
 	public Categoria quitarImagen(Long idCategoria) {
 		Categoria categoria = bloquear(idCategoria);
-		alTerminar(categoria.getImagen(), null);
+		ArchivosAlTerminar.borrar(almacen, categoria.getImagen(), null);
 		categoria.cambiarImagen(null);
 		return categoria;
 	}
@@ -99,9 +118,6 @@ public class CategoriaService {
 	public Optional<ImagenGuardada> imagen(Long idCategoria) {
 		return Optional.ofNullable(buscar(idCategoria).getImagen()).flatMap(nombre -> almacen.leer(nombre)
 				.map(contenido -> new ImagenGuardada(contenido, FormatoImagen.deArchivo(nombre))));
-	}
-
-	public record ImagenGuardada(byte[] contenido, FormatoImagen formato) {
 	}
 
 	private Categoria buscar(Long idCategoria) {
@@ -121,27 +137,6 @@ public class CategoriaService {
 				throw new CategoriaExistenteException();
 			}
 			throw e;
-		}
-	}
-
-	// Al confirmar se borra el primer archivo; al revertir, el segundo. Sin transacción activa (pruebas
-	// unitarias) se aplica enseguida, como si se confirmara
-	private void alTerminar(String siSeConfirma, String siSeRevierte) {
-		if (!TransactionSynchronizationManager.isSynchronizationActive()) {
-			borrarSiHay(siSeConfirma);
-			return;
-		}
-		TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-			@Override
-			public void afterCompletion(int estado) {
-				borrarSiHay(estado == STATUS_COMMITTED ? siSeConfirma : siSeRevierte);
-			}
-		});
-	}
-
-	private void borrarSiHay(String imagen) {
-		if (imagen != null) {
-			almacen.borrar(imagen);
 		}
 	}
 }
