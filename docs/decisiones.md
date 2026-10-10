@@ -17,7 +17,7 @@ solo las secciones que tocan la tarea. Al agregar una decisión, sumarla al
 - **[Seguridad](#seguridad)**: [`Usuario` es una sola clase con `rol` enumerado](#usuario-es-una-sola-clase-con-rol-enumerado) · [Autenticación por JWT stateless](#autenticación-por-jwt-stateless) · [Contraseñas con BCrypt](#contraseñas-con-bcrypt) · [Administrador inicial al arrancar](#administrador-inicial-al-arrancar) · [Registro](#registro) · [Inicio de sesión](#inicio-de-sesión) · [Recuperación de contraseña](#recuperación-de-contraseña) · [Datos personales](#datos-personales) · [Gestión de usuarios](#gestión-de-usuarios)
 - **[Notificaciones](#notificaciones)**: [Envío de correo detrás de `NotificadorCorreo`](#envío-de-correo-detrás-de-notificadorcorreo) · [Gmail por SMTP, sin servidor de correo propio](#gmail-por-smtp-sin-servidor-de-correo-propio)
 - **[Sistema de diseño (frontend)](#sistema-de-diseño-frontend)**: [La aplicación es un producto, no un trabajo académico](#la-aplicación-es-un-producto-no-un-trabajo-académico) · [Paleta y modos](#paleta-y-modos) · [Tipografía](#tipografía) · [Reglas que valen para toda la interfaz](#reglas-que-valen-para-toda-la-interfaz) · [Decisiones técnicas del frontend](#decisiones-técnicas-del-frontend)
-- **[Decisiones del proyecto](#decisiones-del-proyecto)**: [Tienda propia, no marketplace](#tienda-propia-no-marketplace) · [Roles de la tienda](#roles-de-la-tienda) · [Pago con Libélula, sin facturación SIAT](#pago-con-libélula-sin-facturación-siat) · [Rediseño del frontend dentro del flujo](#rediseño-del-frontend-dentro-del-flujo) · [Rubro: ferretería, con vista 3D](#rubro-ferretería-con-vista-3d) · [Categorías del catálogo](#categorías-del-catálogo)
+- **[Decisiones del proyecto](#decisiones-del-proyecto)**: [Tienda propia, no marketplace](#tienda-propia-no-marketplace) · [Roles de la tienda](#roles-de-la-tienda) · [Pago con Libélula, sin facturación SIAT](#pago-con-libélula-sin-facturación-siat) · [Rediseño del frontend dentro del flujo](#rediseño-del-frontend-dentro-del-flujo) · [Rubro: ferretería, con vista 3D](#rubro-ferretería-con-vista-3d) · [Categorías del catálogo](#categorías-del-catálogo) · [Productos](#productos)
 
 ---
 
@@ -492,4 +492,29 @@ Cada producto pertenece a **una sola** categoría.
 **Motivo:** el catálogo de demostración tiene 15 a 25 productos en 4 a 6
 categorías; un nivel alcanza, y ocultar evita perder productos y el
 historial de ventas por categoría.
+
+### Productos
+
+*10/10/2026 (HU-07).* Cada producto tiene nombre (no único), código, marca,
+categoría, unidad de venta, precio en bolivianos, descripción, una ficha
+técnica libre y hasta cinco imágenes.
+
+- **El código lo genera el sistema:** las tres primeras letras de la categoría
+  de alta, sin tildes y en mayúsculas, un guion y el número del producto con
+  cuatro cifras («JAR-0007»). No cambia si el producto cambia de categoría.
+  Del nombre solo cuentan las letras (sin espacios, cifras ni signos): «3D»
+  da «D»; un nombre sin letras usa «PRD».
+- **Unidad de venta de una lista fija:** unidad, metro, kilo, litro, caja, par,
+  rollo (parejo para el stock y los reportes).
+- **Ficha técnica:** hasta 15 pares nombre–valor, para los datos que cambian
+  de una herramienta a otra sin tocar el sistema.
+- **Hasta cinco imágenes; la primera es la principal.**
+- **Un producto no se borra: se desactiva.** Inactivo no sale en el catálogo
+  ni se compra, pero queda para pedidos y reportes. Una categoría con
+  productos, activos o no, no se borra (HU-06: se oculta).
+- Precio mayor que 0 y hasta 99 999,99 Bs, con dos decimales como máximo.
+
+**Motivo:** el código automático evita repetidos e inventos; la lista fija de
+unidades y la ficha libre equilibran orden y flexibilidad; desactivar en vez de
+borrar protege el historial de ventas.
 
