@@ -17,7 +17,7 @@ solo las secciones que tocan la tarea. Al agregar una decisión, sumarla al
 - **[Seguridad](#seguridad)**: [`Usuario` es una sola clase con `rol` enumerado](#usuario-es-una-sola-clase-con-rol-enumerado) · [Autenticación por JWT stateless](#autenticación-por-jwt-stateless) · [Contraseñas con BCrypt](#contraseñas-con-bcrypt) · [Administrador inicial al arrancar](#administrador-inicial-al-arrancar) · [Registro](#registro) · [Inicio de sesión](#inicio-de-sesión) · [Recuperación de contraseña](#recuperación-de-contraseña) · [Datos personales](#datos-personales) · [Gestión de usuarios](#gestión-de-usuarios)
 - **[Notificaciones](#notificaciones)**: [Envío de correo detrás de `NotificadorCorreo`](#envío-de-correo-detrás-de-notificadorcorreo) · [Gmail por SMTP, sin servidor de correo propio](#gmail-por-smtp-sin-servidor-de-correo-propio)
 - **[Sistema de diseño (frontend)](#sistema-de-diseño-frontend)**: [La aplicación es un producto, no un trabajo académico](#la-aplicación-es-un-producto-no-un-trabajo-académico) · [Paleta y modos](#paleta-y-modos) · [Tipografía](#tipografía) · [Reglas que valen para toda la interfaz](#reglas-que-valen-para-toda-la-interfaz) · [Decisiones técnicas del frontend](#decisiones-técnicas-del-frontend)
-- **[Decisiones del proyecto](#decisiones-del-proyecto)**: [Tienda propia, no marketplace](#tienda-propia-no-marketplace) · [Roles de la tienda](#roles-de-la-tienda) · [Pago con Libélula, sin facturación SIAT](#pago-con-libélula-sin-facturación-siat) · [Rediseño del frontend dentro del flujo](#rediseño-del-frontend-dentro-del-flujo) · [Rubro: ferretería, con vista 3D](#rubro-ferretería-con-vista-3d) · [Categorías del catálogo](#categorías-del-catálogo) · [Productos](#productos)
+- **[Decisiones del proyecto](#decisiones-del-proyecto)**: [Tienda propia, no marketplace](#tienda-propia-no-marketplace) · [Roles de la tienda](#roles-de-la-tienda) · [Pago con Libélula, sin facturación SIAT](#pago-con-libélula-sin-facturación-siat) · [Rediseño del frontend dentro del flujo](#rediseño-del-frontend-dentro-del-flujo) · [Rubro: ferretería, con vista 3D](#rubro-ferretería-con-vista-3d) · [Categorías del catálogo](#categorías-del-catálogo) · [Productos](#productos) · [Inventario](#inventario)
 
 ---
 
@@ -518,3 +518,30 @@ técnica libre y hasta cinco imágenes.
 unidades y la ficha libre equilibran orden y flexibilidad; desactivar en vez de
 borrar protege el historial de ventas.
 
+
+### Inventario
+
+*12/10/2026 (HU-08).* Un solo stock por producto, que se mueve solo con
+movimientos registrados.
+
+- **Cantidades según la unidad:** metro, kilo y litro admiten hasta dos
+  decimales; unidad, caja, par y rollo, solo enteros.
+- **Dos movimientos:** la *entrada* suma (una compra); el *ajuste* lleva la
+  cantidad contada y el sistema guarda la diferencia, con un motivo de lista
+  (conteo físico, daño o merma, devolución, otro). Los dos con nota opcional.
+  Sin costo de compra ni proveedores.
+- **El stock nunca es negativo.**
+- **Un movimiento no se edita ni se borra:** un error se corrige con otro
+  ajuste. Cada movimiento guarda quién lo hizo y cuándo.
+- **Stock mínimo opcional por producto:** la pantalla marca «Stock bajo» y
+  deja filtrar por eso; sin correos ni notificaciones.
+- **Roles:** el Empleado y el Administrador registran; el Contador solo ve.
+  Los productos inactivos se listan y admiten movimientos.
+- **Límites:** una cantidad hasta 99 999,99 y el stock hasta 9 999 999,99;
+  «Stock bajo» es stock menor o igual al mínimo; la nota admite 200
+  caracteres y es obligatoria con el motivo «otro». Un producto no puede
+  pasar a una unidad sin decimales si su stock o su mínimo los tienen.
+
+**Motivo:** el ajuste por cantidad contada es lo que hace quien cuenta un
+estante; el historial inmutable deja rastro de cada cambio; costos y
+proveedores quedan fuera porque los reportes son de ventas e ingresos.
