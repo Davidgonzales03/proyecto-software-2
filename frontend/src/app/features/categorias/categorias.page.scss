@@ -23,17 +23,6 @@ h2 {
 	margin: 0;
 }
 
-textarea {
-	font: inherit;
-	font-size: 15px;
-	padding: var(--app-espacio-3);
-	border: 1px solid var(--app-borde-control);
-	border-radius: var(--app-radio-control);
-	background: var(--app-fondo);
-	color: var(--app-texto);
-	resize: vertical;
-}
-
 .acciones {
 	display: flex;
 	flex-wrap: wrap;

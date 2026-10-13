@@ -50,6 +50,11 @@ public class SecurityConfig {
 						// Lo que lee el catálogo es público; la gestión de la tienda es del Administrador (HU-06)
 						.requestMatchers(HttpMethod.GET, "/api/categorias/**", "/api/productos/**").permitAll()
 						.requestMatchers("/api/gestion/**").hasRole("ADMINISTRADOR")
+						// El inventario lo leen el Empleado, el Administrador y el Contador; solo los dos primeros
+						// registran movimientos (HU-08)
+						.requestMatchers(HttpMethod.GET, "/api/inventario/**")
+						.hasAnyRole("EMPLEADO", "ADMINISTRADOR", "CONTADOR")
+						.requestMatchers("/api/inventario/**").hasAnyRole("EMPLEADO", "ADMINISTRADOR")
 						.anyRequest().authenticated())
 				// El 401 y el 403 pasan por ManejadorErrores para salir con el mismo formato que el resto de la
 				// API; el 401 anuncia además el esquema de autenticación esperado (RFC 6750)

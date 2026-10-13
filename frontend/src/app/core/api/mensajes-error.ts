@@ -28,6 +28,10 @@ const MENSAJES: Record<string, string> = {
 	PRODUCTO_LLENO_DE_IMAGENES: 'El producto ya tiene 5 fotos. Quita una antes de subir otra.',
 	FICHA_INVALIDA: 'La ficha técnica tiene dos datos con el mismo nombre.',
 	ORDEN_DE_IMAGENES_INVALIDO: 'Las fotos cambiaron mientras las ordenabas. Recarga la página.',
+	AJUSTE_SIN_CAMBIO: 'La cantidad contada es igual al stock: no hay nada que ajustar.',
+	STOCK_FUERA_DE_RANGO: 'Con esa entrada el stock pasaría de 9.999.999,99.',
+	UNIDAD_INCOMPATIBLE_CON_STOCK:
+		'El stock o el mínimo de este producto tienen decimales y esa unidad no los admite. Ajusta el stock antes de cambiarla.',
 	IMAGEN_INVALIDA: 'Ese archivo no es una imagen JPG, PNG o WebP.',
 	IMAGEN_DEMASIADO_GRANDE: 'La imagen pesa más de 2 MB. Elige una más liviana.',
 	SIN_CONEXION: 'No pudimos conectar con el servidor. Intenta de nuevo.',
@@ -67,6 +71,10 @@ const NOMBRES_DE_CAMPO: Record<string, string> = {
 	desde: 'La fecha desde',
 	hasta: 'La fecha hasta',
 	cantidad: 'La cantidad',
+	contada: 'La cantidad contada',
+	minimo: 'El mínimo',
+	motivo: 'El motivo',
+	nota: 'La nota',
 	estado: 'El estado',
 };
 

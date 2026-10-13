@@ -107,6 +107,14 @@ describe('PanelPage', () => {
     expect(crear().querySelector('a[href="/categorias"]')?.textContent).toContain('Categorías');
   });
 
+  // HU-08 RF-1
+  it('el empleado, el contador y el administrador tienen el acceso al inventario', () => {
+    for (const rol of ['EMPLEADO', 'CONTADOR', 'ADMINISTRADOR'] as const) {
+      sesion.iniciar(sesionCon(rol));
+      expect(crear().querySelector('a[href="/inventario"]')?.textContent).toContain('Inventario');
+    }
+  });
+
   // HU-07 RF-1
   it('el administrador tiene el acceso a productos', () => {
     sesion.iniciar(sesionCon('ADMINISTRADOR'));
@@ -120,5 +128,6 @@ describe('PanelPage', () => {
 
     expect(crear().querySelector('a[href="/categorias"]')).toBeNull();
     expect(crear().querySelector('a[href="/productos"]')).toBeNull();
+    expect(crear().querySelector('a[href="/inventario"]')).toBeNull();
   });
 });

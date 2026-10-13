@@ -82,5 +82,20 @@ export const routes: Routes = [
     data: { rol: 'ADMINISTRADOR' },
     loadComponent: () => import('./features/producto/producto.page').then((m) => m.ProductoPage),
   },
+  {
+    path: 'inventario',
+    title: `Inventario · ${MARCA.nombre}`,
+    canActivate: [rolGuard],
+    data: { roles: ['ADMINISTRADOR', 'EMPLEADO', 'CONTADOR'] },
+    loadComponent: () => import('./features/inventario/inventario.page').then((m) => m.InventarioPage),
+  },
+  {
+    path: 'inventario/:id',
+    title: `Stock · ${MARCA.nombre}`,
+    canActivate: [rolGuard],
+    canDeactivate: [cambiosSinGuardarGuard],
+    data: { roles: ['ADMINISTRADOR', 'EMPLEADO', 'CONTADOR'] },
+    loadComponent: () => import('./features/stock/stock.page').then((m) => m.StockPage),
+  },
   { path: '**', redirectTo: '' },
 ];

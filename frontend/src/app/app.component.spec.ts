@@ -190,16 +190,18 @@ describe('AppComponent', () => {
     it('un administrador ve Inicio, Usuarios, Categorías y Productos', async () => {
       const fijo = await en('/');
 
-      expect(nombres(enlacesDelMenu(fijo))).toEqual(['Inicio', 'Usuarios', 'Categorías', 'Productos']);
+      expect(nombres(enlacesDelMenu(fijo))).toEqual(['Inicio', 'Usuarios', 'Categorías', 'Productos', 'Inventario']);
       expect(enlacesDelMenu(fijo)[1].getAttribute('href')).toBe('/usuarios');
       expect(enlacesDelMenu(fijo)[2].getAttribute('href')).toBe('/categorias');
       expect(enlacesDelMenu(fijo)[3].getAttribute('href')).toBe('/productos');
     });
 
-    it('un empleado ve solo «Inicio»', async () => {
+    // HU-08 RF-1
+    it('un empleado ve «Inicio» e «Inventario»', async () => {
       const fijo = await en('/', 'EMPLEADO');
 
-      expect(nombres(enlacesDelMenu(fijo))).toEqual(['Inicio']);
+      expect(nombres(enlacesDelMenu(fijo))).toEqual(['Inicio', 'Inventario']);
+      expect(enlacesDelMenu(fijo)[1].getAttribute('href')).toBe('/inventario');
     });
 
     it('marca el módulo actual', async () => {

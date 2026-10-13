@@ -1,0 +1,253 @@
+<a class="volver" routerLink="/inventario">
+  <svg lucideArrowLeft class="icono" aria-hidden="true"></svg>
+  Inventario
+</a>
+
+@if (idProducto() === null) {
+  <h1>Stock</h1>
+  <p class="aviso" role="alert">Esa dirección no es la de un producto.</p>
+} @else if (producto(); as producto) {
+  <div class="cabecera">
+    <h1>{{ producto.nombre }}</h1>
+    <p class="datos">
+      {{ producto.codigo }} · {{ producto.categoria }}
+      <span class="estado" [class.desactivada]="!producto.activo">{{ producto.activo ? 'Activo' : 'Inactivo' }}</span>
+    </p>
+  </div>
+
+  <dl class="resumen">
+    <div class="dato">
+      <dt>Stock</dt>
+      <dd class="numero">{{ cantidad(producto.stock) }} <span class="unidad">{{ unidad(producto) }}</span></dd>
+    </div>
+    <div class="dato">
+      <dt>Mínimo</dt>
+      <dd class="numero">{{ producto.stockMinimo === null ? 'Sin mínimo' : cantidad(producto.stockMinimo) }}</dd>
+    </div>
+    @if (producto.stockBajo) {
+      <div class="dato">
+        <dt class="solo-lectores">Alerta</dt>
+        <dd class="bajo">
+          <svg lucideTriangleAlert class="icono" aria-hidden="true"></svg>
+          Stock bajo
+        </dd>
+      </div>
+    }
+  </dl>
+
+  <div role="status" class="avisos">
+    @if (avisoDeExito()) {
+      <p class="aviso exito">{{ avisoDeExito() }}</p>
+    }
+  </div>
+
+  @if (puedeRegistrar()) {
+    <div class="formularios">
+      <form class="tarjeta" (submit)="registrarEntrada($event)" novalidate aria-labelledby="titulo-entrada">
+        <h2 id="titulo-entrada">Entrada</h2>
+        <p class="ayuda">Mercadería que llegó: se suma al stock.</p>
+        <div role="alert">
+          @if (errorDeEntrada()) {
+            <p class="aviso">{{ errorDeEntrada() }}</p>
+          }
+        </div>
+        <div class="campo">
+          @let errorCantidad = mensaje(entrada.cantidad());
+          <label for="entrada-cantidad">Cantidad ({{ unidad(producto) }})</label>
+          <input
+            id="entrada-cantidad"
+            type="text"
+            inputmode="decimal"
+            autocomplete="off"
+            [formField]="entrada.cantidad"
+            [attr.aria-invalid]="errorCantidad ? 'true' : null"
+            [attr.aria-describedby]="errorCantidad ? 'error-entrada-cantidad' : null"
+          />
+          @if (errorCantidad) {
+            <p class="error" id="error-entrada-cantidad">{{ errorCantidad }}</p>
+          }
+        </div>
+        <div class="campo">
+          @let errorNota = mensaje(entrada.nota());
+          <label for="entrada-nota">Nota <span class="opcional">(opcional)</span></label>
+          <input
+            id="entrada-nota"
+            type="text"
+            autocomplete="off"
+            placeholder="Factura 123"
+            [formField]="entrada.nota"
+            [attr.aria-invalid]="errorNota ? 'true' : null"
+            [attr.aria-describedby]="errorNota ? 'error-entrada-nota' : null"
+          />
+          @if (errorNota) {
+            <p class="error" id="error-entrada-nota">{{ errorNota }}</p>
+          }
+        </div>
+        <button type="submit" class="boton" [disabled]="registrandoEntrada()">
+          {{ registrandoEntrada() ? 'Registrando…' : 'Registrar entrada' }}
+        </button>
+      </form>
+
+      <form class="tarjeta" (submit)="registrarAjuste($event)" novalidate aria-labelledby="titulo-ajuste">
+        <h2 id="titulo-ajuste">Ajuste</h2>
+        <p class="ayuda">Escribe cuánto hay realmente; el sistema guarda la diferencia.</p>
+        <div role="alert">
+          @if (errorDeAjuste()) {
+            <p class="aviso">{{ errorDeAjuste() }}</p>
+          }
+        </div>
+        <div class="campo">
+          @let errorContada = mensaje(ajuste.contada());
+          <label for="ajuste-contada">Cantidad contada ({{ unidad(producto) }})</label>
+          <input
+            id="ajuste-contada"
+            type="text"
+            inputmode="decimal"
+            autocomplete="off"
+            [formField]="ajuste.contada"
+            [attr.aria-invalid]="errorContada ? 'true' : null"
+            [attr.aria-describedby]="errorContada ? 'error-ajuste-contada' : null"
+          />
+          @if (errorContada) {
+            <p class="error" id="error-ajuste-contada">{{ errorContada }}</p>
+          }
+        </div>
+        <div class="campo">
+          <label for="ajuste-motivo">Motivo</label>
+          <select id="ajuste-motivo" [formField]="ajuste.motivo">
+            @for (motivo of motivos; track motivo) {
+              <option [value]="motivo">{{ nombresDeMotivo[motivo] }}</option>
+            }
+          </select>
+        </div>
+        <div class="campo">
+          @let errorNotaAjuste = mensaje(ajuste.nota());
+          <label for="ajuste-nota">
+            Nota
+            <span class="opcional">{{ ajuste.motivo().value() === 'OTRO' ? '(obligatoria)' : '(opcional)' }}</span>
+          </label>
+          <input
+            id="ajuste-nota"
+            type="text"
+            autocomplete="off"
+            [attr.aria-required]="ajuste.motivo().value() === 'OTRO' ? 'true' : null"
+            [formField]="ajuste.nota"
+            [attr.aria-invalid]="errorNotaAjuste ? 'true' : null"
+            [attr.aria-describedby]="errorNotaAjuste ? 'error-ajuste-nota' : null"
+          />
+          @if (errorNotaAjuste) {
+            <p class="error" id="error-ajuste-nota">{{ errorNotaAjuste }}</p>
+          }
+        </div>
+        <button type="submit" class="boton" [disabled]="registrandoAjuste()">
+          {{ registrandoAjuste() ? 'Registrando…' : 'Registrar ajuste' }}
+        </button>
+      </form>
+
+      <form class="tarjeta" (submit)="guardarMinimo($event)" novalidate aria-labelledby="titulo-minimo">
+        <h2 id="titulo-minimo">Stock mínimo</h2>
+        <p class="ayuda">Con el stock en el mínimo o por debajo, el producto aparece en «Stock bajo».</p>
+        <div role="alert">
+          @if (errorDeMinimo()) {
+            <p class="aviso">{{ errorDeMinimo() }}</p>
+          }
+        </div>
+        <div class="campo">
+          @let errorMinimo = mensaje(minimo.minimo());
+          <label for="minimo">Mínimo ({{ unidad(producto) }})</label>
+          <input
+            id="minimo"
+            type="text"
+            inputmode="decimal"
+            autocomplete="off"
+            [formField]="minimo.minimo"
+            [attr.aria-invalid]="errorMinimo ? 'true' : null"
+            [attr.aria-describedby]="errorMinimo ? 'error-minimo' : null"
+          />
+          @if (errorMinimo) {
+            <p class="error" id="error-minimo">{{ errorMinimo }}</p>
+          }
+        </div>
+        <div class="acciones">
+          <button type="submit" class="boton" [disabled]="guardandoMinimo()">Guardar mínimo</button>
+          @if (producto.stockMinimo !== null) {
+            <button type="button" class="secundario" [disabled]="guardandoMinimo()" (click)="quitarMinimo()">
+              Quitar mínimo
+            </button>
+          }
+        </div>
+      </form>
+    </div>
+  }
+
+  <section class="historial" aria-labelledby="titulo-historial">
+    <h2 id="titulo-historial">Historial</h2>
+    @if (movimientos(); as pagina) {
+      @if (pagina.contenido.length === 0) {
+        <p class="vacio">Todavía no hay movimientos.</p>
+      } @else {
+        <div class="contenedor-tabla">
+          <table>
+            <caption class="solo-lectores">Movimientos de stock, del más reciente al más antiguo</caption>
+            <thead>
+              <tr>
+                <th scope="col">Fecha</th>
+                <th scope="col">Movimiento</th>
+                <th scope="col">Cantidad</th>
+                <th scope="col">Stock</th>
+                <th scope="col">Registró</th>
+                <th scope="col">Nota</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (movimiento of pagina.contenido; track movimiento.idMovimiento) {
+                <tr>
+                  <td data-etiqueta="Fecha" class="numero">{{ fecha(movimiento.fecha) }} {{ hora(movimiento.fecha) }}</td>
+                  <th scope="row" data-etiqueta="Movimiento">{{ descripcion(movimiento) }}</th>
+                  <td data-etiqueta="Cantidad" class="numero">{{ conSigno(movimiento) }}</td>
+                  <td data-etiqueta="Stock" class="numero">{{ cantidad(movimiento.stockResultante) }}</td>
+                  <td data-etiqueta="Registró">{{ movimiento.usuario }}</td>
+                  <td data-etiqueta="Nota" class="nota">{{ movimiento.nota ?? '—' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        @if (pagina.totalPaginas > 1) {
+          <nav class="paginacion" aria-label="Páginas del historial">
+            <button
+              type="button"
+              class="secundario"
+              [disabled]="pagina.pagina === 0"
+              (click)="irAPaginaDelHistorial(pagina.pagina - 1)"
+            >
+              Más recientes
+            </button>
+            <p class="numero">Página {{ pagina.pagina + 1 }} de {{ pagina.totalPaginas }}</p>
+            <button
+              type="button"
+              class="secundario"
+              [disabled]="pagina.pagina + 1 >= pagina.totalPaginas"
+              (click)="irAPaginaDelHistorial(pagina.pagina + 1)"
+            >
+              Más antiguos
+            </button>
+          </nav>
+        }
+      }
+    } @else if (historial.error()) {
+      <p class="aviso" role="alert">No pudimos cargar el historial.</p>
+    } @else {
+      <p class="cargando" role="status">Cargando el historial…</p>
+    }
+  </section>
+} @else if (errorDeCarga()) {
+  <h1>Stock</h1>
+  <div class="tarjeta-error">
+    <p class="aviso" role="alert">{{ errorDeCarga() }}</p>
+    <button type="button" class="secundario" (click)="recurso.reload()">Reintentar</button>
+  </div>
+} @else {
+  <h1>Stock</h1>
+  <p class="cargando" role="status">Cargando el producto…</p>
+}

@@ -1,0 +1,204 @@
+// La tabla, los campos y los avisos vienen de _lista.scss (con _formulario.scss
+// además, la hoja pasa el presupuesto de estilos). Acá quedan la cabecera, el
+// resumen, las tarjetas de los formularios y su botón principal
+@use '../../../styles/lista';
+
+:host {
+	display: flex;
+	flex-direction: column;
+	gap: var(--app-espacio-6);
+}
+
+h1 {
+	margin: 0;
+	overflow-wrap: anywhere;
+}
+
+h2 {
+	margin: 0;
+	font-size: 20px;
+}
+
+.volver {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--app-espacio-2);
+	align-self: flex-start;
+	min-height: var(--app-area-tocable);
+	color: var(--app-texto-suave);
+	font-size: 14px;
+	text-decoration: none;
+}
+
+.volver:hover {
+	color: var(--app-texto);
+}
+
+.icono {
+	width: 18px;
+	height: 18px;
+}
+
+.cabecera {
+	display: flex;
+	flex-direction: column;
+	gap: var(--app-espacio-1);
+}
+
+.datos {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--app-espacio-3);
+	margin: 0;
+	font-family: var(--app-familia-datos);
+	font-size: 14px;
+	color: var(--app-texto-suave);
+}
+
+.resumen {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--app-espacio-6);
+	margin: 0;
+}
+
+.dato dt {
+	font-family: var(--app-familia-datos);
+	font-size: 12px;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	color: var(--app-texto-suave);
+}
+
+.dato dd {
+	margin: 0;
+	font-family: var(--app-familia-titulos);
+	font-size: 32px;
+	font-weight: 700;
+}
+
+.unidad {
+	font-family: var(--app-familia-texto, inherit);
+	font-size: 15px;
+	font-weight: 400;
+	color: var(--app-texto-suave);
+}
+
+// Stock bajo: ícono y texto, no solo color
+.bajo {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--app-espacio-2);
+	margin: 0;
+	font-family: inherit;
+	font-size: 15px;
+	padding: var(--app-espacio-2) var(--app-espacio-3);
+	border: 1px solid var(--app-acento-texto);
+	border-radius: var(--app-radio-control);
+	color: var(--app-acento-texto);
+	font-weight: 600;
+}
+
+.formularios {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+	gap: var(--app-espacio-4);
+	align-items: start;
+}
+
+.tarjeta {
+	display: flex;
+	flex-direction: column;
+	gap: var(--app-espacio-3);
+	padding: var(--app-espacio-4);
+	border: 1px solid var(--app-borde);
+	border-radius: var(--app-radio);
+	background: var(--app-superficie);
+}
+
+.opcional {
+	text-transform: none;
+	letter-spacing: 0;
+}
+
+input[aria-invalid='true'] {
+	border: 2px solid var(--app-error);
+}
+
+.error {
+	margin: 0;
+	color: var(--app-error);
+	font-size: 12.5px;
+	font-weight: 500;
+}
+
+.boton {
+	font: inherit;
+	font-size: 14px;
+	font-weight: 600;
+	min-height: var(--app-area-tocable);
+	padding: var(--app-espacio-2) var(--app-espacio-4);
+	border: 1px solid transparent;
+	border-radius: var(--app-radio-control);
+	background: var(--app-ambar);
+	color: var(--app-sobre-ambar);
+	cursor: pointer;
+}
+
+.boton:hover:not([disabled]) {
+	background: var(--app-ambar-fuerte);
+}
+
+.boton[disabled] {
+	opacity: 0.6;
+	cursor: default;
+}
+
+.ayuda {
+	margin: 0;
+	color: var(--app-texto-suave);
+	font-size: 13.5px;
+}
+
+.acciones {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--app-espacio-2);
+}
+
+.historial {
+	display: flex;
+	flex-direction: column;
+	gap: var(--app-espacio-3);
+}
+
+.nota {
+	color: var(--app-texto-suave);
+	overflow-wrap: anywhere;
+}
+
+// El estado no depende solo del color: círculo para activo, cuadrado para inactivo
+.estado {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--app-espacio-2);
+	color: var(--app-exito);
+}
+
+.estado::before {
+	content: '';
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	background: currentColor;
+}
+
+.estado.desactivada {
+	color: var(--app-error);
+}
+
+.estado.desactivada::before {
+	border-radius: 1px;
+}

@@ -1,0 +1,137 @@
+<h1>Inventario</h1>
+
+<form class="filtros" role="search" aria-label="Filtrar el inventario" (submit)="$event.preventDefault()">
+  <div class="campo busqueda">
+    <label for="filtro-texto">Buscar</label>
+    <input
+      id="filtro-texto"
+      name="texto"
+      type="search"
+      autocomplete="off"
+      spellcheck="false"
+      placeholder="Nombre o código…"
+      [value]="textoEscrito()"
+      (input)="alEscribir($any($event.target).value)"
+    />
+  </div>
+
+  <div class="campo">
+    <label for="filtro-categoria">Categoría</label>
+    <select id="filtro-categoria" name="categoria" (change)="alElegirCategoria($any($event.target).value)">
+      <option value="" [selected]="filtros().categoria === null">Todas</option>
+      @for (categoria of categorias(); track categoria.idCategoria) {
+        <option [value]="categoria.idCategoria" [selected]="filtros().categoria === categoria.idCategoria">
+          {{ categoria.nombre }}
+        </option>
+      }
+    </select>
+  </div>
+
+  <div class="campo">
+    <label for="filtro-estado">Estado</label>
+    <select id="filtro-estado" name="activo" (change)="alElegirEstado($any($event.target).value)">
+      <option value="" [selected]="filtros().activo === null">Todos</option>
+      <option value="true" [selected]="filtros().activo === true">Activos</option>
+      <option value="false" [selected]="filtros().activo === false">Inactivos</option>
+    </select>
+  </div>
+
+  <label class="casilla">
+    <input
+      id="filtro-bajo"
+      type="checkbox"
+      name="bajo"
+      [checked]="filtros().soloBajo"
+      (change)="alMarcarStockBajo($any($event.target).checked)"
+    />
+    Solo stock bajo
+  </label>
+</form>
+
+@if (pagina(); as pagina) {
+  @if (pagina.contenido.length === 0 && pagina.pagina > 0 && pagina.totalElementos > 0) {
+    <div class="vacio" role="status">
+      <p>Esta página no existe.</p>
+      <button type="button" class="secundario" (click)="irAPagina(0)">Ir a la primera página</button>
+    </div>
+  } @else if (pagina.contenido.length === 0) {
+    <p class="vacio" role="status">No hay productos con esos filtros.</p>
+  } @else {
+    <div class="contenedor-tabla">
+      <table>
+        <caption class="solo-lectores">Stock de los productos</caption>
+        <thead>
+          <tr>
+            <th scope="col">Código</th>
+            <th scope="col">Producto</th>
+            <th scope="col">Categoría</th>
+            <th scope="col">Stock</th>
+            <th scope="col">Mínimo</th>
+            <th scope="col">Estado</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (producto of pagina.contenido; track producto.idProducto) {
+            @let unidad = nombresDeUnidad[producto.unidad].toLowerCase();
+            <tr [class.inactivo]="!producto.activo">
+              <td data-etiqueta="Código" class="codigo">{{ producto.codigo }}</td>
+              <th scope="row" data-etiqueta="Producto">
+                <a [routerLink]="['/inventario', producto.idProducto]">{{ producto.nombre }}</a>
+              </th>
+              <td data-etiqueta="Categoría">{{ producto.categoria }}</td>
+              <td data-etiqueta="Stock" class="numero">
+                <span>
+                  {{ cantidad(producto.stock) }} <span class="unidad">{{ unidad }}</span>
+                  @if (producto.stockBajo) {
+                    <span class="bajo">
+                      <svg lucideTriangleAlert class="icono" aria-hidden="true"></svg>
+                      Stock bajo
+                    </span>
+                  }
+                </span>
+              </td>
+              <td data-etiqueta="Mínimo" class="numero">
+                {{ producto.stockMinimo === null ? '—' : cantidad(producto.stockMinimo) }}
+              </td>
+              <td data-etiqueta="Estado">
+                <span class="estado" [class.desactivada]="!producto.activo">
+                  {{ producto.activo ? 'Activo' : 'Inactivo' }}
+                </span>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  <nav class="paginacion" aria-label="Páginas de la lista">
+    <button
+      type="button"
+      class="secundario"
+      [disabled]="pagina.pagina === 0"
+      (click)="irAPagina(pagina.pagina - 1)"
+    >
+      Anterior
+    </button>
+    <p class="numero">
+      Página {{ pagina.pagina + 1 }} de {{ pagina.totalPaginas || 1 }} ·
+      {{ pagina.totalElementos }} {{ pagina.totalElementos === 1 ? 'producto' : 'productos' }}
+    </p>
+    <button
+      type="button"
+      class="secundario"
+      [disabled]="pagina.pagina + 1 >= pagina.totalPaginas"
+      (click)="irAPagina(pagina.pagina + 1)"
+    >
+      Siguiente
+    </button>
+  </nav>
+} @else if (errorDeCarga()) {
+  <div class="tarjeta-error">
+    <p class="aviso" role="alert">{{ errorDeCarga() }}</p>
+    <button type="button" class="secundario" (click)="listado.reload()">Reintentar</button>
+  </div>
+} @else {
+  <p class="cargando" role="status">Cargando el inventario…</p>
+}

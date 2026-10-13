@@ -30,6 +30,18 @@ public interface ProductoRepository extends JpaRepository<Producto, Long> {
 	Page<Producto> buscar(@Param("idCategoria") Long idCategoria, @Param("activo") Boolean activo,
 			@Param("texto") String texto, Pageable paginacion);
 
+	// El inventario (HU-08): activos e inactivos; texto como en buscar, en el nombre o el código
+	@EntityGraph(attributePaths = "categoria")
+	@Query("""
+			select p from Producto p
+			where (:idCategoria is null or p.categoria.idCategoria = :idCategoria)
+			  and (:activo is null or p.activo = :activo)
+			  and (:soloBajo = false or (p.stockMinimo is not null and p.stock <= p.stockMinimo))
+			  and (:texto is null or lower(p.nombre) like :texto escape '!' or lower(p.codigo) like :texto escape '!')
+			""")
+	Page<Producto> inventario(@Param("texto") String texto, @Param("idCategoria") Long idCategoria,
+			@Param("activo") Boolean activo, @Param("soloBajo") boolean soloBajo, Pageable paginacion);
+
 	boolean existsByCategoria_IdCategoria(Long idCategoria);
 
 	long countByCategoria_IdCategoria(Long idCategoria);

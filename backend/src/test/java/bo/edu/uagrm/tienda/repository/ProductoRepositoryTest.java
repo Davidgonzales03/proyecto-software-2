@@ -124,6 +124,49 @@ class ProductoRepositoryTest {
 		assertThat(productoRepository.existsByCategoria_IdCategoria(herramientas.getIdCategoria())).isFalse();
 	}
 
+	// HU-08 RF-2
+	@Test
+	void productoNuevoEmpiezaConStockCeroYSinMinimo() {
+		Long id = producto("Pala", null, jardin, "JAR-0001", 0).getIdProducto();
+		em.flush();
+		em.clear();
+
+		Producto leido = productoRepository.findById(id).orElseThrow();
+
+		assertThat(leido.getStock()).isEqualByComparingTo("0");
+		assertThat(leido.getStockMinimo()).isNull();
+		assertThat(leido.isStockBajo()).isFalse();
+	}
+
+	// HU-08 RF-9, RF-10: por nombre, con texto en nombre o código, categoría, estado y solo stock bajo
+	@Test
+	void inventarioFiltraPorTextoCategoriaEstadoYStockBajo() {
+		Producto taladro = producto("Taladro", "Bosch", herramientas, "HER-0001", 0);
+		taladro.aplicarMovimiento(new BigDecimal("3"));
+		taladro.cambiarMinimo(new BigDecimal("5"));
+		Producto pala = producto("Pala", null, jardin, "JAR-0002", 1);
+		pala.aplicarMovimiento(new BigDecimal("5"));
+		pala.cambiarMinimo(new BigDecimal("5"));
+		Producto manguera = producto("Manguera", null, jardin, "JAR-0003", 2);
+		manguera.aplicarMovimiento(new BigDecimal("6"));
+		manguera.cambiarMinimo(new BigDecimal("5"));
+		producto("Azada", null, jardin, "JAR-0004", 3).desactivar();
+		em.flush();
+		em.clear();
+		PageRequest pagina = PageRequest.of(0, 20, Sort.by("nombre", "idProducto"));
+
+		assertThat(productoRepository.inventario(null, null, null, false, pagina)).extracting(Producto::getNombre)
+				.containsExactly("Azada", "Manguera", "Pala", "Taladro");
+		assertThat(productoRepository.inventario(null, null, null, true, pagina)).extracting(Producto::getNombre)
+				.containsExactly("Pala", "Taladro");
+		assertThat(productoRepository.inventario(null, jardin.getIdCategoria(), true, false, pagina))
+				.extracting(Producto::getNombre).containsExactly("Manguera", "Pala");
+		assertThat(productoRepository.inventario("%jar-0004%", null, false, false, pagina))
+				.extracting(Producto::getNombre).containsExactly("Azada");
+		assertThat(productoRepository.inventario("%tala%", null, null, false, pagina))
+				.extracting(Producto::getNombre).containsExactly("Taladro");
+	}
+
 	// HU-07 RF-4: el código se exige único en la base, aunque lo asigne el servicio
 	@Test
 	void codigoRepetidoSeRechaza() {

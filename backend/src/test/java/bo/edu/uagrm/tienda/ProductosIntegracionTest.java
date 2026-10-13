@@ -27,6 +27,7 @@ import com.jayway.jsonpath.JsonPath;
 
 import bo.edu.uagrm.tienda.config.ImagenesProperties;
 import bo.edu.uagrm.tienda.repository.CategoriaRepository;
+import bo.edu.uagrm.tienda.repository.MovimientoStockRepository;
 import bo.edu.uagrm.tienda.repository.ProductoRepository;
 import bo.edu.uagrm.tienda.repository.UsuarioRepository;
 import bo.edu.uagrm.tienda.service.AdministradorInicial;
@@ -49,6 +50,9 @@ class ProductosIntegracionTest {
 
 	@Autowired
 	private AdministradorInicial administradorInicial;
+
+	@Autowired
+	private MovimientoStockRepository movimientoRepository;
 
 	@Autowired
 	private ProductoRepository productoRepository;
@@ -78,6 +82,7 @@ class ProductosIntegracionTest {
 
 	@AfterEach
 	void limpiar() {
+		movimientoRepository.deleteAll();
 		productoRepository.deleteAll();
 		categoriaRepository.deleteAll();
 		usuarioRepository.findByCorreo("emp@mail.com").ifPresent(usuarioRepository::delete);
