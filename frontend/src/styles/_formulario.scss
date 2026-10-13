@@ -74,10 +74,13 @@ label {
 	letter-spacing: 0;
 }
 
-input {
+// Los tres controles con el mismo aspecto
+input,
+select,
+textarea {
 	font: inherit;
 	font-size: 15px;
-	min-height: 44px;
+	min-height: var(--app-area-tocable);
 	padding: var(--app-espacio-3);
 	border: 1px solid var(--app-borde-control);
 	border-radius: var(--app-radio-control);
@@ -96,7 +99,13 @@ input {
 	padding-right: calc(var(--app-area-tocable) + var(--app-espacio-1));
 }
 
-input[aria-invalid='true'] {
+textarea {
+	resize: vertical;
+}
+
+input[aria-invalid='true'],
+select[aria-invalid='true'],
+textarea[aria-invalid='true'] {
 	border-color: var(--app-error);
 	border-width: 2px;
 }

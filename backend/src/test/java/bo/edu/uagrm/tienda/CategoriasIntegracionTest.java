@@ -24,6 +24,7 @@ import com.jayway.jsonpath.JsonPath;
 
 import bo.edu.uagrm.tienda.config.ImagenesProperties;
 import bo.edu.uagrm.tienda.repository.CategoriaRepository;
+import bo.edu.uagrm.tienda.repository.MovimientoStockRepository;
 import bo.edu.uagrm.tienda.repository.ProductoRepository;
 import bo.edu.uagrm.tienda.repository.UsuarioRepository;
 import bo.edu.uagrm.tienda.service.AdministradorInicial;
@@ -50,6 +51,9 @@ class CategoriasIntegracionTest {
 	private CategoriaRepository categoriaRepository;
 
 	@Autowired
+	private MovimientoStockRepository movimientoRepository;
+
+	@Autowired
 	private ProductoRepository productoRepository;
 
 	@Autowired
@@ -64,6 +68,7 @@ class CategoriasIntegracionTest {
 	void preparar() throws Exception {
 		// La H2 es compartida y otro contexto pudo recrearla sin el administrador inicial
 		administradorInicial.run(new DefaultApplicationArguments());
+		movimientoRepository.deleteAll();
 		productoRepository.deleteAll();
 		categoriaRepository.deleteAll();
 		tokenAdmin = token(ADMIN, CLAVE_ADMIN);

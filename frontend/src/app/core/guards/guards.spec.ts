@@ -94,6 +94,17 @@ describe('guards de ruta', () => {
       expect(router.serializeUrl(resultado as UrlTree)).toBe('/');
     });
 
+    // HU-08 RF-1: el inventario es de tres roles
+    it('con una lista de roles deja pasar a cualquiera de ellos', () => {
+      const datos = { roles: ['EMPLEADO', 'ADMINISTRADOR', 'CONTADOR'] };
+      sesion.iniciar(sesionCon('CONTADOR'));
+      expect(correr(rolGuard as never, datos, '/inventario')).toBe(true);
+
+      sesion.iniciar(sesionCon('CLIENTE'));
+      const resultado = correr(rolGuard as never, datos, '/inventario');
+      expect(router.serializeUrl(resultado as UrlTree)).toBe('/');
+    });
+
     it('sin sesión manda a iniciar sesión', () => {
       const resultado = correr(rolGuard as never, { rol: 'ADMINISTRADOR' }, '/usuarios');
 

@@ -26,6 +26,7 @@ import bo.edu.uagrm.tienda.exception.ImagenInvalidaException;
 import bo.edu.uagrm.tienda.exception.OrdenDeImagenesInvalidoException;
 import bo.edu.uagrm.tienda.exception.ProductoLlenoDeImagenesException;
 import bo.edu.uagrm.tienda.exception.ProductoNoEncontradoException;
+import bo.edu.uagrm.tienda.exception.UnidadIncompatibleConStockException;
 import bo.edu.uagrm.tienda.repository.CategoriaRepository;
 import bo.edu.uagrm.tienda.repository.ProductoRepository;
 import lombok.RequiredArgsConstructor;
@@ -77,6 +78,12 @@ public class ProductoService {
 	@Transactional
 	public ProductoResponse editar(Long idProducto, ProductoRequest solicitud) {
 		Producto producto = bloquear(idProducto);
+		// 12,5 m no se pueden volver unidades (HU-08 RF-13)
+		if (!InventarioService.admiteDecimales(solicitud.unidad(), producto.getStock())
+				|| (producto.getStockMinimo() != null
+						&& !InventarioService.admiteDecimales(solicitud.unidad(), producto.getStockMinimo()))) {
+			throw new UnidadIncompatibleConStockException();
+		}
 		producto.editar(solicitud.nombre(), solicitud.marca(), solicitud.descripcion(), solicitud.precio(),
 				solicitud.unidad(), categoria(solicitud.idCategoria()), ficha(solicitud));
 		return ProductoResponse.from(producto);

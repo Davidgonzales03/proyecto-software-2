@@ -35,6 +35,7 @@ import bo.edu.uagrm.tienda.exception.ImagenInvalidaException;
 import bo.edu.uagrm.tienda.exception.OrdenDeImagenesInvalidoException;
 import bo.edu.uagrm.tienda.exception.ProductoLlenoDeImagenesException;
 import bo.edu.uagrm.tienda.exception.ProductoNoEncontradoException;
+import bo.edu.uagrm.tienda.exception.UnidadIncompatibleConStockException;
 import bo.edu.uagrm.tienda.repository.CategoriaRepository;
 import bo.edu.uagrm.tienda.repository.ProductoRepository;
 
@@ -171,6 +172,31 @@ class ProductoServiceTest {
 		assertThat(editado.codigo()).isEqualTo("HER-0009");
 		assertThat(editado.categoria()).isEqualTo("Jardín");
 		assertThat(editado.nombre()).isEqualTo("Taladro percutor 750 W");
+	}
+
+	// HU-08 RF-13: 12,5 m no se pueden volver unidades; 12 m sí
+	@Test
+	void unidadSinDecimalesConStockDecimalSeRechaza() {
+		Categoria jardin = categoria(2, "Jardín");
+		Producto manguera = Producto.crear("Manguera", null, null, BigDecimal.TEN, UnidadVenta.METRO, jardin,
+				List.of(), LocalDateTime.ofInstant(AHORA, ZONA));
+		ReflectionTestUtils.setField(manguera, "idProducto", 9L);
+		manguera.asignarCodigo("JAR-0009");
+		manguera.aplicarMovimiento(new BigDecimal("12.5"));
+		given(productoRepository.findConBloqueoByIdProducto(9L)).willReturn(Optional.of(manguera));
+
+		assertThatThrownBy(() -> servicio.editar(9L, solicitud(2, List.of())))
+				.isInstanceOfSatisfying(UnidadIncompatibleConStockException.class,
+						ex -> assertThat(ex.getCodigo()).isEqualTo("UNIDAD_INCOMPATIBLE_CON_STOCK"));
+		assertThat(manguera.getUnidad()).isEqualTo(UnidadVenta.METRO);
+
+		manguera.aplicarMovimiento(new BigDecimal("12.00"));
+		manguera.cambiarMinimo(new BigDecimal("1.5"));
+		assertThatThrownBy(() -> servicio.editar(9L, solicitud(2, List.of())))
+				.isInstanceOf(UnidadIncompatibleConStockException.class);
+
+		manguera.cambiarMinimo(new BigDecimal("2"));
+		assertThat(servicio.editar(9L, solicitud(2, List.of())).unidad()).isEqualTo(UnidadVenta.UNIDAD);
 	}
 
 	// HU-07 RF-11

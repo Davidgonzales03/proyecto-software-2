@@ -51,6 +51,8 @@ describe('rutas', () => {
     await import('./features/categorias/categorias.page');
     await import('./features/productos/productos.page');
     await import('./features/producto/producto.page');
+    await import('./features/inventario/inventario.page');
+    await import('./features/stock/stock.page');
   }, 60_000);
 
   afterEach(() => localStorage.clear());
@@ -91,6 +93,14 @@ describe('rutas', () => {
     expect(await navegarComo('ADMINISTRADOR', '/productos/nuevo')).toBe('/productos/nuevo');
     expect(await navegarComo('EMPLEADO', '/productos')).toBe('/');
     expect(await navegarComo('CLIENTE', '/productos/7')).toBe('/');
+  });
+
+  // HU-08 RF-1: el inventario es del Empleado, el Administrador y el Contador
+  it('el inventario es del empleado, el administrador y el contador', async () => {
+    expect(await navegarComo('EMPLEADO', '/inventario')).toBe('/inventario');
+    expect(await navegarComo('CONTADOR', '/inventario/7')).toBe('/inventario/7');
+    expect(await navegarComo('ADMINISTRADOR', '/inventario')).toBe('/inventario');
+    expect(await navegarComo('CLIENTE', '/inventario')).toBe('/');
   });
 
   // HU-05 RF-1

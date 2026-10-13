@@ -17,4 +17,9 @@ export class PanelPage {
 
 	protected readonly nombre = computed(() => this.sesion.usuario()?.nombre ?? '');
 	protected readonly esAdministrador = computed(() => this.sesion.rol() === 'ADMINISTRADOR');
+	// HU-08: el Contador lo ve sin poder registrar
+	protected readonly veInventario = computed(() => {
+		const rol = this.sesion.rol();
+		return rol === 'ADMINISTRADOR' || rol === 'EMPLEADO' || rol === 'CONTADOR';
+	});
 }
