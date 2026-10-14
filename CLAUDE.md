@@ -103,6 +103,13 @@ El repositorio puede ser **público**:
   lo indique.
 - **No instalar dependencias** (`npm install`, cambios en `pom.xml`) sin avisar
   primero.
+- **Las reglas se pueden cambiar.** Si una regla de este archivo o de
+  `docs/decisiones.md` (el diseño, la paleta, los tokens, una decisión
+  técnica) impide algo que mejoraría el proyecto (una librería, un patrón, lo
+  que recomiende una skill), la regla no manda: avisar al usuario con la
+  propuesta y la regla que choca, y cambiarla con fecha y motivo. No
+  esquivarla en silencio ni descartar la mejora por la regla. Quedan firmes
+  las de seguridad, las de commits y PR, y avisar antes de instalar.
 - Responder en español. Comandos de PowerShell en una sola línea.
 
 ### Uso de skills
@@ -124,19 +131,34 @@ cualquier skill:
   `-y`, aunque `find-skills` lo sugiera.
 - En `.claude/settings.local.json` quedan apagados `brainstorming`,
   `using-superpowers`, `using-git-worktrees`,
-  `finishing-a-development-branch`, `requesting-code-review` y
-  `spring-security-jwt`.
+  `finishing-a-development-branch`, `requesting-code-review`,
+  `spring-security-jwt`, `frontend-design` y `ui-ux-pro-max` (los dos últimos
+  los reemplaza `impeccable`).
+- **Diseño del frontend con `impeccable`** (pbakaus) y las skills de Emil
+  Kowalski (`emil-design-eng`, `animate`, `mobile-native`, `break-ui`,
+  `review-animations`…). `impeccable` va sin sus hooks y **sin `init`**: no
+  crea `PRODUCT.md` ni `DESIGN.md`, porque el producto está en este archivo y
+  el diseño en `docs/decisiones.md` → «Sistema de diseño». Sus subagentes
+  están en `.claude/agents/impeccable-*` (ignorados por git).
+- **Verificación en el navegador con `playwright-cli`** (Microsoft, instalado
+  global con `npm install -g @playwright/cli`; su skill en `.claude/skills/`).
+  Antes de pasar una pantalla a la prueba manual: abrirla sin ventana en
+  escritorio y en celular (`--device="iPhone 15"`), capturas y consola sin
+  errores. No reemplaza la prueba manual del usuario.
 
 ### Decisiones técnicas que ganan sobre lo que digan los skills
 
 Los skills de stack están escritos en general y a veces contradicen este
-proyecto. Ganan estas (detalle y motivo en `docs/decisiones.md`):
+proyecto. Por defecto ganan estas (detalle y motivo en
+`docs/decisiones.md`); si una skill propone algo mejor, se avisa y se cambia
+la decisión (ver «Las reglas se pueden cambiar»):
 
 - **Signal Forms** para los formularios nuevos (`@angular/forms/signals`). La
   guía de Angular de `ui-ux-pro-max` recomienda Reactive Forms: está
   desactualizada.
-- **Iconos con Lucide y animaciones con CSS,** aunque `frontend-design` o
-  `ui-ux-pro-max` sugieran otras librerías.
+- **Iconos con Lucide.** Las animaciones simples van con CSS; una librería
+  (de animación, carrusel, componentes) entra si mejora el proyecto y es
+  compatible con Angular 22, avisando antes.
 - **Pruebas del backend sobre H2** con el perfil `test`. Sin Testcontainers.
 - **Pruebas del frontend con Vitest** sobre jsdom. Sin Karma ni Jasmine.
 - **IDs `Long` autoincrementales.** No UUID ni IDs asignados.
@@ -157,11 +179,17 @@ Detalle y motivos en `docs/decisiones.md` → «Sistema de diseño (frontend)».
   de la API.
 - **Lecturas con `httpResource`; escrituras con `HttpClient`.**
 - **Estilos solo por tokens** de `frontend/src/styles/_tokens.scss`, y
-  componentes estilados con `:host`. Sin colores sueltos ni librerías de
-  componentes. Tema oscuro por defecto y claro a pedido.
+  componentes estilados con `:host`. Sin colores sueltos. Tema oscuro por
+  defecto y claro a pedido.
+- **Librerías permitidas si mejoran el proyecto,** compatibles con Angular 22 y
+  mantenidas, avisando antes de instalarlas. Una librería que trae su propio
+  aspecto se adapta a los tokens.
 - **Iconos con Lucide** (`@lucide/angular`), nunca emojis. **Animaciones con
-  CSS y `animate.enter`/`animate.leave`,** sin `@angular/animations`;
-  duraciones y curvas por tokens, y todo apagado con `prefers-reduced-motion`.
+  CSS y `animate.enter`/`animate.leave`** cuando alcanzan, o con una librería
+  si hace falta más (sin `@angular/animations`, que está deprecado);
+  duraciones y curvas por tokens, hasta 300 ms (400 solo en diálogos y paneles
+  laterales). Con `prefers-reduced-motion` nada se desplaza, pero los fundidos
+  quedan.
 - **En la interfaz no se menciona la universidad** ni que es un trabajo
   académico.
 

@@ -44,7 +44,9 @@ lista vive solo ahí: leerla en lugar de suponerla. Hoy son:
 
 - `/code-review`, siempre;
 - `/security-review` en seguridad, pagos y superficies nuevas;
-- `web-design-guidelines`, si hay frontend, bajando las reglas actualizadas.
+- `web-design-guidelines`, si hay frontend, bajando las reglas actualizadas;
+- `review-animations`, si hay animaciones nuevas o cambiadas;
+- `break-ui`, si hay pantallas nuevas que muestran datos.
 
 Cada hallazgo real se corrige con su prueba y se vuelve al paso 2. Los
 descartados se anotan con su motivo.

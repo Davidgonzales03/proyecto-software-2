@@ -109,6 +109,11 @@ Una historia está terminada cuando:
   nueva** para datos que vienen de afuera: subida de archivos, exportaciones,
   cualquier endpoint público.
 - `web-design-guidelines` sobre los componentes, si la historia tiene frontend.
+- `review-animations` sobre las animaciones nuevas o cambiadas, si las hay.
+  Solo se invoca a mano (`/review-animations`); un subagente sigue
+  `.claude/skills/review-animations/SKILL.md` leyéndolo.
+- `break-ui` sobre las pantallas nuevas que muestran datos (listas, tarjetas,
+  fichas): con los peores datos realistas, antes de la prueba manual.
 
 ## Dónde va cada commit de una historia
 
