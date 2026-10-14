@@ -93,22 +93,21 @@ a {
 @keyframes app-aparecer {
 	from {
 		opacity: 0;
-		transform: translateY(8px);
+		transform: translateY(var(--app-desplazamiento));
 	}
 }
 
 // Cada pantalla es el hermano del router-outlet dentro de <main>
 main > :not(router-outlet) {
 	display: block;
-	animation: app-aparecer var(--app-duracion-lenta) var(--app-curva-salida);
+	animation: app-aparecer var(--app-duracion-media) var(--app-curva-salida);
 }
 
+// Movimiento reducido: nada se desplaza, pero los fundidos y los cambios de
+// color quedan, porque ayudan a ver qué cambió. Lo que mueva algo con transform
+// usa --app-desplazamiento o va dentro de prefers-reduced-motion: no-preference
 @media (prefers-reduced-motion: reduce) {
-	*,
-	*::before,
-	*::after {
-		animation-duration: 0.01ms !important;
-		animation-iteration-count: 1 !important;
-		transition-duration: 0.01ms !important;
+	:root {
+		--app-desplazamiento: 0px;
 	}
 }
