@@ -57,11 +57,12 @@ form {
 	gap: var(--app-espacio-1);
 }
 
-// Las etiquetas van como rótulo: monoespaciada, en mayúsculas y espaciada
+// Las etiquetas van como rótulo: en mayúsculas y espaciadas. La monoespaciada
+// queda para los datos (decisiones.md → Tipografía)
 label {
-	font-family: var(--app-familia-datos);
+	font-family: var(--app-familia-texto);
 	font-size: 12px;
-	font-weight: 500;
+	font-weight: 600;
 	letter-spacing: 0.06em;
 	text-transform: uppercase;
 	color: var(--app-texto-suave);

@@ -66,16 +66,24 @@
 	--app-familia-texto: Barlow, 'Segoe UI', system-ui, -apple-system, sans-serif;
 	--app-familia-datos: 'JetBrains Mono', ui-monospace, Consolas, monospace;
 
-	// Movimiento: de 150 a 400 ms, solo transform y opacity (decisiones.md →
-	// Reglas que valen para toda la interfaz). Todo se apaga con
-	// prefers-reduced-motion (styles.scss)
+	// Movimiento: sin recalcular el layout (transform, opacity, clip-path,
+	// filter), hasta 300 ms; 400 ms solo para diálogos y paneles laterales
+	// (decisiones.md → Reglas que valen para toda la interfaz). Con
+	// prefers-reduced-motion se quita el desplazamiento y quedan los fundidos
+	// (styles.scss)
 	--app-duracion-rapida: 150ms;
 	--app-duracion-media: 250ms;
 	--app-duracion-lenta: 400ms;
-	// Sale rápido y frena al llegar: para lo que entra y para responder a una acción
-	--app-curva-salida: cubic-bezier(0.2, 0, 0, 1);
-	// Arranca lento y se va rápido: para lo que sale
-	--app-curva-entrada: cubic-bezier(0.4, 0, 1, 1);
+	// Cuánto sube lo que aparece; 0 con movimiento reducido
+	--app-desplazamiento: 8px;
+	// Sale rápido y frena al llegar: para lo que entra y para responder a una
+	// acción. Fuerte: las curvas de CSS (ease-out) se sienten blandas
+	--app-curva-salida: cubic-bezier(0.23, 1, 0.32, 1);
+	// Acelera y frena: para lo que se mueve dentro de la pantalla (un carrusel)
+	--app-curva-mover: cubic-bezier(0.77, 0, 0.175, 1);
+	// Arranca lento: solo para lo que se va, y con la duración rápida. Nunca para
+	// entrar ni para responder, porque se siente lento
+	--app-curva-irse: cubic-bezier(0.4, 0, 1, 1);
 	// Respuesta a hover y foco: color, fondo y borde
 	--app-transicion: var(--app-duracion-rapida) var(--app-curva-salida);
 

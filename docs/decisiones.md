@@ -346,11 +346,19 @@ de control), en los dos modos.
 
 *09/10/2026 (chore #8).* **Barlow Condensed** para los títulos (600/700),
 como la rotulación de una ferretería; **Barlow** para el texto (400/500/600) y
-**JetBrains Mono** para las etiquetas de los campos, los precios y los datos
+**JetBrains Mono** para los precios y los datos
 (400/500). De Google Fonts y con su pila de reserva. Las etiquetas van en
 mayúsculas y espaciadas, como un rótulo. Escala de 12, 14, 16 (base), 18, 20,
 22, 28 y 34 px; interlineado 1.5 en el texto y 1.1 en los títulos. Sobre fondo
 oscuro el texto fino se deshace, así que el cuerpo no baja de 400.
+
+*14/10/2026, con la skill `impeccable`.* **La monoespaciada es solo para
+datos:** precios, códigos, cantidades y contadores. Las etiquetas de los
+campos, los encabezados de tabla y las leyendas pasan a Barlow 600, en
+mayúsculas y espaciadas. **Motivo:** la monoespaciada en las etiquetas era un
+disfraz de «técnico»; en los datos alinea las cifras y se lee como medida.
+**Sin antetítulos** (la etiqueta chica en mayúsculas encima de un título): el
+título se sostiene solo.
 
 ### Reglas que valen para toda la interfaz
 
@@ -361,20 +369,34 @@ oscuro el texto fino se deshace, así que el cuerpo no baja de 400.
 - **Animaciones permitidas:** entradas y salidas de pantallas, listas,
   diálogos y avisos; estados de carga (esqueletos, indicadores); respuesta a
   cada acción (hover, clic, envío). Con CSS y `animate.enter` /
-  `animate.leave` de Angular, **sin `@angular/animations`** (deprecado) ni
-  librerías de animación. Duración de 150 a 400 ms; solo `transform` y
-  `opacity` (no `width`, `height` ni `top`); las duraciones y curvas salen de
-  tokens (`--app-duracion-*`, `--app-curva-*`). Ninguna animación bloquea al
-  usuario ni retrasa lo que pidió. **Todo se apaga con
-  `prefers-reduced-motion`.**
+  `animate.leave` de Angular cuando alcanzan, **sin `@angular/animations`**
+  (deprecado); si hace falta más (resortes, gestos, carruseles), una librería
+  según la regla de abajo. Solo propiedades que no recalculan el layout:
+  `transform` y `opacity`, y también `clip-path`, `filter` (desenfoque corto)
+  y sombras cuando se mantienen fluidas (no `width`, `height` ni `top`); las duraciones y curvas salen de tokens (`--app-duracion-*`,
+  `--app-curva-*`). Ninguna animación bloquea al usuario ni retrasa lo que
+  pidió.
+  *14/10/2026, con las skills de Emil Kowalski:* **hasta 300 ms en la
+  interfaz;** 400 ms solo para diálogos y paneles laterales. **Lo que entra o
+  responde a una acción usa una curva que arranca rápido** (`--app-curva-salida`,
+  fuerte); la que arranca lento (`--app-curva-irse`) solo sirve para lo que se
+  va, y corta. Lo que se mueve dentro de la pantalla usa `--app-curva-mover`.
+  **Con `prefers-reduced-motion` se quita el desplazamiento, no los fundidos:**
+  nada se mueve de lugar, pero la opacidad y el color siguen cambiando, porque
+  ayudan a entender qué cambió (antes se apagaba todo).
 - **Áreas tocables de 44 px** y foco visible en todo lo que se use con teclado.
 - **Iconos con [Lucide](https://lucide.dev)** (`@lucide/angular`, el paquete oficial actual; `lucide-angular` no soporta Angular 22), la librería
   de iconos abierta más usada: trazo uniforme, licencia ISC y se importa icono
   por icono, así que el bundle solo lleva los que se usan. Nunca emojis. Un
   icono solo, sin texto, lleva `aria-label`; uno junto a su texto,
   `aria-hidden="true"`. El tamaño y el color salen de tokens.
-- **Sin librerías de componentes ni de estilos** (Angular Material, PrimeNG,
-  Tailwind, Bootstrap): Lucide es la única excepción, y solo para iconos.
+- *14/10/2026.* **Librerías permitidas si mejoran el proyecto** (antes: sin
+  librerías de componentes ni de estilos, salvo Lucide). Condiciones: que sea
+  compatible con Angular 22 y esté mantenida, que se avise antes de
+  instalarla, y que su aspecto se adapte a los tokens (colores, radios,
+  tipografía), para que la interfaz siga siendo una sola. **Motivo:** la regla
+  venía de otro proyecto; acá limitaba el rediseño del catálogo (carruseles,
+  animaciones) sin una razón propia.
 - **Espaciado** en múltiplos de 4 px; radio de 8 px en tarjetas y 6 px en
   campos y botones (más recto, como el prototipo); ancho máximo del contenido de 1120 px.
 - *09/10/2026.* **El encabezado queda fijo arriba y, al bajar, se vuelve
@@ -408,6 +430,14 @@ oscuro el texto fino se deshace, así que el cuerpo no baja de 400.
 - **Pruebas con Vitest sobre jsdom,** sin Karma ni Jasmine, y **sin pruebas de
   extremo a extremo automatizadas:** el flujo completo se prueba a mano contra el
   backend levantado.
+  *14/10/2026.* Mientras tanto, cada pantalla se revisa con `playwright-cli`
+  (escritorio y celular) antes de la prueba manual. **Cuando el proyecto esté
+  casi completo** (catálogo, carrito, pedido y pago estables): una **revisión
+  total** del proyecto y pruebas de extremo a extremo **solo del camino
+  principal** (registro → catálogo → carrito → pedido → pago simulado → mis
+  pedidos), unas 10 a 15 en el CI. **Motivo:** por historia costarían de 10 a
+  20 % más de trabajo cada una y se romperían con el rediseño; al final son un
+  costo fijo (~4 min de CI) sobre pantallas que ya no cambian.
 
 ---
 

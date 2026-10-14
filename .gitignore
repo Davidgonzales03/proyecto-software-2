@@ -39,9 +39,15 @@ Desktop.ini
 # Skills de agentes (instalados localmente, no forman parte del sistema)
 .agents/
 .claude/skills/
+.claude/agents/impeccable-*
+# playwright-cli: configuración de cada máquina, capturas y sesiones
+.playwright/
+.playwright-cli/
 .claude/settings.local.json
 skills-lock.json
 .superpowers/
 
 # Documentación académica: se trabaja fuera del repositorio
 /documentacion/
+# Playwright CLI output (may contain credentials)
+.playwright-cli/

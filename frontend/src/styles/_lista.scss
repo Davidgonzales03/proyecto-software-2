@@ -19,9 +19,9 @@ h1 {
 }
 
 label {
-	font-family: var(--app-familia-datos);
+	font-family: var(--app-familia-texto);
 	font-size: 12px;
-	font-weight: 500;
+	font-weight: 600;
 	letter-spacing: 0.06em;
 	text-transform: uppercase;
 	color: var(--app-texto-suave);
@@ -55,9 +55,9 @@ table {
 thead th {
 	background: var(--app-superficie);
 	color: var(--app-texto-suave);
-	font-family: var(--app-familia-datos);
+	font-family: var(--app-familia-texto);
 	font-size: 12px;
-	font-weight: 500;
+	font-weight: 600;
 	letter-spacing: 0.06em;
 	text-transform: uppercase;
 	text-align: left;
