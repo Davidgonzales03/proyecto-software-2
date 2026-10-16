@@ -28,6 +28,14 @@ describe('CategoriasService', () => {
 
   afterEach(() => http.verify());
 
+  // HU-06 RF-11, HU-09 RF-9: las visibles, para el filtro de la tienda
+  it('pide las categorías públicas', () => {
+    TestBed.runInInjectionContext(() => servicio.catalogo());
+    TestBed.tick();
+
+    http.expectOne('/api/categorias').flush([]);
+  });
+
   // HU-06 RF-2, RF-3
   it('crea con los datos recortados y sin descripción vacía', async () => {
     const promesa = servicio.crear({ nombre: '  Jardín ', descripcion: '   ' });

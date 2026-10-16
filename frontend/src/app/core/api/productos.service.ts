@@ -24,6 +24,7 @@ interface SolicitudDeProducto {
 	unidad: UnidadVenta;
 	precio: number | null;
 	ficha: Caracteristica[];
+	destacado: boolean;
 }
 
 // Llamadas a /api/gestion/productos (HU-07). Solo el administrador llega: el
@@ -94,6 +95,7 @@ function solicitud(datos: DatosDeProducto): SolicitudDeProducto {
 		ficha: datos.ficha
 			.map((par) => ({ nombre: par.nombre.trim(), valor: par.valor.trim() }))
 			.filter((par) => par.nombre !== '' || par.valor !== ''),
+		destacado: datos.destacado,
 	};
 }
 

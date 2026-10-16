@@ -22,6 +22,7 @@ const TALADRO: Producto = {
   fechaAlta: '2026-10-10T09:00:00',
   ficha: [{ nombre: 'Potencia', valor: '750 W' }],
   imagenes: ['a.png', 'b.png'],
+  destacado: false,
 };
 
 const PAGINA: Pagina<ProductoResumen> = {
@@ -45,6 +46,7 @@ const DATOS: DatosDeProducto = {
     { nombre: ' Potencia ', valor: ' 750 W ' },
     { nombre: ' ', valor: '' },
   ],
+  destacado: true,
 };
 
 // HU-07: llamadas a /api/gestion/productos
@@ -111,6 +113,8 @@ describe('ProductosService', () => {
       unidad: 'UNIDAD',
       precio: 420.5,
       ficha: [{ nombre: 'Potencia', valor: '750 W' }],
+      // HU-09 RF-4
+      destacado: true,
     });
     peticion.flush(TALADRO, { status: 201, statusText: 'Created' });
 

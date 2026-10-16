@@ -11,7 +11,7 @@ import bo.edu.uagrm.tienda.entity.UnidadVenta;
 // primera es la principal
 public record ProductoResponse(Long idProducto, String codigo, String nombre, String marca, String descripcion,
 		BigDecimal precio, UnidadVenta unidad, Long idCategoria, String categoria, boolean activo,
-		LocalDateTime fechaAlta, List<CaracteristicaResponse> ficha, List<String> imagenes) {
+		LocalDateTime fechaAlta, List<CaracteristicaResponse> ficha, List<String> imagenes, boolean destacado) {
 
 	// Lee la categoría y las colecciones: dentro de la transacción
 	public static ProductoResponse from(Producto producto) {
@@ -19,6 +19,6 @@ public record ProductoResponse(Long idProducto, String codigo, String nombre, St
 				producto.getMarca(), producto.getDescripcion(), producto.getPrecio(), producto.getUnidad(),
 				producto.getCategoria().getIdCategoria(), producto.getCategoria().getNombre(), producto.isActivo(),
 				producto.getFechaAlta(), producto.getFicha().stream().map(CaracteristicaResponse::from).toList(),
-				List.copyOf(producto.getImagenes()));
+				List.copyOf(producto.getImagenes()), producto.isDestacado());
 	}
 }

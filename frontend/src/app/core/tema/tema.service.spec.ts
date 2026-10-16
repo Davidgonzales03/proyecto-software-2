@@ -47,7 +47,7 @@ describe('TemaService', () => {
     delete document.documentElement.dataset['tema'];
     meta = document.createElement('meta');
     meta.name = 'theme-color';
-    meta.content = '#0b1020';
+    meta.content = '#0c3326';
     document.head.appendChild(meta);
     TestBed.resetTestingModule();
   });
@@ -65,7 +65,7 @@ describe('TemaService', () => {
 
     expect(servicio.tema()).toBe('oscuro');
     expect(document.documentElement.dataset['tema']).toBeUndefined();
-    expect(meta.content).toBe('#0b1020');
+    expect(meta.content).toBe('#0c3326');
   });
 
   it('alternar pasa a claro, lo aplica al documento y lo recuerda', () => {
@@ -76,7 +76,7 @@ describe('TemaService', () => {
 
     expect(servicio.tema()).toBe('claro');
     expect(document.documentElement.dataset['tema']).toBe('claro');
-    expect(meta.content).toBe('#f6f7fb');
+    expect(meta.content).toBe('#f2efe6');
     expect(localStorage.getItem(CLAVE_TEMA)).toBe('claro');
   });
 
@@ -90,7 +90,7 @@ describe('TemaService', () => {
 
     expect(servicio.tema()).toBe('oscuro');
     expect(document.documentElement.dataset['tema']).toBeUndefined();
-    expect(meta.content).toBe('#0b1020');
+    expect(meta.content).toBe('#0c3326');
     expect(localStorage.getItem(CLAVE_TEMA)).toBe('oscuro');
   });
 

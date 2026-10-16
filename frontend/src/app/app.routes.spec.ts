@@ -63,12 +63,15 @@ describe('rutas', () => {
   it('la gestión de usuarios es solo del administrador', async () => {
     expect(await navegarComo('ADMINISTRADOR', '/usuarios')).toBe('/usuarios');
     expect(await navegarComo('CLIENTE', '/usuarios')).toBe('/');
-    expect(await navegarComo('EMPLEADO', '/usuarios')).toBe('/');
+    // HU-09 RF-16: el personal sin permiso vuelve a su panel
+    expect(await navegarComo('EMPLEADO', '/usuarios')).toBe('/panel');
   });
 
   // HU-02 RF-12: con la sesión iniciada no tiene sentido volver a entrar
   it('con sesión, iniciar sesión lleva al inicio', async () => {
     expect(await navegarComo('CLIENTE', '/inicio-sesion')).toBe('/');
+    // HU-09 RF-16
+    expect(await navegarComo('CONTADOR', '/inicio-sesion')).toBe('/panel');
   });
 
   // HU-01 RF-14
@@ -84,14 +87,14 @@ describe('rutas', () => {
   // HU-06 RF-1: la gestión de categorías es del administrador
   it('la gestión de categorías es solo del administrador', async () => {
     expect(await navegarComo('ADMINISTRADOR', '/categorias')).toBe('/categorias');
-    expect(await navegarComo('EMPLEADO', '/categorias')).toBe('/');
+    expect(await navegarComo('EMPLEADO', '/categorias')).toBe('/panel');
   });
 
   // HU-07 RF-1: la gestión de productos es del administrador
   it('la gestión de productos es solo del administrador', async () => {
     expect(await navegarComo('ADMINISTRADOR', '/productos')).toBe('/productos');
     expect(await navegarComo('ADMINISTRADOR', '/productos/nuevo')).toBe('/productos/nuevo');
-    expect(await navegarComo('EMPLEADO', '/productos')).toBe('/');
+    expect(await navegarComo('EMPLEADO', '/productos')).toBe('/panel');
     expect(await navegarComo('CLIENTE', '/productos/7')).toBe('/');
   });
 
@@ -109,10 +112,13 @@ describe('rutas', () => {
   });
 
   // La portada es el panel: pide sesión y, sin ella, vuelve a la portada al entrar
-  it('la portada pide sesión', async () => {
-    expect(await navegarComo(null, '/')).toBe('/inicio-sesion?destino=%2F');
-    expect(await navegarComo('CLIENTE', '/')).toBe('/');
+  // HU-09 RF-1: la tienda es para todos; RF-16: el panel pide sesión
+  it('la portada y el catálogo son públicos; el panel pide sesión', async () => {
+    expect(await navegarComo(null, '/')).toBe('/');
+    expect(await navegarComo(null, '/catalogo?q=pala')).toBe('/catalogo?q=pala');
     expect(await navegarComo('EMPLEADO', '/')).toBe('/');
+    expect(await navegarComo(null, '/panel')).toBe('/inicio-sesion?destino=%2Fpanel');
+    expect(await navegarComo('EMPLEADO', '/panel')).toBe('/panel');
   });
 
   it('mis datos pide sesión', async () => {

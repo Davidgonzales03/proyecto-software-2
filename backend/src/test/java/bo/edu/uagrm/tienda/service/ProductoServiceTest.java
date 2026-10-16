@@ -90,8 +90,12 @@ class ProductoServiceTest {
 	}
 
 	private static ProductoRequest solicitud(long idCategoria, List<CaracteristicaRequest> ficha) {
+		return solicitud(idCategoria, ficha, null);
+	}
+
+	private static ProductoRequest solicitud(long idCategoria, List<CaracteristicaRequest> ficha, Boolean destacado) {
 		return new ProductoRequest("  Taladro percutor 750 W ", " Bosch ", "  ", idCategoria, UnidadVenta.UNIDAD,
-				new BigDecimal("420.00"), ficha);
+				new BigDecimal("420.00"), ficha, destacado);
 	}
 
 	// HU-07 RF-2, RF-3, RF-4
@@ -172,6 +176,20 @@ class ProductoServiceTest {
 		assertThat(editado.codigo()).isEqualTo("HER-0009");
 		assertThat(editado.categoria()).isEqualTo("Jardín");
 		assertThat(editado.nombre()).isEqualTo("Taladro percutor 750 W");
+	}
+
+	// HU-09 RF-4: sin decirlo, un producto nuevo no es destacado; al editarlo se marca y se desmarca
+	@Test
+	void editarCambiaDestacado() {
+		categoria(3, "Herramientas eléctricas");
+		guardaConNumero(1);
+		assertThat(servicio.crear(solicitud(3, List.of())).destacado()).isFalse();
+
+		Producto taladro = existente(9, Categoria.crear("Herramientas", null), "HER-0009");
+
+		assertThat(servicio.editar(9L, solicitud(3, List.of(), true)).destacado()).isTrue();
+		assertThat(taladro.isDestacado()).isTrue();
+		assertThat(servicio.editar(9L, solicitud(3, List.of(), false)).destacado()).isFalse();
 	}
 
 	// HU-08 RF-13: 12,5 m no se pueden volver unidades; 12 m sí

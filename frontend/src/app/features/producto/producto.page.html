@@ -130,6 +130,11 @@
       </div>
     </div>
 
+    <label class="casilla" for="destacado">
+      <input id="destacado" type="checkbox" [formField]="formulario.destacado" />
+      <span>Destacado <span class="opcional">(sale primero en la portada de la tienda)</span></span>
+    </label>
+
     <div class="campo">
       @let errorDescripcion = mensaje(formulario.descripcion(), 'descripcion');
       <label for="descripcion">Descripción <span class="opcional">(opcional)</span></label>

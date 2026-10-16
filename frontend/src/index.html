@@ -5,7 +5,7 @@
   <title>Tienda Montero</title>
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#0b1020">
+  <meta name="theme-color" content="#0c3326">
   <!-- Aplica el modo claro antes de pintar, si fue lo elegido: sin esto la
        página aparece oscura un instante y después cambia. La clave es la de
        core/tema/almacen-tema.ts; desde ahí sigue TemaService -->
@@ -13,7 +13,7 @@
     try {
       if (localStorage.getItem('app.tema') === 'claro') {
         document.documentElement.dataset.tema = 'claro';
-        document.querySelector('meta[name="theme-color"]').content = '#f6f7fb';
+        document.querySelector('meta[name="theme-color"]').content = '#f2efe6';
       }
     } catch (e) {}
   </script>
@@ -22,7 +22,7 @@
        pide en paralelo en vez de esperar a descargar la hoja de estilos -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
 </head>
 <body>
   <app-root></app-root>

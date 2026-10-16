@@ -1,0 +1,281 @@
+// El letrero de ruta (DESIGN.md): la ventana fija con la leyenda amarilla, la
+// cinta de secciones cortada en sesgo y las secciones sobre placas de lona
+:host {
+	display: flex;
+	flex-direction: column;
+	gap: var(--app-espacio-6);
+}
+
+// Cuando deja de verse, el letrero ya quedó fijo arriba y se achica
+.marcador {
+	height: 1px;
+	margin-bottom: calc(var(--app-espacio-6) * -1 - 1px);
+}
+
+.letrero {
+	position: sticky;
+	top: var(--app-alto-cabecera, 0px);
+	z-index: 4;
+	display: flex;
+	flex-direction: column;
+	gap: var(--app-espacio-3);
+	padding-block: var(--app-espacio-3);
+	background: var(--app-fondo) var(--app-textura-lona);
+	background-blend-mode: soft-light;
+}
+
+// El borde de entrada de la ventana va cortado en sesgo, como la lona
+.ventana {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--app-espacio-4);
+	padding: var(--app-espacio-4) clamp(var(--app-espacio-4), 4vw, var(--app-espacio-12));
+	padding-left: clamp(var(--app-espacio-8), 6vw, 72px);
+	background: var(--app-ventana);
+	box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--app-ambar) 30%, transparent);
+	clip-path: polygon(28px 0, 100% 0, 100% 100%, 0 100%);
+}
+
+// La leyenda vieja sube y sale mientras la nueva entra desde abajo: un paso
+// entero del rollo, que se pasa un poco y se asienta
+.marco {
+	display: grid;
+	min-width: 0;
+	overflow: hidden;
+}
+
+.leyenda {
+	grid-area: 1 / 1;
+	margin: 0;
+	color: var(--app-ambar);
+	font-family: var(--app-familia-titulos);
+	font-size: clamp(44px, 13vw, 140px);
+	font-weight: 800;
+	line-height: 1;
+	letter-spacing: 0.01em;
+	text-transform: uppercase;
+	hyphens: auto;
+	overflow-wrap: break-word;
+}
+
+.compacto .ventana {
+	flex-wrap: nowrap;
+	padding-block: var(--app-espacio-2);
+}
+
+.compacto .marco {
+	flex: 1 1 0;
+}
+
+.compacto .leyenda {
+	font-size: clamp(26px, 4vw, 40px);
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	overflow: hidden;
+}
+
+// El paso del rollo con transiciones, que retoman desde donde están si se
+// encadenan pasos: la nueva entra desde abajo y se asienta; la vieja sube
+.leyenda {
+	transition: transform var(--app-duracion-media) var(--app-curva-paso);
+
+	@starting-style {
+		transform: translateY(100%);
+	}
+}
+
+.paso-sale {
+	transform: translateY(-100%);
+	transition: transform var(--app-duracion-media) var(--app-curva-salida);
+}
+
+// Con movimiento reducido la leyenda cambia sin desplazarse
+@media (prefers-reduced-motion: reduce) {
+	.leyenda {
+		transition: opacity var(--app-duracion-media) var(--app-curva-salida);
+
+		@starting-style {
+			transform: none;
+			opacity: 0;
+		}
+	}
+
+	.paso-sale {
+		display: none;
+	}
+}
+
+// La posición en el rollo, como el número de paso del letrero: «2 / 5»
+.posicion {
+	flex: none;
+	margin: 0;
+	color: var(--app-ambar);
+	font-family: var(--app-familia-titulos);
+	font-size: clamp(22px, 3vw, 32px);
+	font-weight: 700;
+	font-variant-numeric: tabular-nums;
+	letter-spacing: 0.04em;
+	opacity: 0.85;
+}
+
+// El rollo trabado: la mitad de abajo de una leyenda y la de arriba de la
+// siguiente, encontradas en una costura
+.atascada .marco {
+	display: flex;
+	flex-direction: column;
+}
+
+.mitad {
+	display: block;
+	height: 0.5em;
+	overflow: hidden;
+	font-size: clamp(44px, 13vw, 140px);
+	line-height: 1;
+}
+
+.mitad .leyenda {
+	display: block;
+	transition: none;
+	font-size: 1em;
+}
+
+.mitad.arriba .leyenda {
+	transform: translateY(-50%);
+}
+
+.mitad.abajo {
+	border-top: 2px dashed color-mix(in srgb, var(--app-ambar) 60%, transparent);
+}
+
+// La cinta: cada sección es un corte de lona en sesgo; la actual, lona clara
+.cinta {
+	display: flex;
+	gap: var(--app-espacio-2);
+	padding: 2px var(--app-espacio-2) 2px var(--app-espacio-3);
+	overflow-x: auto;
+	scrollbar-width: none;
+}
+
+.cinta button {
+	flex: none;
+	min-height: var(--app-area-tocable);
+	padding: 0 var(--app-espacio-4);
+	border: 2px solid currentColor;
+	background: transparent;
+	color: var(--app-texto);
+	font-family: var(--app-familia-titulos);
+	font-size: 18px;
+	font-weight: 700;
+	letter-spacing: 0.05em;
+	text-transform: uppercase;
+	cursor: pointer;
+	transform: skewX(var(--app-sesgo));
+	transition:
+		box-shadow var(--app-transicion),
+		transform var(--app-duracion-rapida) var(--app-curva-salida);
+}
+
+.cinta button {
+	max-width: min(24ch, 70vw);
+}
+
+.cinta button span {
+	display: block;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	transform: skewX(calc(var(--app-sesgo) * -1));
+}
+
+@media (hover: hover) and (pointer: fine) {
+	.cinta button:not(.actual):hover {
+		box-shadow: inset 0 0 0 2px currentColor;
+	}
+}
+
+.cinta button:active {
+	transform: skewX(var(--app-sesgo)) scale(0.96);
+}
+
+.cinta button.actual {
+	border-color: var(--app-lona);
+	background: var(--app-lona);
+	color: var(--app-sobre-lona);
+}
+
+.secciones {
+	display: flex;
+	flex-direction: column;
+	gap: var(--app-espacio-6);
+}
+
+// Una placa de lona cruda por sección, con su costura amarilla arriba. Sobre la
+// lona los enlaces van en verde: el amarillo no se lee ahí
+.placa {
+	--app-acento-texto: var(--app-sobre-lona);
+	padding: var(--app-espacio-6) clamp(var(--app-espacio-4), 3vw, var(--app-espacio-8));
+	background: var(--app-lona-tejida) var(--app-textura-cruda);
+	background-blend-mode: soft-light;
+	color: var(--app-sobre-lona);
+	border-top: 2px dashed var(--app-ambar);
+	outline: 1px solid var(--app-ambar);
+	outline-offset: -1px;
+	scroll-margin-top: calc(var(--app-alto-cabecera, 0px) + var(--app-alto-letrero, 140px) + 16px);
+}
+
+.placa:focus {
+	outline: none;
+}
+
+.vacio,
+.cargando {
+	margin: 0;
+	color: var(--app-texto-suave);
+	font-size: 18px;
+}
+
+.vacio p {
+	margin: 0;
+}
+
+.tarjeta-error {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: var(--app-espacio-3);
+}
+
+.aviso {
+	margin: 0;
+	padding: var(--app-espacio-3);
+	border: 1px solid var(--app-error);
+	background: var(--app-error-fondo);
+	color: var(--app-error);
+}
+
+.secundario {
+	min-height: var(--app-area-tocable);
+	padding: 0 var(--app-espacio-4);
+	border: 2px solid var(--app-texto);
+	background: transparent;
+	color: var(--app-texto);
+	font: inherit;
+	font-weight: 600;
+	cursor: pointer;
+}
+
+.solo-lectores {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	clip-path: inset(50%);
+	white-space: nowrap;
+}
+
+// En el modo claro la lona clara se pierde sobre el fondo: la actual lleva borde
+:host-context([data-tema='claro']) .cinta button.actual {
+	border-color: var(--app-sobre-lona);
+}

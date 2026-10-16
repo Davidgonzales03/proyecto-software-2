@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.ColumnDefault;
@@ -81,6 +83,16 @@ public class Producto {
 	@Column(name = "stock_minimo", precision = 9, scale = 2)
 	private BigDecimal stockMinimo;
 
+	// La portada lo muestra en «Destacados» (HU-09). El valor por defecto completa los productos que ya existían
+	@ColumnDefault("false")
+	@Column(nullable = false)
+	private boolean destacado;
+
+	// Nombre, marca y código sin tildes ni mayúsculas, para que la búsqueda del catálogo los ignore igual en H2 y en
+	// MySQL (HU-09 RF-8). Los productos que ya existían la reciben al arrancar (BusquedaAlArrancar)
+	@Column(length = 250)
+	private String busqueda;
+
 	@ElementCollection
 	@CollectionTable(name = "producto_caracteristica", joinColumns = @JoinColumn(name = "id_producto"))
 	@OrderColumn(name = "posicion")
@@ -114,6 +126,7 @@ public class Producto {
 		this.categoria = Objects.requireNonNull(categoria);
 		this.ficha.clear();
 		this.ficha.addAll(ficha);
+		actualizarBusqueda();
 	}
 
 	public void asignarCodigo(String codigo) {
@@ -121,6 +134,21 @@ public class Producto {
 			throw new IllegalStateException("El código de un producto no cambia");
 		}
 		this.codigo = Objects.requireNonNull(codigo);
+		actualizarBusqueda();
+	}
+
+	public void marcarDestacado(boolean destacado) {
+		this.destacado = destacado;
+	}
+
+	public void actualizarBusqueda() {
+		this.busqueda = textoDeBusqueda(Stream.of(nombre, marca, codigo).filter(Objects::nonNull)
+				.collect(Collectors.joining(" ")));
+	}
+
+	// Sin tildes, en minúsculas y con un solo espacio entre palabras: lo que se guarda y lo que se busca
+	public static String textoDeBusqueda(String texto) {
+		return Categoria.clave(texto).replaceAll("\\s+", " ");
 	}
 
 	public List<Caracteristica> getFicha() {

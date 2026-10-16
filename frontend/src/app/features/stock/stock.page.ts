@@ -20,7 +20,7 @@ import {
 	validate,
 } from '@angular/forms/signals';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { LucideArrowLeft, LucideTriangleAlert } from '@lucide/angular';
+import { LucideArrowLeft, LucideCircleSlash, LucideTriangleAlert } from '@lucide/angular';
 
 import { comoErrorApi } from '../../core/api/autenticacion.service';
 import { InventarioService } from '../../core/api/inventario.service';
@@ -68,7 +68,7 @@ const SIN_AJUSTE: DatosDeAjuste = { contada: '', motivo: 'CONTEO', nota: '' };
 // rechaza igual sus movimientos.
 @Component({
 	selector: 'app-stock',
-	imports: [FormField, RouterLink, LucideArrowLeft, LucideTriangleAlert],
+	imports: [FormField, RouterLink, LucideArrowLeft, LucideCircleSlash, LucideTriangleAlert],
 	templateUrl: './stock.page.html',
 	styleUrl: './stock.page.scss',
 	changeDetection: ChangeDetectionStrategy.OnPush,

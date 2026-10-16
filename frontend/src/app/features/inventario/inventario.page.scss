@@ -49,9 +49,16 @@ h1 {
 	white-space: nowrap;
 }
 
+// El nombre lleva a la ficha de stock: al pasar el cursor toma el acento, para
+// que se note que es un enlace
 tbody th a {
 	color: var(--app-texto);
 	text-underline-offset: 3px;
+	transition: color var(--app-transicion);
+}
+
+tbody th a:hover {
+	color: var(--app-acento-texto);
 }
 
 .unidad {

@@ -1,5 +1,5 @@
 // El modo de la interfaz que eligió la persona, guardado en el navegador
-// (docs/decisiones.md → Sistema de diseño (frontend)). Sin nada guardado, o si
+// (DESIGN.md → Paleta y modos). Sin nada guardado, o si
 // el almacenamiento no está disponible, el modo es el oscuro.
 export type Tema = 'oscuro' | 'claro';
 

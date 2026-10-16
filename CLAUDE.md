@@ -136,10 +136,12 @@ cualquier skill:
   los reemplaza `impeccable`).
 - **Diseño del frontend con `impeccable`** (pbakaus) y las skills de Emil
   Kowalski (`emil-design-eng`, `animate`, `mobile-native`, `break-ui`,
-  `review-animations`…). `impeccable` va sin sus hooks y **sin `init`**: no
-  crea `PRODUCT.md` ni `DESIGN.md`, porque el producto está en este archivo y
-  el diseño en `docs/decisiones.md` → «Sistema de diseño». Sus subagentes
-  están en `.claude/agents/impeccable-*` (ignorados por git).
+  `review-animations`…). `impeccable` va sin sus hooks. *16/10/2026:* es la
+  dueña de **`DESIGN.md`** (todo el sistema visual) y de **`PRODUCT.md`** (a
+  quién le habla la tienda y cómo se siente), los dos versionados; las reglas
+  de negocio siguen acá y en `docs/decisiones.md`. Sus fichas de pantalla van
+  en `.impeccable/surfaces/` y sus subagentes en `.claude/agents/impeccable-*`
+  (ignorados por git).
 - **Verificación en el navegador con `playwright-cli`** (Microsoft, instalado
   global con `npm install -g @playwright/cli`; su skill en `.claude/skills/`).
   Antes de pasar una pantalla a la prueba manual: abrirla sin ventana en
@@ -169,7 +171,9 @@ la decisión (ver «Las reglas se pueden cambiar»):
 
 ## Frontend (Angular)
 
-Detalle y motivos en `docs/decisiones.md` → «Sistema de diseño (frontend)».
+Lo visual (paleta, tipografía, forma, movimiento, componentes, reglas de la
+interfaz) está en **`DESIGN.md`**; lo técnico, en `docs/decisiones.md` →
+«Decisiones técnicas del frontend».
 
 - **Tres capas en `frontend/src/app/`:** `features/` (una carpeta por
   pantalla), `core/` (sesión, servicios HTTP, interceptores, guards, modelos) y
@@ -179,17 +183,14 @@ Detalle y motivos en `docs/decisiones.md` → «Sistema de diseño (frontend)».
   de la API.
 - **Lecturas con `httpResource`; escrituras con `HttpClient`.**
 - **Estilos solo por tokens** de `frontend/src/styles/_tokens.scss`, y
-  componentes estilados con `:host`. Sin colores sueltos. Tema oscuro por
-  defecto y claro a pedido.
+  componentes estilados con `:host`. Sin colores sueltos.
 - **Librerías permitidas si mejoran el proyecto,** compatibles con Angular 22 y
   mantenidas, avisando antes de instalarlas. Una librería que trae su propio
   aspecto se adapta a los tokens.
-- **Iconos con Lucide** (`@lucide/angular`), nunca emojis. **Animaciones con
-  CSS y `animate.enter`/`animate.leave`** cuando alcanzan, o con una librería
-  si hace falta más (sin `@angular/animations`, que está deprecado);
-  duraciones y curvas por tokens, hasta 300 ms (400 solo en diálogos y paneles
-  laterales). Con `prefers-reduced-motion` nada se desplaza, pero los fundidos
-  quedan.
+- **Iconos con Lucide** (`@lucide/angular`). **Animaciones con CSS y
+  `animate.enter`/`animate.leave`** cuando alcanzan, o con una librería si
+  hace falta más (sin `@angular/animations`, que está deprecado); sus reglas
+  (duraciones, curvas, movimiento reducido) están en `DESIGN.md`.
 - **En la interfaz no se menciona la universidad** ni que es un trabajo
   académico.
 
@@ -202,6 +203,8 @@ No cargar todo de entrada — consultar según la tarea:
 | Archivo | Cuándo consultarlo |
 |---|---|
 | `docs/flujo-sdd.md` | Antes de empezar una historia o un cambio a una historia. |
+| `DESIGN.md` | Antes de tocar cualquier pantalla o estilo: el sistema visual completo. |
+| `PRODUCT.md` | Al diseñar o escribir textos de la interfaz: público, personalidad y tono (de usted). |
 | `docs/decisiones.md` | **Antes de resolver cualquier ambigüedad.** Empezar por su índice y leer solo lo que toca la tarea; al agregar una decisión, sumarla al índice. |
 | `docs/historias/HU-XX.md` | La historia en curso y las que comparten entidades o pantallas con ella. |
 | `docs/planes/` | El plan de la historia en curso y su «Resultado». |

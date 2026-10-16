@@ -61,6 +61,7 @@ const VACIO: DatosDeProducto = {
 	unidad: 'UNIDAD',
 	precio: '',
 	ficha: [],
+	destacado: false,
 };
 
 // El mismo nombre sin importar mayúsculas, tildes ni espacios alrededor, como lo compara el backend
@@ -374,6 +375,7 @@ function aFormulario(producto: Producto): DatosDeProducto {
 		// Con coma, como se escribe en Bolivia; sin decimales de más
 		precio: String(producto.precio).replace('.', ','),
 		ficha: producto.ficha.map((par) => ({ ...par })),
+		destacado: producto.destacado,
 	};
 }
 
@@ -385,6 +387,7 @@ function mismosDatos(a: DatosDeProducto, b: DatosDeProducto): boolean {
 		a.idCategoria === b.idCategoria &&
 		a.unidad === b.unidad &&
 		a.precio === b.precio &&
+		a.destacado === b.destacado &&
 		a.ficha.length === b.ficha.length &&
 		a.ficha.every((par, i) => par.nombre === b.ficha[i].nombre && par.valor === b.ficha[i].valor)
 	);

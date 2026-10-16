@@ -1,5 +1,6 @@
 package bo.edu.uagrm.tienda.repository;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -41,6 +42,49 @@ public interface ProductoRepository extends JpaRepository<Producto, Long> {
 			""")
 	Page<Producto> inventario(@Param("texto") String texto, @Param("idCategoria") Long idCategoria,
 			@Param("activo") Boolean activo, @Param("soloBajo") boolean soloBajo, Pageable paginacion);
+
+	// Los productos de antes de HU-09, para BusquedaAlArrancar
+	List<Producto> findByBusquedaIsNull();
+
+	// Lo que el catálogo puede listar (HU-09 RF-2): activos de categorías visibles. Se repite en la consulta y en su
+	// conteo
+	String CATALOGO = """
+			from Producto p
+			where p.activo = true and p.categoria.visible = true
+			  and (:texto is null or p.busqueda like :texto escape '!')
+			  and (:idCategoria is null or p.categoria.idCategoria = :idCategoria)
+			  and (:marca is null or lower(p.marca) = :marca)
+			  and (:precioMin is null or p.precio >= :precioMin)
+			  and (:precioMax is null or p.precio <= :precioMax)
+			  and (:soloDisponibles = false or p.stock > 0)
+			""";
+
+	// texto llega como en buscar, pero ya sin tildes (Producto.textoDeBusqueda), y la marca en minúsculas. Los
+	// agotados van al final; después, el orden que pide la página (OrdenCatalogo)
+	@Query(value = "select p " + CATALOGO + " order by case when p.stock > 0 then 0 else 1 end",
+			countQuery = "select count(p) " + CATALOGO)
+	Page<Producto> catalogo(@Param("texto") String texto, @Param("idCategoria") Long idCategoria,
+			@Param("marca") String marca, @Param("precioMin") BigDecimal precioMin,
+			@Param("precioMax") BigDecimal precioMax, @Param("soloDisponibles") boolean soloDisponibles,
+			Pageable paginacion);
+
+	// Los carruseles de la portada (HU-09 RF-3, RF-7): solo disponibles; por categoría y solo destacados si se pide
+	@Query("""
+			select p from Producto p
+			where p.activo = true and p.categoria.visible = true and p.stock > 0
+			  and (:idCategoria is null or p.categoria.idCategoria = :idCategoria)
+			  and (:soloDestacados = false or p.destacado = true)
+			""")
+	List<Producto> vitrina(@Param("idCategoria") Long idCategoria, @Param("soloDestacados") boolean soloDestacados,
+			Pageable paginacion);
+
+	// El filtro por marca (HU-09 RF-9): las de lo que se puede listar, también agotado
+	@Query("""
+			select distinct p.marca from Producto p
+			where p.activo = true and p.categoria.visible = true and p.marca is not null
+			order by p.marca
+			""")
+	List<String> marcasDelCatalogo();
 
 	boolean existsByCategoria_IdCategoria(Long idCategoria);
 

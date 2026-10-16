@@ -105,6 +105,17 @@ describe('guards de ruta', () => {
       expect(router.serializeUrl(resultado as UrlTree)).toBe('/');
     });
 
+    // HU-09 RF-16: el inicio del personal es el panel; el del cliente, la tienda
+    it('sin permiso va al panel o a la tienda', () => {
+      sesion.iniciar(sesionCon('EMPLEADO'));
+      const empleado = correr(rolGuard as never, { rol: 'ADMINISTRADOR' }, '/usuarios');
+      expect(router.serializeUrl(empleado as UrlTree)).toBe('/panel');
+
+      sesion.iniciar(sesionCon('CLIENTE'));
+      const cliente = correr(rolGuard as never, { rol: 'ADMINISTRADOR' }, '/usuarios');
+      expect(router.serializeUrl(cliente as UrlTree)).toBe('/');
+    });
+
     it('sin sesión manda a iniciar sesión', () => {
       const resultado = correr(rolGuard as never, { rol: 'ADMINISTRADOR' }, '/usuarios');
 
@@ -124,6 +135,13 @@ describe('guards de ruta', () => {
       const resultado = correr(visitanteGuard as never) as UrlTree;
 
       expect(router.serializeUrl(resultado)).toBe('/');
+    });
+
+    // HU-09 RF-16
+    it('con sesión va al panel o a la tienda', () => {
+      sesion.iniciar(sesionCon('CONTADOR'));
+
+      expect(router.serializeUrl(correr(visitanteGuard as never) as UrlTree)).toBe('/panel');
     });
   });
 });

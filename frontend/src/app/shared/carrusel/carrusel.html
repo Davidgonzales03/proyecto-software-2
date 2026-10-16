@@ -1,0 +1,35 @@
+<section class="carrusel" [attr.aria-labelledby]="id">
+  <header>
+    <h2 [id]="id">{{ titulo() }}</h2>
+    <div class="acciones">
+      @if (desborda()) {
+        <button
+          type="button"
+          class="flecha"
+          [attr.aria-label]="'Anteriores de ' + titulo()"
+          [attr.aria-disabled]="alInicio()"
+          (click)="avanzar(-1)"
+        >
+          <svg lucideChevronLeft aria-hidden="true"></svg>
+        </button>
+        <button
+          type="button"
+          class="flecha"
+          [attr.aria-label]="'Siguientes de ' + titulo()"
+          [attr.aria-disabled]="alFinal()"
+          (click)="avanzar(1)"
+        >
+          <svg lucideChevronRight aria-hidden="true"></svg>
+        </button>
+      }
+      @if (enlace(); as destino) {
+        <a class="ver-todo" [routerLink]="destino" [queryParams]="parametros()">
+          Ver todo <svg lucideArrowRight aria-hidden="true"></svg>
+        </a>
+      }
+    </div>
+  </header>
+  <div class="pista" #pista (scroll)="medir()">
+    <ng-content />
+  </div>
+</section>

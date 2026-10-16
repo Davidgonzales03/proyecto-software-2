@@ -97,6 +97,14 @@ describe('InventarioPage', () => {
     return TestBed.inject(Router).url;
   }
 
+  // 16/10/2026: con stock 0 la marca es «Agotado», no «Stock bajo»
+  it('marca como agotado un producto sin stock', async () => {
+    await abrir('/inventario', (falso) => falso.recurso.value.set(pagina([{ ...MANGUERA, stock: 0 }])));
+
+    expect(texto()).toContain('Agotado');
+    expect(texto()).not.toContain('Stock bajo');
+  });
+
   // HU-08 RF-9, RF-10: código, nombre, categoría, stock con su unidad, mínimo, estado y stock bajo
   it('muestra el stock de cada producto con la marca de stock bajo', async () => {
     await abrir();

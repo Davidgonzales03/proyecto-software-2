@@ -1,0 +1,143 @@
+// Una fila del letrero (DESIGN.md → Letrero de ruta): título en condensada
+// mayúscula, flechas cortadas en sesgo y la pista que frena en cada tarjeta
+:host {
+	display: block;
+}
+
+header {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: end;
+	justify-content: space-between;
+	gap: var(--app-espacio-3);
+	margin-bottom: var(--app-espacio-4);
+}
+
+h2 {
+	font-size: clamp(28px, 4vw, 40px);
+	font-weight: 800;
+	letter-spacing: 0.02em;
+	text-transform: uppercase;
+}
+
+.acciones {
+	display: flex;
+	align-items: center;
+	gap: var(--app-espacio-2);
+}
+
+// Cortadas en sesgo, sin tinte: el relieve marca lo que se puede pulsar
+.flecha {
+	display: grid;
+	place-items: center;
+	width: var(--app-area-tocable);
+	height: var(--app-area-tocable);
+	border: 2px solid currentColor;
+	background: transparent;
+	color: inherit;
+	cursor: pointer;
+	transform: skewX(var(--app-sesgo));
+	transition:
+		box-shadow var(--app-transicion),
+		transform var(--app-duracion-rapida) var(--app-curva-salida);
+}
+
+.flecha svg {
+	width: 22px;
+	height: 22px;
+	// El ícono va derecho dentro del corte
+	transform: skewX(calc(var(--app-sesgo) * -1));
+}
+
+// Al pasar el mouse, la costura se engrosa: relieve, no tinte
+@media (hover: hover) and (pointer: fine) {
+	.flecha:not([aria-disabled='true']):hover {
+		box-shadow: inset 0 0 0 2px currentColor;
+	}
+}
+
+.flecha:not([aria-disabled='true']):active {
+	transform: skewX(var(--app-sesgo)) scale(0.95);
+}
+
+// Desactivada: la lona se gasta, sin cambiar de color
+.flecha[aria-disabled='true'] {
+	border-style: dashed;
+	opacity: 0.4;
+	cursor: default;
+}
+
+.ver-todo {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--app-espacio-1);
+	min-height: var(--app-area-tocable);
+	padding-inline: var(--app-espacio-2);
+	color: var(--app-acento-texto);
+	font-family: var(--app-familia-titulos);
+	font-size: 19px;
+	font-weight: 700;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	text-decoration: none;
+}
+
+.ver-todo svg {
+	width: 18px;
+	height: 18px;
+	transition: transform var(--app-duracion-rapida) var(--app-curva-salida);
+}
+
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+	.ver-todo:hover svg {
+		transform: translateX(3px);
+	}
+}
+
+// Cada tarjeta mide una fracción fija del ancho, según la pantalla, y la pista
+// frena en su borde izquierdo
+.pista {
+	display: grid;
+	grid-auto-flow: column;
+	grid-auto-columns: calc((100% - var(--app-espacio-4) * (var(--por-pantalla) - 1)) / var(--por-pantalla));
+	gap: var(--app-espacio-4);
+	--por-pantalla: 1.4;
+	overflow-x: auto;
+	overscroll-behavior-x: contain;
+	scroll-snap-type: x mandatory;
+	scroll-behavior: smooth;
+	scrollbar-width: none;
+	padding-bottom: var(--app-espacio-2);
+}
+
+.pista::-webkit-scrollbar {
+	display: none;
+}
+
+.pista > ::ng-deep * {
+	scroll-snap-align: start;
+}
+
+@media (min-width: 560px) {
+	.pista {
+		--por-pantalla: 2.4;
+	}
+}
+
+@media (min-width: 860px) {
+	.pista {
+		--por-pantalla: 3.4;
+	}
+}
+
+@media (min-width: 1100px) {
+	.pista {
+		--por-pantalla: 4.4;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.pista {
+		scroll-behavior: auto;
+	}
+}

@@ -82,7 +82,12 @@
               <td data-etiqueta="Stock" class="numero">
                 <span>
                   {{ cantidad(producto.stock) }} <span class="unidad">{{ unidad }}</span>
-                  @if (producto.stockBajo) {
+                  @if (producto.stock === 0) {
+                    <span class="bajo">
+                      <svg lucideCircleSlash class="icono" aria-hidden="true"></svg>
+                      Agotado
+                    </span>
+                  } @else if (producto.stockBajo) {
                     <span class="bajo">
                       <svg lucideTriangleAlert class="icono" aria-hidden="true"></svg>
                       Stock bajo

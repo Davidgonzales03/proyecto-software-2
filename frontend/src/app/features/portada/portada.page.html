@@ -1,0 +1,66 @@
+<h1 class="solo-lectores">Tienda</h1>
+
+@if (secciones().length > 0) {
+  <div class="marcador" #marcador></div>
+  <div class="letrero" [class.compacto]="compacto()">
+    <div class="ventana">
+      <div class="marco">
+        @for (titulo of [leyenda()]; track titulo) {
+          <p class="leyenda" animate.leave="paso-sale">{{ titulo }}</p>
+        }
+      </div>
+      @if (secciones().length > 1) {
+        <p class="posicion" aria-hidden="true">{{ posicion() }} / {{ secciones().length }}</p>
+      }
+    </div>
+
+    @if (secciones().length > 1) {
+    <nav class="cinta" aria-label="Secciones de la tienda">
+      @for (cada of secciones(); track cada.clave) {
+        <button
+          type="button"
+          [class.actual]="cada.clave === activa()"
+          [attr.aria-current]="cada.clave === activa() ? 'true' : null"
+          (click)="elegir(cada.clave)"
+        >
+          <span [title]="cada.titulo">{{ cada.titulo }}</span>
+        </button>
+      }
+    </nav>
+    }
+  </div>
+
+  <div class="secciones">
+    @for (cada of secciones(); track cada.clave) {
+      <div class="placa" [id]="cada.clave" tabindex="-1">
+        <app-carrusel
+          [titulo]="cada.titulo"
+          [enlace]="cada.parametros === null ? null : '/catalogo'"
+          [parametros]="cada.parametros ?? {}"
+        >
+          @for (tarjeta of cada.tarjetas; track tarjeta.enlace) {
+            <app-tarjeta-producto [datos]="tarjeta" />
+          }
+        </app-carrusel>
+      </div>
+    }
+  </div>
+} @else if (vacia()) {
+  <div class="vacio" role="status">
+    <p>Todavía no hay productos en la tienda.</p>
+  </div>
+} @else if (errorDeCarga()) {
+  <!-- El rollo trabado a medio paso: dos medias leyendas en la costura -->
+  <div class="ventana atascada" aria-hidden="true">
+    <div class="marco">
+      <span class="mitad arriba"><span class="leyenda">Tienda</span></span>
+      <span class="mitad abajo"><span class="leyenda">Montero</span></span>
+    </div>
+  </div>
+  <div class="tarjeta-error">
+    <p class="aviso" role="alert">{{ errorDeCarga() }}</p>
+    <button type="button" class="secundario" (click)="recurso.reload()">Reintentar</button>
+  </div>
+} @else {
+  <p class="cargando" role="status">Cargando la tienda…</p>
+}

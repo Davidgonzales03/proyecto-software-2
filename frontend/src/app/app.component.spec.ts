@@ -42,6 +42,8 @@ describe('AppComponent', () => {
           { path: 'inicio-sesion', component: PantallaVacia },
           { path: 'registro', component: PantallaVacia },
           { path: 'usuarios', component: PantallaVacia },
+          { path: 'catalogo', component: PantallaVacia },
+          { path: 'panel', component: PantallaVacia },
         ]),
       ],
     }).compileComponents();
@@ -161,7 +163,7 @@ describe('AppComponent', () => {
       await fijo.whenStable();
       fijo.detectChanges();
 
-      expect(nombres(enlacesDelMenu(fijo))).toEqual(['Inicio']);
+      expect(nombres(enlacesDelMenu(fijo))).toEqual(['Inicio', 'Catálogo']);
       expect(fijo.nativeElement.querySelector('a[href="/inicio-sesion"]')?.textContent?.trim()).toBe(
         'Iniciar sesión',
       );
@@ -176,12 +178,13 @@ describe('AppComponent', () => {
       expect(fijo.nativeElement.querySelector('a[href="/registro"]')).toBeNull();
     });
 
-    // Pedido en la prueba manual: una casa explícita para volver al inicio
-    it('un cliente ve solo «Inicio», con el ícono de la casa', async () => {
+    // Pedido en la prueba manual: una casa explícita para volver al inicio. HU-09
+    // RF-16, RF-17: el cliente no tiene panel
+    it('un cliente ve «Inicio» y «Catálogo», con el ícono de la casa', async () => {
       const fijo = await en('/', 'CLIENTE');
 
       const enlaces = enlacesDelMenu(fijo);
-      expect(nombres(enlaces)).toEqual(['Inicio']);
+      expect(nombres(enlaces)).toEqual(['Inicio', 'Catálogo']);
       expect(enlaces[0].getAttribute('href')).toBe('/');
       expect(enlaces[0].querySelector('svg')?.getAttribute('aria-hidden')).toBe('true');
     });
@@ -190,18 +193,49 @@ describe('AppComponent', () => {
     it('un administrador ve Inicio, Usuarios, Categorías y Productos', async () => {
       const fijo = await en('/');
 
-      expect(nombres(enlacesDelMenu(fijo))).toEqual(['Inicio', 'Usuarios', 'Categorías', 'Productos', 'Inventario']);
-      expect(enlacesDelMenu(fijo)[1].getAttribute('href')).toBe('/usuarios');
-      expect(enlacesDelMenu(fijo)[2].getAttribute('href')).toBe('/categorias');
-      expect(enlacesDelMenu(fijo)[3].getAttribute('href')).toBe('/productos');
+      expect(nombres(enlacesDelMenu(fijo))).toEqual([
+        'Inicio',
+        'Catálogo',
+        'Panel',
+        'Usuarios',
+        'Categorías',
+        'Productos',
+        'Inventario',
+      ]);
+      expect(enlacesDelMenu(fijo)[3].getAttribute('href')).toBe('/usuarios');
+      expect(enlacesDelMenu(fijo)[4].getAttribute('href')).toBe('/categorias');
+      expect(enlacesDelMenu(fijo)[5].getAttribute('href')).toBe('/productos');
     });
 
     // HU-08 RF-1
     it('un empleado ve «Inicio» e «Inventario»', async () => {
       const fijo = await en('/', 'EMPLEADO');
 
-      expect(nombres(enlacesDelMenu(fijo))).toEqual(['Inicio', 'Inventario']);
-      expect(enlacesDelMenu(fijo)[1].getAttribute('href')).toBe('/inventario');
+      expect(nombres(enlacesDelMenu(fijo))).toEqual(['Inicio', 'Catálogo', 'Panel', 'Inventario']);
+      expect(enlacesDelMenu(fijo)[3].getAttribute('href')).toBe('/inventario');
+    });
+
+    // HU-09 RF-16
+    it('el panel es solo para el personal', async () => {
+      const fijo = await en('/', 'CONTADOR');
+
+      expect(enlacesDelMenu(fijo)[2].getAttribute('href')).toBe('/panel');
+    });
+
+    // HU-09 RF-8, RF-17: la búsqueda del encabezado, con o sin sesión
+    it('la búsqueda del encabezado lleva al catálogo', async () => {
+      const fijo = crear();
+      const router = TestBed.inject(Router);
+      await router.navigateByUrl('/');
+      const busqueda: HTMLInputElement = fijo.nativeElement.querySelector('header input[type="search"]');
+      expect(busqueda.labels?.[0]?.textContent?.trim()).toBe('Buscar en la tienda');
+
+      busqueda.value = '  martillo ';
+      busqueda.dispatchEvent(new Event('input'));
+      fijo.nativeElement.querySelector('header form').dispatchEvent(new Event('submit'));
+      await fijo.whenStable();
+
+      expect(router.url).toBe('/catalogo?q=martillo');
     });
 
     it('marca el módulo actual', async () => {

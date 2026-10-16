@@ -18,7 +18,14 @@ html {
 	color-scheme: dark;
 	// El encabezado queda fijo arriba: lo que recibe el foco o se busca con un
 	// ancla no queda tapado por él
-	scroll-padding-top: 80px;
+	scroll-padding-top: calc(var(--app-alto-cabecera, 0px) + var(--app-alto-letrero, 0px) + var(--app-espacio-4));
+}
+
+// En la portada, el letrero se achica al quedar fijo: si el navegador corrigiera
+// el scroll por ese cambio (scroll anchoring), el letrero volvería a agrandarse
+// y parpadearía. Su lugar lo guarda un margen (portada.page.ts)
+html:has(app-portada) {
+	overflow-anchor: none;
 }
 
 html,
@@ -28,7 +35,8 @@ body {
 
 body {
 	margin: 0;
-	background: var(--app-fondo);
+	background: var(--app-fondo) var(--app-textura-lona);
+	background-blend-mode: soft-light;
 	color: var(--app-texto);
 	font-family: var(--app-familia-texto);
 	font-size: 16px;
@@ -62,6 +70,17 @@ a {
 	// Quita el retardo de 300 ms y el destello gris al tocar en móvil
 	touch-action: manipulation;
 	-webkit-tap-highlight-color: transparent;
+}
+
+// Lo que el navegador pinta solo también lleva la marca
+::selection {
+	background: var(--app-ambar);
+	color: var(--app-sobre-ambar);
+}
+
+input,
+textarea {
+	caret-color: var(--app-ambar);
 }
 
 :focus-visible {
@@ -110,4 +129,30 @@ main > :not(router-outlet) {
 	:root {
 		--app-desplazamiento: 0px;
 	}
+}
+
+// Una casilla con su texto al lado, toda tocable (HU-09: «Destacado» y «Solo disponibles»)
+.casilla {
+	display: flex;
+	align-items: center;
+	gap: var(--app-espacio-2);
+	min-height: var(--app-area-tocable);
+	font-size: 16px;
+	font-weight: 600;
+	letter-spacing: 0;
+	text-transform: none;
+	color: var(--app-texto);
+	cursor: pointer;
+}
+
+// Más específico que el input de _formulario.scss, que las pantallas traen con
+// sus estilos: sin su relleno ni su alto mínimo, la casilla queda junto al texto
+.casilla input[type='checkbox'] {
+	flex: none;
+	width: 20px;
+	height: 20px;
+	min-height: 0;
+	margin: 0;
+	padding: 0;
+	accent-color: var(--app-ambar);
 }

@@ -39,6 +39,8 @@ export interface Producto {
 	ficha: Caracteristica[];
 	// Nombres de archivo en orden: la primera es la principal
 	imagenes: string[];
+	// Sale en «Destacados» de la portada (HU-09 RF-4)
+	destacado: boolean;
 }
 
 // Una fila de la lista de la gestión
@@ -73,4 +75,5 @@ export interface DatosDeProducto {
 	unidad: UnidadVenta;
 	precio: string;
 	ficha: Caracteristica[];
+	destacado: boolean;
 }

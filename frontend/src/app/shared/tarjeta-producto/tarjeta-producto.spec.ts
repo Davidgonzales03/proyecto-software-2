@@ -1,0 +1,107 @@
+import { Component, signal } from '@angular/core';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
+
+import { DatosDeTarjeta, TarjetaProducto } from './tarjeta-producto';
+
+const MARTILLO: DatosDeTarjeta = {
+  nombre: 'Martillo de carpintero 16 oz',
+  marca: 'Truper',
+  precio: 85,
+  unidad: null,
+  imagen: '/api/productos/7/imagenes/a.jpg',
+  agotado: false,
+  enlace: '/producto/7',
+};
+
+@Component({
+  imports: [TarjetaProducto],
+  template: `<app-tarjeta-producto [datos]="datos()" />`,
+})
+class Anfitrion {
+  readonly datos = signal<DatosDeTarjeta>(MARTILLO);
+}
+
+// HU-09: la tarjeta de un producto en la tienda
+describe('TarjetaProducto', () => {
+  let fijo: ComponentFixture<Anfitrion>;
+
+  beforeEach(async () => {
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({ providers: [provideRouter([])] });
+    fijo = TestBed.createComponent(Anfitrion);
+    fijo.autoDetectChanges();
+    await fijo.whenStable();
+  });
+
+  async function con(cambios: Partial<DatosDeTarjeta>): Promise<void> {
+    fijo.componentInstance.datos.set({ ...MARTILLO, ...cambios });
+    await fijo.whenStable();
+  }
+
+  function texto(): string {
+    return (fijo.nativeElement.textContent ?? '').replace(/\s+/g, ' ');
+  }
+
+  // HU-09 RF-6
+  it('muestra nombre, marca y precio con su unidad', async () => {
+    await con({ unidad: 'metro', precio: 12.5 });
+
+    expect(texto()).toContain('Martillo de carpintero 16 oz');
+    expect(texto()).toContain('Truper');
+    expect(texto()).toMatch(/Bs\s12,50 \/ metro/);
+  });
+
+  // HU-09 RF-6: la línea de la marca se reserva vacía, así los nombres de una fila quedan alineados
+  it('sin marca deja la línea vacía', async () => {
+    await con({ marca: null });
+
+    expect(fijo.nativeElement.querySelector('.marca').textContent.trim()).toBe('');
+  });
+
+  // Una foto que no carga muestra el ícono
+  it('una foto rota muestra el ícono', async () => {
+    fijo.nativeElement.querySelector('img').dispatchEvent(new Event('error'));
+    await fijo.whenStable();
+
+    expect(fijo.nativeElement.querySelector('img')).toBeNull();
+    expect(fijo.nativeElement.querySelector('.sin-foto svg')).not.toBeNull();
+  });
+
+  // HU-09 RF-6
+  it('sin foto muestra un ícono', async () => {
+    await con({ imagen: null });
+
+    expect(fijo.nativeElement.querySelector('img')).toBeNull();
+    expect(fijo.nativeElement.querySelector('.sin-foto svg')).not.toBeNull();
+  });
+
+  // HU-09 RF-6: la foto no repite el nombre para el lector de pantalla
+  it('la foto es decorativa', () => {
+    const foto: HTMLImageElement = fijo.nativeElement.querySelector('img');
+
+    expect(foto.getAttribute('src')).toBe('/api/productos/7/imagenes/a.jpg');
+    expect(foto.alt).toBe('');
+    expect(foto.getAttribute('loading')).toBe('lazy');
+  });
+
+  // HU-09 RF-7
+  it('agotado con ícono y texto', async () => {
+    expect(texto()).not.toContain('Agotado');
+
+    await con({ agotado: true });
+
+    const marca: HTMLElement = fijo.nativeElement.querySelector('.agotado');
+    expect(marca.textContent?.trim()).toBe('Agotado');
+    expect(marca.querySelector('svg')).not.toBeNull();
+  });
+
+  // HU-09 RF-6
+  it('toda la tarjeta es un enlace', () => {
+    const enlaces: HTMLAnchorElement[] = Array.from(fijo.nativeElement.querySelectorAll('a'));
+
+    expect(enlaces).toHaveLength(1);
+    expect(enlaces[0].getAttribute('href')).toBe('/producto/7');
+    expect(enlaces[0].textContent).toContain('Martillo de carpintero 16 oz');
+  });
+});
