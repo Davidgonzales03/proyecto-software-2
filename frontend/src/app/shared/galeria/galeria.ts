@@ -30,7 +30,6 @@ export class Galeria {
 
 	private readonly dialogo = viewChild<ElementRef<HTMLDialogElement>>('dialogo');
 	private readonly grande = viewChild<ElementRef<HTMLButtonElement>>('grande');
-	private readonly botonCerrar = viewChild<ElementRef<HTMLButtonElement>>('botonCerrar');
 
 	// Con otras fotos (otro producto), vuelve a la primera y olvida las rotas
 	protected readonly actual = linkedSignal({ source: this.fotos, computation: () => 0 });
@@ -65,9 +64,8 @@ export class Galeria {
 	}
 
 	protected ampliar(): void {
+		// «Cerrar» es el primer botón: showModal() le da el foco una sola vez
 		this.dialogo()?.nativeElement.showModal();
-		// El foco va a «Cerrar»: la flecha anterior empieza desactivada
-		this.botonCerrar()?.nativeElement.focus();
 	}
 
 	protected cerrar(): void {
@@ -118,7 +116,6 @@ export class Galeria {
 		if (evento.isPrimary === false) {
 			return;
 		}
-		this.recienDeslizo = false;
 		this.inicioDelDedo = { id: evento.pointerId, x: evento.clientX };
 		// El final llega aunque el dedo salga de la foto
 		const zona = evento.currentTarget;
@@ -141,6 +138,15 @@ export class Galeria {
 			this.siguiente();
 		} else {
 			this.anterior();
+		}
+	}
+
+	// Un toque nuevo, en cualquier parte: el deslizamiento anterior ya terminó
+	// (en el celular no siempre deja un clic que borre la marca)
+	protected alTocarLaPantalla(evento: PointerEvent): void {
+		// Un segundo dedo (un pellizco) no es un toque nuevo, como en alApoyar
+		if (evento.isPrimary !== false) {
+			this.recienDeslizo = false;
 		}
 	}
 

@@ -123,5 +123,7 @@ describe('CatalogoService', () => {
   // HU-10 RF-5
   it('arma la dirección de cada foto', () => {
     expect(urlDeImagen(9, 'b.webp')).toBe('/api/productos/9/imagenes/b.webp');
+    // Revisión de HU-10: el nombre va codificado, como en la gestión
+    expect(urlDeImagen(9, 'a b#1.webp')).toBe('/api/productos/9/imagenes/a%20b%231.webp');
   });
 });

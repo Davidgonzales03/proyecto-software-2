@@ -95,20 +95,16 @@ export class DetallePage {
 			}
 		});
 
-		// Al pasar a otro producto desde «Más de…», la página vuelve arriba y el
-		// foco va a su nombre. Solo esta pantalla: el catálogo cambia la
-		// dirección con cada filtro y no tiene que saltar
+		// Al pasar de un producto a otro desde «Más de…», el foco va a su nombre.
+		// La página ya vuelve arriba al cambiar de ruta (provideDesplazamiento)
 		let anterior: number | null = null;
 		afterRenderEffect(() => {
 			const idProducto = this.producto()?.idProducto;
 			const titulo = this.titulo()?.nativeElement;
-			if (idProducto === undefined || titulo === undefined) {
+			if (idProducto === undefined || titulo === undefined || idProducto === anterior) {
 				return;
 			}
-			if (anterior !== null && anterior !== idProducto) {
-				if (typeof window.scrollTo === 'function') {
-					window.scrollTo({ top: 0 });
-				}
+			if (anterior !== null) {
 				titulo.focus({ preventScroll: true });
 			}
 			anterior = idProducto;

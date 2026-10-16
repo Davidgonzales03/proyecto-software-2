@@ -51,9 +51,16 @@
     class="pantalla-completa"
     [attr.aria-label]="'Fotos de ' + nombre()"
     (close)="alCerrar()"
+    (pointerdown)="alTocarLaPantalla($event)"
     (click)="alTocar($event)"
     (keydown)="alTeclear($event)"
   >
+    <!-- Primero en el orden: showModal() le da el foco al abrir (la flecha
+         anterior empieza desactivada) -->
+    <button type="button" class="flecha cerrar" aria-label="Cerrar" (click)="cerrar()">
+      <svg lucideX aria-hidden="true"></svg>
+    </button>
+
     <div
       class="ampliada"
       (pointerdown)="alApoyar($event)"
@@ -67,8 +74,8 @@
       }
     </div>
 
-    <div class="controles">
-      @if (total() > 1) {
+    @if (total() > 1) {
+      <div class="controles">
         <button
           type="button"
           class="flecha anterior"
@@ -91,10 +98,7 @@
         >
           <svg lucideChevronRight aria-hidden="true"></svg>
         </button>
-      }
-      <button #botonCerrar type="button" class="flecha cerrar" aria-label="Cerrar" (click)="cerrar()">
-        <svg lucideX aria-hidden="true"></svg>
-      </button>
-    </div>
+      </div>
+    }
   </dialog>
 }

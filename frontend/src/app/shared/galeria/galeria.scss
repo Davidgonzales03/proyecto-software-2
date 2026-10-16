@@ -113,7 +113,9 @@
 
 .pantalla-completa[open] {
 	display: grid;
-	grid-template-rows: 1fr auto;
+	// Cerrar, la foto y, con más de una foto, los controles
+	grid-auto-rows: auto;
+	grid-template-rows: auto minmax(0, 1fr);
 	gap: var(--app-espacio-4);
 }
 
@@ -191,7 +193,7 @@
 }
 
 .cerrar {
-	margin-left: var(--app-espacio-4);
+	justify-self: end;
 	border-color: var(--app-ambar);
 	color: var(--app-ambar);
 }

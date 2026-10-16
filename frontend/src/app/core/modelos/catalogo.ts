@@ -92,8 +92,9 @@ export function idDeProducto(texto: string | null): number | null {
 	return Number.isSafeInteger(id) ? id : null;
 }
 
+// La única regla para la dirección de una foto: la usan la tienda y la gestión
 export function urlDeImagen(idProducto: number, imagen: string): string {
-	return `/api/productos/${idProducto}/imagenes/${imagen}`;
+	return `/api/productos/${idProducto}/imagenes/${encodeURIComponent(imagen)}`;
 }
 
 // La ruta del detalle (HU-10)

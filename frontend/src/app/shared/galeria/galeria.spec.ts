@@ -120,7 +120,9 @@ describe('Galeria', () => {
     await ampliar();
     expect(dialogo().hasAttribute('open')).toBe(true);
     expect(fotoAmpliada()).toBe('/fotos/b.webp');
-    expect(document.activeElement).toBe(boton('cerrar'));
+    // showModal() da el foco al primer botón, «Cerrar» (jsdom no lo aplica: se
+    // verifica en el navegador)
+    expect(dialogo().querySelector('button')).toBe(boton('cerrar'));
 
     boton('siguiente').click();
     await fijo.whenStable();
@@ -203,6 +205,15 @@ describe('Galeria', () => {
     ampliada.click();
     await fijo.whenStable();
     expect(dialogo().hasAttribute('open')).toBe(true);
+
+    // Revisión de HU-10: en el celular un deslizamiento no deja clic; el
+    // toque siguiente afuera sí cierra
+    await deslizar(300, 200);
+    const controles = dialogo().querySelector('.controles') as HTMLElement;
+    controles.dispatchEvent(Object.assign(new Event('pointerdown', { bubbles: true }), { pointerId: 2, isPrimary: true }));
+    controles.click();
+    await fijo.whenStable();
+    expect(dialogo().hasAttribute('open')).toBe(false);
   });
 
   // HU-10 RF-6: lo oscuro alrededor de la foto es el fondo; la foto y los botones no cierran
