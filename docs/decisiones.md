@@ -16,8 +16,8 @@ solo las secciones que tocan la tarea. Al agregar una decisión, sumarla al
 - **[Transversales](#transversales)**: [Spring Boot 4.1.1](#spring-boot-411) · [Variables de entorno con prefijo propio](#variables-de-entorno-con-prefijo-propio) · [Despliegue con Docker y un solo origen](#despliegue-con-docker-y-un-solo-origen) · [Base de datos: sin migraciones](#base-de-datos-sin-migraciones) · [Pago: interfaz propia con dos implementaciones](#pago-interfaz-propia-con-dos-implementaciones) · [Imágenes subidas](#imágenes-subidas)
 - **[Seguridad](#seguridad)**: [`Usuario` es una sola clase con `rol` enumerado](#usuario-es-una-sola-clase-con-rol-enumerado) · [Autenticación por JWT stateless](#autenticación-por-jwt-stateless) · [Contraseñas con BCrypt](#contraseñas-con-bcrypt) · [Administrador inicial al arrancar](#administrador-inicial-al-arrancar) · [Registro](#registro) · [Inicio de sesión](#inicio-de-sesión) · [Recuperación de contraseña](#recuperación-de-contraseña) · [Datos personales](#datos-personales) · [Gestión de usuarios](#gestión-de-usuarios)
 - **[Notificaciones](#notificaciones)**: [Envío de correo detrás de `NotificadorCorreo`](#envío-de-correo-detrás-de-notificadorcorreo) · [Gmail por SMTP, sin servidor de correo propio](#gmail-por-smtp-sin-servidor-de-correo-propio)
-- **[Sistema de diseño (frontend)](#sistema-de-diseño-frontend)**: [La aplicación es un producto, no un trabajo académico](#la-aplicación-es-un-producto-no-un-trabajo-académico) · [Paleta y modos](#paleta-y-modos) · [Tipografía](#tipografía) · [Reglas que valen para toda la interfaz](#reglas-que-valen-para-toda-la-interfaz) · [Decisiones técnicas del frontend](#decisiones-técnicas-del-frontend)
-- **[Decisiones del proyecto](#decisiones-del-proyecto)**: [Tienda propia, no marketplace](#tienda-propia-no-marketplace) · [Roles de la tienda](#roles-de-la-tienda) · [Pago con Libélula, sin facturación SIAT](#pago-con-libélula-sin-facturación-siat) · [Rediseño del frontend dentro del flujo](#rediseño-del-frontend-dentro-del-flujo) · [Rubro: ferretería, con vista 3D](#rubro-ferretería-con-vista-3d) · [Categorías del catálogo](#categorías-del-catálogo) · [Productos](#productos) · [Inventario](#inventario)
+- **[Sistema de diseño (frontend)](#sistema-de-diseño-frontend)**: [La aplicación es un producto, no un trabajo académico](#la-aplicación-es-un-producto-no-un-trabajo-académico) · [Lo visual vive en `DESIGN.md`](#lo-visual-vive-en-designmd) · [Decisiones técnicas del frontend](#decisiones-técnicas-del-frontend)
+- **[Decisiones del proyecto](#decisiones-del-proyecto)**: [Tienda propia, no marketplace](#tienda-propia-no-marketplace) · [Roles de la tienda](#roles-de-la-tienda) · [Pago con Libélula, sin facturación SIAT](#pago-con-libélula-sin-facturación-siat) · [Rediseño del frontend dentro del flujo](#rediseño-del-frontend-dentro-del-flujo) · [Rubro: ferretería, con vista 3D](#rubro-ferretería-con-vista-3d) · [Categorías del catálogo](#categorías-del-catálogo) · [Productos](#productos) · [Inventario](#inventario) · [Catálogo público](#catálogo-público)
 
 ---
 
@@ -227,8 +227,9 @@ archivo versionado, como haría un `data.sql`.
 - *09/10/2026 (HU-03).* Después de restablecer se va a «Iniciar sesión» con el
   aviso, sin entrar directo: el enlace del correo no alcanza por sí solo para
   abrir una sesión.
-- *09/10/2026 (HU-03).* El correo usa los colores de la marca (grafito y
-  amarillo de señalización, «Paleta y modos»).
+- *09/10/2026 (HU-03).* El correo usa los colores de la marca (entonces
+  grafito y amarillo de señalización; desde el 16/10/2026 la marca es la de
+  `DESIGN.md`, y el correo todavía no se actualizó).
 
 ### Datos personales
 
@@ -322,91 +323,22 @@ los textos, ni en el pie de página, ni en los correos. El nombre de la marca
 vive en un único lugar del frontend (`core/marca.ts`) y del backend
 (`TIENDA_MARCA`), para poder cambiarlo sin tocar las pantallas.
 
-### Paleta y modos
+### Lo visual vive en `DESIGN.md`
 
-Los valores están en `frontend/src/styles/_tokens.scss`, con el prefijo
-`--app-`. **El oscuro es el modo por defecto;** un botón con sol o luna en el
-encabezado alterna al claro, con o sin sesión, y la elección se guarda en el
-navegador (`localStorage`, clave `app.tema`). El claro redefine los tokens en
-`:root[data-tema='claro']`; un script mínimo en `index.html` lo aplica antes de
-que arranque Angular, para que la página no aparezca oscura un instante.
+*16/10/2026 (HU-09).* **Todo el sistema visual está en `DESIGN.md`:** paleta y
+modos, tipografía, forma, espaciado, movimiento, texturas, componentes y las
+reglas que valen para toda la interfaz (contraste medido, estado nunca solo por
+color, errores junto al campo, áreas tocables, iconos Lucide). Lo escribe y lo
+mantiene la skill `impeccable` a partir de lo construido; `PRODUCT.md` guarda a
+quién le habla la tienda y cómo se siente. Este archivo sigue con las
+decisiones técnicas y de negocio. **El mundo actual es «Letrero de ruta»** (lona
+verde, amarillo cromo y lona clara), elegido en HU-09; reemplaza al grafito con
+amarillo de señalización del 09/10/2026, y el encabezado translúcido con
+desenfoque pasa a ser de lona sólida.
 
-*09/10/2026 (chore #8).* La paleta es la del prototipo del visor 3D:
-**grafito con amarillo de señalización**, el de las herramientas y los avisos
-de obra, que va con el rubro (ferretería). El amarillo tiene dos tokens: el de
-relleno (`--app-ambar`: botones, logotipo, la raya del encabezado), con texto
-oscuro encima en los dos modos, y el de texto (`--app-acento-texto`: enlaces,
-foco, la pestaña actual), que en el modo claro es un ocre oscuro porque el
-amarillo no llega a 4.5:1 sobre el fondo claro. **Se puede cambiar,** con una
-condición: los contrastes se miden contra el fondo con la fórmula de luminancia
-de WCAG, uno por uno, antes de fijar un color (4.5:1 en texto, 3:1 en bordes
-de control), en los dos modos.
-
-### Tipografía
-
-*09/10/2026 (chore #8).* **Barlow Condensed** para los títulos (600/700),
-como la rotulación de una ferretería; **Barlow** para el texto (400/500/600) y
-**JetBrains Mono** para los precios y los datos
-(400/500). De Google Fonts y con su pila de reserva. Las etiquetas van en
-mayúsculas y espaciadas, como un rótulo. Escala de 12, 14, 16 (base), 18, 20,
-22, 28 y 34 px; interlineado 1.5 en el texto y 1.1 en los títulos. Sobre fondo
-oscuro el texto fino se deshace, así que el cuerpo no baja de 400.
-
-*14/10/2026, con la skill `impeccable`.* **La monoespaciada es solo para
-datos:** precios, códigos, cantidades y contadores. Las etiquetas de los
-campos, los encabezados de tabla y las leyendas pasan a Barlow 600, en
-mayúsculas y espaciadas. **Motivo:** la monoespaciada en las etiquetas era un
-disfraz de «técnico»; en los datos alinea las cifras y se lee como medida.
-**Sin antetítulos** (la etiqueta chica en mayúsculas encima de un título): el
-título se sostiene solo.
-
-### Reglas que valen para toda la interfaz
-
-- **El estado nunca depende solo del color:** cada etiqueta lleva su texto y una
-  forma propia.
-- **Errores junto al campo y resumidos al principio del formulario:** el resumen
-  recibe el foco al fallar el envío y cada línea lleva a su campo.
-- **Animaciones permitidas:** entradas y salidas de pantallas, listas,
-  diálogos y avisos; estados de carga (esqueletos, indicadores); respuesta a
-  cada acción (hover, clic, envío). Con CSS y `animate.enter` /
-  `animate.leave` de Angular cuando alcanzan, **sin `@angular/animations`**
-  (deprecado); si hace falta más (resortes, gestos, carruseles), una librería
-  según la regla de abajo. Solo propiedades que no recalculan el layout:
-  `transform` y `opacity`, y también `clip-path`, `filter` (desenfoque corto)
-  y sombras cuando se mantienen fluidas (no `width`, `height` ni `top`); las duraciones y curvas salen de tokens (`--app-duracion-*`,
-  `--app-curva-*`). Ninguna animación bloquea al usuario ni retrasa lo que
-  pidió.
-  *14/10/2026, con las skills de Emil Kowalski:* **hasta 300 ms en la
-  interfaz;** 400 ms solo para diálogos y paneles laterales. **Lo que entra o
-  responde a una acción usa una curva que arranca rápido** (`--app-curva-salida`,
-  fuerte); la que arranca lento (`--app-curva-irse`) solo sirve para lo que se
-  va, y corta. Lo que se mueve dentro de la pantalla usa `--app-curva-mover`.
-  **Con `prefers-reduced-motion` se quita el desplazamiento, no los fundidos:**
-  nada se mueve de lugar, pero la opacidad y el color siguen cambiando, porque
-  ayudan a entender qué cambió (antes se apagaba todo).
-- **Áreas tocables de 44 px** y foco visible en todo lo que se use con teclado.
-- **Iconos con [Lucide](https://lucide.dev)** (`@lucide/angular`, el paquete oficial actual; `lucide-angular` no soporta Angular 22), la librería
-  de iconos abierta más usada: trazo uniforme, licencia ISC y se importa icono
-  por icono, así que el bundle solo lleva los que se usan. Nunca emojis. Un
-  icono solo, sin texto, lleva `aria-label`; uno junto a su texto,
-  `aria-hidden="true"`. El tamaño y el color salen de tokens.
-- *14/10/2026.* **Librerías permitidas si mejoran el proyecto** (antes: sin
-  librerías de componentes ni de estilos, salvo Lucide). Condiciones: que sea
-  compatible con Angular 22 y esté mantenida, que se avise antes de
-  instalarla, y que su aspecto se adapte a los tokens (colores, radios,
-  tipografía), para que la interfaz siga siendo una sola. **Motivo:** la regla
-  venía de otro proyecto; acá limitaba el rediseño del catálogo (carruseles,
-  animaciones) sin una razón propia.
-- **Espaciado** en múltiplos de 4 px; radio de 8 px en tarjetas y 6 px en
-  campos y botones (más recto, como el prototipo); ancho máximo del contenido de 1120 px.
-- *09/10/2026.* **El encabezado queda fijo arriba y, al bajar, se vuelve
-  translúcido en degradé** (sólido arriba, más transparente hacia la raya
-  amarilla) con desenfoque de lo que pasa por detrás. Lo marca el propio
-  desplazamiento con CSS (`animation-timeline: scroll()`), sin JavaScript;
-  donde no hay soporte queda sólido.
-- **Lo angosto va centrado,** con el mixin `pagina-angosta` de
-  `frontend/src/styles/_pagina.scss`, sin `max-width` suelto.
-- **Estilos solo por tokens,** y componentes estilados con `:host`.
+**Motivo:** con las skills de diseño, tener lo visual repartido entre este
+archivo y `CLAUDE.md` duplicaba la fuente; `impeccable` lee `DESIGN.md`, y un
+solo lugar por tema evita que se contradigan.
 
 ### Decisiones técnicas del frontend
 
@@ -416,6 +348,20 @@ título se sostiene solo.
   nunca importa de `features/`, y `shared/` no importa de ninguno de los dos.
 - **Una pantalla por ruta, con `loadComponent`;** un servicio por área de la API.
 - **Lecturas con `httpResource`, escrituras con `HttpClient`.**
+- **Animaciones con CSS y `animate.enter` / `animate.leave`** de Angular
+  cuando alcanzan, **sin `@angular/animations`** (deprecado); duraciones y
+  curvas por tokens (`DESIGN.md`).
+- **Iconos con [Lucide](https://lucide.dev)** (`@lucide/angular`, el paquete
+  oficial actual; `lucide-angular` no soporta Angular 22): se importa icono por
+  icono, así que el bundle solo lleva los que se usan.
+- *14/10/2026.* **Librerías permitidas si mejoran el proyecto** (antes: sin
+  librerías de componentes ni de estilos, salvo Lucide). Condiciones: que sea
+  compatible con Angular 22 y esté mantenida, que se avise antes de
+  instalarla, y que su aspecto se adapte a los tokens. **Motivo:** la regla
+  venía de otro proyecto y limitaba el rediseño sin una razón propia.
+- **Estilos solo por tokens** (`frontend/src/styles/_tokens.scss`) y
+  componentes estilados con `:host`; lo angosto va centrado con el mixin
+  `pagina-angosta` de `_pagina.scss`, sin `max-width` suelto.
 - **Formularios nuevos con Signal Forms** (`@angular/forms/signals`, estable en
   Angular 22).
 - **Interceptores funcionales:** uno agrega el token, otro traduce los errores y
@@ -575,3 +521,31 @@ movimientos registrados.
 **Motivo:** el ajuste por cantidad contada es lo que hace quien cuenta un
 estante; el historial inmutable deja rastro de cada cambio; costos y
 proveedores quedan fuera porque los reportes son de ventas e ingresos.
+
+### Catálogo público
+
+*14/10/2026 (HU-09).* La tienda es la portada para todos, con o sin sesión.
+
+- **Portada (`/`) y catálogo (`/catalogo`):** la portada tiene carruseles
+  («Destacados», «Recientes» y uno por categoría, hasta 12 productos cada uno)
+  y una búsqueda; el catálogo tiene búsqueda, filtros, orden y páginas de 24.
+- **Destacados:** los marca el Administrador en el producto, al crearlo o al
+  editarlo; su carrusel no lleva «Ver todo». «Más vendidos» llega cuando
+  existan pedidos.
+- *16/10/2026.* **La búsqueda es la del encabezado,** en todas las pantallas
+  (en `/catalogo` la reemplaza la del catálogo); la portada se recorre con la
+  ventana del letrero y su cinta (`DESIGN.md`).
+- **Solo productos activos de categorías visibles.** Sin stock se muestran
+  como «Agotado», al final de cualquier orden y fuera de los carruseles;
+  **nunca se muestra la cantidad en stock**.
+- **Búsqueda en nombre, marca y código,** sin importar mayúsculas ni tildes;
+  filtros por categoría, marca, rango de precio y «Solo disponibles»; orden
+  por recientes, precio y nombre. Todo en la dirección.
+- **Carruseles manuales:** flechas, rueda, teclado o arrastre, con freno en
+  cada tarjeta; no avanzan solos.
+- **El panel del personal pasa a `/panel`,** con un enlace en el encabezado;
+  el personal llega ahí al iniciar sesión y el Cliente vuelve a la tienda.
+
+**Motivo:** la portada vende y el catálogo encuentra; un carrusel que avanza
+solo le quita el producto a quien lo estaba mirando; mostrar la cantidad en
+stock expone el inventario a cualquiera.

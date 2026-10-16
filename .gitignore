@@ -51,3 +51,12 @@ skills-lock.json
 /documentacion/
 # Playwright CLI output (may contain credentials)
 .playwright-cli/
+# Impeccable: se versionan las fichas de pantalla (.impeccable/surfaces/) y su
+# configuración; lo demás es de trabajo
+.impeccable/mocks/
+.impeccable/questions/
+.impeccable/referencias/
+.impeccable/review/
+.impeccable/build/
+.impeccable/texturas/
+.impeccable/*.log

@@ -1,0 +1,165 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-16T00:00:00Z",
+  "title": "Design System: Tienda Montero",
+  "extensions": {
+    "colorMeta": {
+      "fondo": { "role": "neutral", "displayName": "Lona verde botella", "canonical": "#0c3326", "lightModeToken": "fondo-claro" },
+      "superficie": { "role": "neutral", "displayName": "Lona verde, capa", "canonical": "#114032", "lightModeToken": "superficie-claro" },
+      "superficie-alta": { "role": "neutral", "displayName": "Lona verde, capa alta", "canonical": "#164d3c", "lightModeToken": "superficie-alta-claro" },
+      "ambar": { "role": "primary", "displayName": "Amarillo cromo", "canonical": "#ffd200" },
+      "ambar-fuerte": { "role": "primary", "displayName": "Amarillo cromo, hover", "canonical": "#e6bd00" },
+      "acento-texto": { "role": "primary", "displayName": "Amarillo de texto (verde en claro)", "canonical": "#ffd200", "lightModeToken": "acento-texto-claro" },
+      "lona": { "role": "neutral", "displayName": "Lona clara", "canonical": "#f2efe6", "lightModeToken": "lona-claro" },
+      "lona-tejida": { "role": "neutral", "displayName": "Lona cruda", "canonical": "#e4dcc6" },
+      "sobre-lona": { "role": "neutral", "displayName": "Tinta verde sobre lona", "canonical": "#0f2a1d" },
+      "ventana": { "role": "neutral", "displayName": "Marco de ventana", "canonical": "#061a12", "lightModeToken": "ventana-claro" },
+      "foto": { "role": "neutral", "displayName": "Blanco de foto", "canonical": "#ffffff" }
+    },
+    "typographyMeta": {
+      "leyenda": { "displayName": "Leyenda", "purpose": "El nombre de la sección en la ventana del letrero." },
+      "headline": { "displayName": "Titular de tienda", "purpose": "Título de pantalla de la tienda, en amarillo y mayúsculas." },
+      "title": { "displayName": "Título de carrusel", "purpose": "Título de cada fila de la portada." },
+      "title-panel": { "displayName": "Título del panel", "purpose": "Formularios y listas del personal." },
+      "rotulo": { "displayName": "Rótulo", "purpose": "Cinta, Ver todo, total, Agotado; siempre en mayúsculas." },
+      "precio": { "displayName": "Precio en placa", "purpose": "Precio de la placa de producto, cifras tabulares." },
+      "body": { "displayName": "Cuerpo", "purpose": "Texto corrido; nunca bajo 400." },
+      "label": { "displayName": "Etiqueta", "purpose": "Etiquetas de campo y encabezados de tabla, en mayúsculas." },
+      "datos": { "displayName": "Datos", "purpose": "Precios, códigos, cantidades y contadores del panel. Solo datos." }
+    },
+    "shadows": [
+      { "name": "contorno-ventana", "value": "inset 0 0 0 1px color-mix(in srgb, var(--app-ambar) 30%, transparent)", "purpose": "El filo amarillo del marco del letrero." },
+      { "name": "relieve-placa", "value": "inset 0 0 0 2px var(--app-sobre-lona), 0 8px 18px color-mix(in srgb, var(--app-ventana) 35%, transparent)", "purpose": "Placa de producto en hover, con translateY(-3px)." },
+      { "name": "costura-engrosada", "value": "inset 0 0 0 2px currentColor", "purpose": "Hover de la cinta y las flechas del carrusel." }
+    ],
+    "motion": [
+      { "name": "duracion-rapida", "value": "150ms", "purpose": "Hover, foco, pulsación y salidas cortas." },
+      { "name": "duracion-media", "value": "250ms", "purpose": "Entradas de pantalla, avisos y el paso del rollo." },
+      { "name": "duracion-lenta", "value": "400ms", "purpose": "Solo diálogos y paneles laterales." },
+      { "name": "desplazamiento", "value": "8px", "purpose": "Cuánto sube lo que aparece; 0 con prefers-reduced-motion." },
+      { "name": "curva-salida", "value": "cubic-bezier(0.23, 1, 0.32, 1)", "purpose": "Lo que entra y lo que responde a una acción." },
+      { "name": "curva-mover", "value": "cubic-bezier(0.77, 0, 0.175, 1)", "purpose": "Lo que se mueve dentro de la pantalla." },
+      { "name": "curva-irse", "value": "cubic-bezier(0.4, 0, 1, 1)", "purpose": "Solo salidas, con la duración rápida." },
+      { "name": "transicion", "value": "150ms cubic-bezier(0.23, 1, 0.32, 1)", "purpose": "Color, fondo y borde en hover y foco." }
+    ],
+    "breakpoints": [
+      { "name": "carrusel-2", "value": "560px" },
+      { "name": "celular", "value": "640px" },
+      { "name": "catalogo-filtros", "value": "760px" },
+      { "name": "carrusel-3", "value": "860px" },
+      { "name": "carrusel-4", "value": "1100px" }
+    ],
+    "shape": { "sesgo": "-12deg", "anchoMaximo": "1120px", "anchoFormulario": "420px", "areaTocable": "44px", "icono": "18px" },
+    "textures": [
+      { "token": "--app-textura-lona", "file": "frontend/public/texturas/lona-verde.webp", "source": "Poly Haven, Stretch Poplin, CC0", "blend": "soft-light" },
+      { "token": "--app-textura-cruda", "file": "frontend/public/texturas/lona-cruda.webp", "source": "Poly Haven, Cotton Jersey, CC0", "blend": "soft-light" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Botón principal en sesgo",
+      "kind": "button",
+      "refersTo": "boton-principal",
+      "description": "La acción principal de la tienda: amarillo, cortado en sesgo, texto derecho.",
+      "html": "<button class=\"ds-btn\"><span class=\"ds-derecho\">Buscar</span></button>",
+      "css": ".ds-btn { min-height: 44px; padding: 0 24px; border: 0; background: var(--app-ambar); color: var(--app-sobre-ambar); font-family: var(--app-familia-titulos); font-size: 20px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; cursor: pointer; transform: skewX(var(--app-sesgo)); transition: transform var(--app-duracion-rapida) var(--app-curva-salida), background-color var(--app-transicion); } .ds-btn:hover { background: var(--app-ambar-fuerte); } .ds-btn:active { transform: skewX(var(--app-sesgo)) scale(0.97); } .ds-btn:focus-visible { outline: 3px solid var(--app-acento-texto); outline-offset: 2px; } .ds-derecho { display: inline-block; transform: skewX(calc(var(--app-sesgo) * -1)); }"
+    },
+    {
+      "name": "Botón secundario",
+      "kind": "button",
+      "refersTo": "boton-secundario",
+      "description": "Acción secundaria del panel: contorno recto, sin relleno.",
+      "html": "<button class=\"ds-sec\">Siguiente</button>",
+      "css": ".ds-sec { min-height: 44px; padding: 8px 16px; border: 1px solid var(--app-borde-control); border-radius: 0; background: transparent; color: var(--app-texto); font-family: var(--app-familia-texto); font-size: 14px; font-weight: 600; cursor: pointer; transition: background-color var(--app-transicion), border-color var(--app-transicion); } .ds-sec:hover { border-color: var(--app-texto-suave); background: var(--app-superficie-alta); } .ds-sec:focus-visible { outline: 3px solid var(--app-acento-texto); outline-offset: 2px; }"
+    },
+    {
+      "name": "Cinta de secciones",
+      "kind": "chip",
+      "refersTo": "cinta-seccion",
+      "description": "Secciones del letrero cortadas en sesgo; la actual en lona clara.",
+      "html": "<div class=\"ds-cinta\"><button class=\"ds-corte ds-actual\"><span>Herramientas</span></button><button class=\"ds-corte\"><span>Jardín</span></button></div>",
+      "css": ".ds-cinta { display: flex; gap: 8px; padding: 2px 8px 2px 12px; } .ds-corte { min-height: 44px; padding: 0 16px; border: 2px solid currentColor; background: transparent; color: var(--app-texto); font-family: var(--app-familia-titulos); font-size: 18px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; cursor: pointer; transform: skewX(var(--app-sesgo)); transition: box-shadow var(--app-transicion); } .ds-corte span { display: inline-block; transform: skewX(calc(var(--app-sesgo) * -1)); } .ds-corte:not(.ds-actual):hover { box-shadow: inset 0 0 0 2px currentColor; } .ds-corte:focus-visible { outline: 3px solid var(--app-acento-texto); outline-offset: 2px; } .ds-actual { border-color: var(--app-lona); background: var(--app-lona); color: var(--app-sobre-lona); }"
+    },
+    {
+      "name": "Ventana del letrero",
+      "kind": "custom",
+      "refersTo": "ventana",
+      "description": "Marco negro con la leyenda amarilla y la posición en el rollo.",
+      "html": "<div class=\"ds-ventana\"><p class=\"ds-leyenda\">Herramientas</p><p class=\"ds-pos\">1 / 5</p></div>",
+      "css": ".ds-ventana { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 48px 16px 72px; background: var(--app-ventana); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--app-ambar) 30%, transparent); clip-path: polygon(28px 0, 100% 0, 100% 100%, 0 100%); } .ds-leyenda { margin: 0; color: var(--app-ambar); font-family: var(--app-familia-titulos); font-size: clamp(52px, 15vw, 140px); font-weight: 800; line-height: 1; letter-spacing: 0.01em; text-transform: uppercase; } .ds-pos { margin: 0; color: var(--app-ambar); font-family: var(--app-familia-titulos); font-size: clamp(22px, 3vw, 32px); font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: 0.04em; opacity: 0.85; }"
+    },
+    {
+      "name": "Placa de producto",
+      "kind": "card",
+      "refersTo": "placa-producto",
+      "description": "Producto sobre lona clara: foto en blanco, nombre y precio; se levanta al pasar el mouse.",
+      "html": "<a class=\"ds-placa\" href=\"#\"><div class=\"ds-foto\"></div><div class=\"ds-cuerpo\"><span class=\"ds-marca\">Truper</span><span class=\"ds-nombre\">Martillo de uña 16 oz</span><span class=\"ds-precio\">Bs 85,00</span></div></a>",
+      "css": ".ds-placa { display: flex; flex-direction: column; width: 220px; background: var(--app-lona) var(--app-textura-cruda); background-blend-mode: soft-light; color: var(--app-sobre-lona); text-decoration: none; border-radius: var(--app-radio); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--app-sobre-lona) 12%, transparent); transition: transform var(--app-duracion-rapida) var(--app-curva-salida), box-shadow var(--app-transicion); } .ds-placa:hover { transform: translateY(-3px); box-shadow: inset 0 0 0 2px var(--app-sobre-lona), 0 8px 18px color-mix(in srgb, var(--app-ventana) 35%, transparent); } .ds-placa:focus-visible { outline: 3px solid var(--app-acento-texto); outline-offset: 2px; } .ds-foto { aspect-ratio: 4 / 3; background: var(--app-foto); border-radius: var(--app-radio) var(--app-radio) 0 0; } .ds-cuerpo { display: flex; flex-direction: column; gap: 4px; padding: 12px 16px 16px; } .ds-marca { font-family: var(--app-familia-texto); font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--app-sobre-lona-suave); } .ds-nombre { font-family: var(--app-familia-texto); font-size: 17px; font-weight: 600; line-height: 1.3; } .ds-precio { padding-top: 8px; font-family: var(--app-familia-titulos); font-size: 24px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1; }"
+    },
+    {
+      "name": "Etiqueta Agotado",
+      "kind": "chip",
+      "refersTo": "placa-producto",
+      "description": "Estado cosido en paralelogramo, con texto: nunca solo color.",
+      "html": "<span class=\"ds-agotado\">Agotado</span>",
+      "css": ".ds-agotado { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; background: var(--app-sobre-lona); color: var(--app-lona); font-family: var(--app-familia-titulos); font-size: 15px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; outline: 1px dashed var(--app-lona); outline-offset: -4px; clip-path: polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%); }"
+    },
+    {
+      "name": "Campo",
+      "kind": "input",
+      "refersTo": "campo",
+      "description": "Campo del panel con etiqueta en rótulo y error junto al campo.",
+      "html": "<label class=\"ds-campo\"><span class=\"ds-etiqueta\">Correo</span><input class=\"ds-input\" placeholder=\"nombre@correo.com\"></label>",
+      "css": ".ds-campo { display: flex; flex-direction: column; gap: 4px; } .ds-etiqueta { font-family: var(--app-familia-texto); font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--app-texto-suave); } .ds-input { font-family: var(--app-familia-texto); font-size: 15px; min-height: 44px; padding: 12px; border: 1px solid var(--app-borde-control); border-radius: 0; background: var(--app-fondo); color: var(--app-texto); } .ds-input:focus-visible { outline: 3px solid var(--app-acento-texto); outline-offset: 2px; } .ds-input[aria-invalid='true'] { border: 2px solid var(--app-error); }"
+    },
+    {
+      "name": "Navegación del encabezado",
+      "kind": "nav",
+      "refersTo": "navegacion",
+      "description": "Enlaces del encabezado; el actual con raya inferior, no solo color.",
+      "html": "<nav class=\"ds-nav\"><a href=\"#\" class=\"ds-actual\">Catálogo</a><a href=\"#\">Productos</a><a href=\"#\">Inventario</a></nav>",
+      "css": ".ds-nav { display: flex; gap: 4px; border-bottom: 3px solid var(--app-ambar); } .ds-nav a { display: inline-flex; align-items: center; min-height: 44px; padding-inline: 8px; border-bottom: 2px solid transparent; color: var(--app-texto-suave); font-family: var(--app-familia-texto); font-size: 14px; font-weight: 600; text-decoration: none; transition: color var(--app-transicion), border-color var(--app-transicion); } .ds-nav a:hover { color: var(--app-texto); } .ds-nav a:focus-visible { outline: 3px solid var(--app-acento-texto); outline-offset: 2px; } .ds-nav a.ds-actual { border-bottom-color: var(--app-acento-texto); color: var(--app-texto); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Letrero de ruta",
+    "overview": "La tienda se lee como el letrero de destino de un micro cruceño: una ventana negra con la leyenda en amarillo enorme, una cinta de secciones que espera su turno y placas de lona donde va el producto. Tres tintes y nada más: lona verde botella a sangre como fondo, amarillo cromo solo para leyendas y la acción principal, lona clara para el texto corrido y las placas.\n\nLa forma es la de la lona cortada: esquinas rectas, paneles y botones en sesgo de 12° con el texto derecho adentro, costuras amarillas de un pelo entre paneles. El estado se marca con costura, troquel y relieve, no con otro color. La densidad es la de una ferretería ordenada: herramienta real sobre fondo blanco, cifras grandes y legibles.\n\nEl panel del personal usa los mismos tokens con un tono más sobrio: superficies verdes, tablas y formularios rectos, sin ventana ni cinta.",
+    "keyCharacteristics": [
+      "Oscuro por defecto; claro a pedido, con su propia paleta medida.",
+      "Condensada en mayúsculas para leyendas y rótulos; Barlow para leer.",
+      "Sesgo de 12° en lo que se pulsa; el texto y los iconos siempre derechos.",
+      "Tejido de lona en los fondos, fundido en soft-light.",
+      "Estado por forma (costura, troquel, relieve), nunca solo por color."
+    ],
+    "rules": [
+      { "name": "The Contraste Medido Rule", "body": "Ningún color se fija sin medirlo contra su fondo con la fórmula de luminancia de WCAG, uno por uno y en los dos modos: 4.5:1 en texto, 3:1 en bordes de control.", "section": "colors" },
+      { "name": "The Amarillo Escaso Rule", "body": "El amarillo es relleno de leyendas, costuras y la acción principal; como texto sobre lona clara no va nunca.", "section": "colors" },
+      { "name": "The Solo Tokens Rule", "body": "Ningún componente escribe un color suelto: todo sale de `_tokens.scss`.", "section": "colors" },
+      { "name": "The Mono Para Datos Rule", "body": "La monoespaciada es solo para datos (precios, códigos, cantidades, contadores); nunca para etiquetas ni leyendas.", "section": "typography" },
+      { "name": "The Sin Antetítulos Rule", "body": "No hay etiqueta chica en mayúsculas encima de un título: el título se sostiene solo.", "section": "typography" },
+      { "name": "The Cuerpo 400 Rule", "body": "Sobre fondo oscuro el texto fino se deshace: el cuerpo no baja de 400.", "section": "typography" },
+      { "name": "The Área Tocable Rule", "body": "Todo lo que se toca mide al menos 44 px (`--app-area-tocable`), y todo lo que se usa con teclado tiene foco visible (contorno de 3 px en `acento-texto`, separado 2 px).", "section": "layout" },
+      { "name": "The Relieve No Tinte Rule", "body": "El hover y el estado se marcan engrosando la costura o levantando la placa, no cambiando de color.", "section": "elevation" },
+      { "name": "The Texto Derecho Rule", "body": "El panel va en sesgo; el texto y los iconos de adentro, siempre derechos.", "section": "shapes" }
+    ],
+    "dos": [
+      "Do sacar cada color, espacio, duración y curva de `_tokens.scss`, y estilar componentes con `:host`.",
+      "Do medir el contraste de cada color nuevo en los dos modos (4.5:1 texto, 3:1 bordes de control).",
+      "Do marcar el estado con texto y forma (costura, troquel, relieve, raya), nunca solo con color.",
+      "Do animar solo `transform`, `opacity`, `clip-path` y `filter`, hasta 300 ms (400 ms solo en diálogos y paneles laterales).",
+      "Do usar `--app-curva-salida` para lo que entra o responde a una acción, `--app-curva-irse` solo para salidas cortas con la duración rápida, y `--app-curva-mover` para lo que se mueve dentro de la pantalla.",
+      "Do quitar el desplazamiento con `prefers-reduced-motion` y dejar los fundidos (`--app-desplazamiento` pasa a 0).",
+      "Do usar iconos de Lucide con su tamaño de token (`--app-icono`, 18 px); `aria-label` si va solo, `aria-hidden` si acompaña texto.",
+      "Do poner las fotos de producto sobre blanco, sin teñir."
+    ],
+    "donts": [
+      "Don't usar emojis como iconos.",
+      "Don't poner antetítulos encima de los títulos.",
+      "Don't usar la monoespaciada en etiquetas o leyendas.",
+      "Don't usar el amarillo como texto sobre lona clara.",
+      "Don't sesgar el texto ni los iconos: solo el panel que los lleva.",
+      "Don't poner vidrio ni desenfoque en el encabezado: es lona sólida.",
+      "Don't redondear: 0 en controles, 2 px en placas y tarjetas."
+    ]
+  }
+}
