@@ -103,6 +103,38 @@ Una historia está terminada cuando:
 
 ## Revisión antes del PR
 
+*16/10/2026 (revisión de HU-10).* En dos rondas, porque cada corrección puede
+romper otra cosa:
+
+1. **Interfaz, con un subagente,** antes de la prueba manual y solo si la
+   historia tiene pantallas: `web-design-guidelines`, `break-ui`,
+   `review-animations` y `playwright-cli` en el navegador (escritorio,
+   celular, modo claro, peores datos). Encuentra lo que solo se ve abriendo
+   la pantalla.
+2. **Código y seguridad, con los comandos,** sobre el diff final, después de
+   corregir: `/code-review` siempre, pidiéndole que lea también la historia y
+   el plan, y `/security-review` cuando corresponda (abajo). Son los que
+   cuenta la Definition of Done.
+3. **Cada hallazgo se verifica** contra el código antes de corregirlo o
+   descartarlo: los comandos no comprueban lo que informan.
+4. **El «Resultado» dice quién encontró qué:** un subagente no es
+   `/code-review`.
+5. **Hasta dónde:** lo que encuentren los comandos se verifica y se corrige
+   (con su prueba) o se descarta con motivo, y `/code-review` se repite una
+   sola vez más si las correcciones cambiaron lógica. Lo que quede después va
+   al «Resultado» como pendiente: cada ronda encuentra algo, y sin un tope no
+   se termina.
+
+**Motivo:** en HU-10 el subagente de interfaz encontró problemas que solo se
+ven en el navegador (foto recortada, foco invisible en modo claro), y ningún
+comando los ve; el subagente de código y seguridad llegó a lo mismo que
+`/code-review` y `/security-review`, así que se quitó. `/code-review`, corrido
+después de corregir, encontró dos bugs que habían entrado al corregir. Si en
+otra historia `/code-review` deja pasar algo grande, se vuelve a sumar el
+subagente de código.
+
+Lo que revisa cada uno:
+
 - `/code-review` sobre los cambios de la rama: siempre.
 - `/security-review` en lo que toca **seguridad** (cuentas, sesión, roles,
   contraseñas) y **pagos y dinero**, y cuando la historia abre una **superficie
