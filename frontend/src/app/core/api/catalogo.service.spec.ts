@@ -3,7 +3,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 
-import { aTarjeta, ProductoEnTienda, SIN_FILTROS } from '../modelos/catalogo';
+import { aTarjeta, idDeProducto, ProductoEnTienda, SIN_FILTROS, urlDeImagen } from '../modelos/catalogo';
 import { CatalogoService } from './catalogo.service';
 
 const PAGINA = { contenido: [], pagina: 0, tamano: 24, totalElementos: 0, totalPaginas: 0 };
@@ -93,5 +93,35 @@ describe('CatalogoService', () => {
     });
     expect(aTarjeta({ ...MANGUERA, unidad: 'UNIDAD', imagenPrincipal: null }).unidad).toBeNull();
     expect(aTarjeta({ ...MANGUERA, imagenPrincipal: null }).imagen).toBeNull();
+  });
+
+  // HU-10 RF-1
+  it('pide el detalle del producto', () => {
+    const id = signal<number | null>(7);
+    TestBed.runInInjectionContext(() => servicio.detalle(id));
+    TestBed.tick();
+
+    http.expectOne('/api/productos/7').flush({});
+  });
+
+  // HU-10 RF-9: sin un número válido no se consulta la API
+  it('sin id no pide nada', () => {
+    TestBed.runInInjectionContext(() => servicio.detalle(signal(null)));
+    TestBed.tick();
+
+    http.expectNone(() => true);
+  });
+
+  // HU-10 RF-9
+  it('idDeProducto descarta lo que no es un número de producto', () => {
+    expect(idDeProducto('7')).toBe(7);
+    for (const basura of [null, '', 'abc', '-1', '0', '1.5', '7abc', ' 7', '1e3', '99999999999999999999']) {
+      expect(idDeProducto(basura)).toBeNull();
+    }
+  });
+
+  // HU-10 RF-5
+  it('arma la dirección de cada foto', () => {
+    expect(urlDeImagen(9, 'b.webp')).toBe('/api/productos/9/imagenes/b.webp');
   });
 });

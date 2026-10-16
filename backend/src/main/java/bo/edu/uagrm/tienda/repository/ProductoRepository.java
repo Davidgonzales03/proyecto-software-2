@@ -78,6 +78,11 @@ public interface ProductoRepository extends JpaRepository<Producto, Long> {
 	List<Producto> vitrina(@Param("idCategoria") Long idCategoria, @Param("soloDestacados") boolean soloDestacados,
 			Pageable paginacion);
 
+	// El detalle público (HU-10 RF-8): inactivo, de una categoría oculta o inexistente da lo mismo; agotado sí sale
+	@EntityGraph(attributePaths = "categoria")
+	@Query("select p from Producto p where p.idProducto = :id and p.activo = true and p.categoria.visible = true")
+	Optional<Producto> publico(@Param("id") Long idProducto);
+
 	// El filtro por marca (HU-09 RF-9): las de lo que se puede listar, también agotado
 	@Query("""
 			select distinct p.marca from Producto p

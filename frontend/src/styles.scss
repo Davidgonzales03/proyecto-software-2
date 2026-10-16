@@ -28,6 +28,11 @@ html:has(app-portada) {
 	overflow-anchor: none;
 }
 
+// Con la foto a pantalla completa (HU-10), la página de atrás no se desplaza
+html:has(dialog.pantalla-completa[open]) {
+	overflow: hidden;
+}
+
 html,
 body {
 	height: 100%;

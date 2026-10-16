@@ -1,12 +1,13 @@
 import { httpResource, HttpResourceRef } from '@angular/common/http';
 import { Injectable, Signal } from '@angular/core';
 
-import { FiltrosDeCatalogo, Portada, ProductoEnTienda } from '../modelos/catalogo';
+import { FiltrosDeCatalogo, Portada, ProductoEnDetalle, ProductoEnTienda } from '../modelos/catalogo';
 import { Pagina } from '../modelos/pagina';
 
 const PRODUCTOS = '/api/productos';
 
-// Llamadas al catálogo público (HU-09), con o sin sesión. Solo lecturas
+// Llamadas al catálogo público (HU-09) y al detalle (HU-10), con o sin sesión.
+// Solo lecturas
 @Injectable({ providedIn: 'root' })
 export class CatalogoService {
 	// httpResource necesita un contexto de inyección: se llama al construir la pantalla
@@ -16,6 +17,14 @@ export class CatalogoService {
 
 	listado(filtros: Signal<FiltrosDeCatalogo>): HttpResourceRef<Pagina<ProductoEnTienda> | undefined> {
 		return httpResource<Pagina<ProductoEnTienda>>(() => ({ url: PRODUCTOS, params: parametros(filtros()) }));
+	}
+
+	// Con null (una dirección que no es un producto) no pide nada
+	detalle(id: Signal<number | null>): HttpResourceRef<ProductoEnDetalle | undefined> {
+		return httpResource<ProductoEnDetalle>(() => {
+			const idProducto = id();
+			return idProducto === null ? undefined : `${PRODUCTOS}/${idProducto}`;
+		});
 	}
 
 	marcas(): HttpResourceRef<string[] | undefined> {

@@ -349,6 +349,25 @@ class ProductoRepositoryTest {
 				.containsExactly("Manguera", "Pala");
 	}
 
+	// HU-10 RF-8: inactivo, de categoría oculta o inexistente, lo mismo; agotado sí
+	@Test
+	void publicoSoloDevuelveActivosDeCategoriasVisibles() {
+		Producto pala = enVenta("Pala", null, jardin, "50.00", "3", 0);
+		Producto azada = enVenta("Azada", null, jardin, "40.00", "0", 1);
+		Producto rastrillo = enVenta("Rastrillo", null, jardin, "40.00", "3", 2);
+		rastrillo.desactivar();
+		Producto taladro = enVenta("Taladro", null, herramientas, "420.00", "3", 3);
+		herramientas.ocultar();
+		em.flush();
+		em.clear();
+
+		assertThat(productoRepository.publico(pala.getIdProducto())).map(Producto::getNombre).contains("Pala");
+		assertThat(productoRepository.publico(azada.getIdProducto())).isPresent();
+		assertThat(productoRepository.publico(rastrillo.getIdProducto())).isEmpty();
+		assertThat(productoRepository.publico(taladro.getIdProducto())).isEmpty();
+		assertThat(productoRepository.publico(999_999L)).isEmpty();
+	}
+
 	// HU-09 RF-9
 	@Test
 	void marcasSinRepetirNiNulasEnOrden() {

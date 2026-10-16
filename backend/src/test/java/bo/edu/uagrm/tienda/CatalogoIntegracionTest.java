@@ -246,4 +246,119 @@ class CatalogoIntegracionTest {
 
 		assertThat(nombres(get(PRODUCTOS + "/marcas"), "$")).containsExactly("Tramontina", "Truper");
 	}
+
+	// --- HU-10: detalle del producto ---
+
+	private void desactivar(Integer idProducto) {
+		assertThat(mvc.put().uri("/api/gestion/productos/{id}/activo", idProducto)
+				.header(HttpHeaders.AUTHORIZATION, "Bearer " + admin).contentType(MediaType.APPLICATION_JSON)
+				.content("{\"activo\":false}").exchange()).hasStatus(HttpStatus.OK);
+	}
+
+	// HU-10 RF-1, RF-2
+	@Test
+	void detalleSinSesionConTodosLosDatos() throws Exception {
+		Integer taladro = id(enviar("/api/gestion/productos", """
+				{"nombre":"Taladro percutor 750 W","marca":"Bosch","descripcion":"Para concreto.","idCategoria":%d,
+				 "unidad":"UNIDAD","precio":420.00,
+				 "ficha":[{"nombre":"Potencia","valor":"750 W"},{"nombre":"Mandril","valor":"13 mm"}]}""".formatted(herramientas)),
+				"$.idProducto");
+
+		MvcTestResult resultado = get(PRODUCTOS + "/{id}", taladro);
+
+		assertThat(resultado).hasStatus(HttpStatus.OK);
+		String json = resultado.getResponse().getContentAsString();
+		assertThat((String) JsonPath.read(json, "$.nombre")).isEqualTo("Taladro percutor 750 W");
+		assertThat((String) JsonPath.read(json, "$.marca")).isEqualTo("Bosch");
+		assertThat((String) JsonPath.read(json, "$.codigo")).startsWith("HER-");
+		assertThat((Integer) JsonPath.read(json, "$.idCategoria")).isEqualTo(herramientas);
+		assertThat((String) JsonPath.read(json, "$.categoria")).isEqualTo("Herramientas");
+		assertThat((Double) JsonPath.read(json, "$.precio")).isEqualTo(420.0);
+		assertThat((String) JsonPath.read(json, "$.unidad")).isEqualTo("UNIDAD");
+		assertThat((String) JsonPath.read(json, "$.descripcion")).isEqualTo("Para concreto.");
+		assertThat(nombres(resultado, "$.ficha[*].nombre")).containsExactly("Potencia", "Mandril");
+		assertThat(nombres(resultado, "$.ficha[*].valor")).containsExactly("750 W", "13 mm");
+		assertThat(nombres(resultado, "$.imagenes")).isEmpty();
+	}
+
+	// HU-10 RF-4
+	@Test
+	void detalleNoExponeStockNiDatosDeGestion() throws Exception {
+		Integer pala = producto("Pala", "Truper", jardin, "50.00", 3, true);
+		producto("Rastrillo", null, jardin, "40.00", 2, true);
+
+		String json = get(PRODUCTOS + "/{id}", pala).getResponse().getContentAsString();
+
+		assertThat(nombres(get(PRODUCTOS + "/{id}", pala), "$.relacionados[*].nombre")).containsExactly("Rastrillo");
+
+		Map<String, Object> detalle = JsonPath.read(json, "$");
+		assertThat(detalle).containsOnlyKeys("idProducto", "codigo", "nombre", "marca", "idCategoria", "categoria",
+				"precio", "unidad", "descripcion", "ficha", "imagenes", "disponible", "relacionados");
+		assertThat(json).doesNotContain("stock", "activo", "destacado", "fechaAlta");
+	}
+
+	// HU-10 RF-4
+	@Test
+	void detalleDiceSiHayStock() throws Exception {
+		Integer pala = producto("Pala", null, jardin, "50.00", 3, false);
+		Integer azada = producto("Azada", null, jardin, "40.00", 0, false);
+
+		assertThat((Boolean) JsonPath.read(get(PRODUCTOS + "/{id}", pala).getResponse().getContentAsString(),
+				"$.disponible")).isTrue();
+		MvcTestResult agotada = get(PRODUCTOS + "/{id}", azada);
+		assertThat(agotada).hasStatus(HttpStatus.OK);
+		assertThat((Boolean) JsonPath.read(agotada.getResponse().getContentAsString(), "$.disponible")).isFalse();
+	}
+
+	// HU-10 RF-7
+	@Test
+	void relacionadosDeLaCategoriaSinElProductoNiAgotados() throws Exception {
+		Integer taladro = producto("Taladro", null, herramientas, "420.00", 3, false);
+		producto("Martillo", null, herramientas, "85.00", 3, false);
+		producto("Sierra", null, herramientas, "120.00", 0, false);
+		producto("Pala", null, jardin, "50.00", 3, false);
+
+		assertThat(nombres(get(PRODUCTOS + "/{id}", taladro), "$.relacionados[*].nombre")).containsExactly("Martillo");
+	}
+
+	// HU-10 RF-7
+	@Test
+	void relacionadosHastaDoce() throws Exception {
+		Integer taladro = producto("Taladro", null, herramientas, "420.00", 3, false);
+		for (int i = 0; i < 13; i++) {
+			producto("Llave " + i, null, herramientas, "10.00", 1, false);
+		}
+
+		List<String> relacionados = nombres(get(PRODUCTOS + "/{id}", taladro), "$.relacionados[*].nombre");
+
+		assertThat(relacionados).hasSize(12).doesNotContain("Taladro").first().isEqualTo("Llave 12");
+	}
+
+	// HU-10 RF-8: los tres casos responden igual
+	@Test
+	void inactivoOcultoEInexistenteResponden404() throws Exception {
+		Integer rastrillo = producto("Rastrillo", null, jardin, "40.00", 3, false);
+		desactivar(rastrillo);
+		Integer taladro = producto("Taladro", null, herramientas, "420.00", 3, false);
+		assertThat(mvc.put().uri("/api/gestion/categorias/{id}/visible", herramientas)
+				.header(HttpHeaders.AUTHORIZATION, "Bearer " + admin).contentType(MediaType.APPLICATION_JSON)
+				.content("{\"visible\":false}").exchange()).hasStatus(HttpStatus.OK);
+
+		for (Object idProducto : List.of(rastrillo, taladro, 999_999)) {
+			MvcTestResult resultado = get(PRODUCTOS + "/{id}", idProducto);
+			assertThat(resultado).as("producto %s", idProducto).hasStatus(HttpStatus.NOT_FOUND);
+			String json = resultado.getResponse().getContentAsString();
+			assertThat((String) JsonPath.read(json, "$.codigo")).isEqualTo("PRODUCTO_NO_ENCONTRADO");
+			assertThat((String) JsonPath.read(json, "$.detail")).isEqualTo("No existe el producto indicado.");
+		}
+	}
+
+	// HU-10 RF-9: un id que no es un número no llega a la base
+	@Test
+	void idQueNoEsNumeroResponde400() {
+		for (String id : List.of("abc", "1.5", "99999999999999999999")) {
+			assertThat(get(PRODUCTOS + "/" + id)).as(id).hasStatus(HttpStatus.BAD_REQUEST);
+		}
+		assertThat(get(PRODUCTOS + "/-1")).hasStatus(HttpStatus.NOT_FOUND);
+	}
 }

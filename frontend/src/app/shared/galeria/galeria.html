@@ -1,0 +1,100 @@
+@if (total() === 0) {
+  <div class="foto-sola">
+    <svg lucideWrench class="icono-foto" aria-hidden="true"></svg>
+  </div>
+} @else {
+  <button
+    #grande
+    type="button"
+    class="foto-grande"
+    aria-haspopup="dialog"
+    [attr.aria-label]="'Ampliar: ' + alt(actual())"
+    (click)="ampliar()"
+  >
+    @if (rota(actual())) {
+      <svg lucideWrench class="icono-foto" aria-hidden="true"></svg>
+    } @else {
+      <img
+        [src]="fotos()[actual()]"
+        [alt]="alt(actual())"
+        width="800"
+        height="600"
+        fetchpriority="high"
+        (error)="marcarRota(actual())"
+      />
+    }
+  </button>
+
+  @if (total() > 1) {
+    <ul class="miniaturas">
+      @for (foto of fotos(); track $index) {
+        <li>
+          <button
+            type="button"
+            [attr.aria-pressed]="$index === actual()"
+            [attr.aria-label]="'Ver la foto ' + ($index + 1) + ' de ' + total()"
+            (click)="elegir($index)"
+          >
+            @if (rota($index)) {
+              <svg lucideWrench class="icono-foto" aria-hidden="true"></svg>
+            } @else {
+              <img [src]="foto" alt="" width="96" height="72" decoding="async" (error)="marcarRota($index)" />
+            }
+          </button>
+        </li>
+      }
+    </ul>
+  }
+
+  <dialog
+    #dialogo
+    class="pantalla-completa"
+    [attr.aria-label]="'Fotos de ' + nombre()"
+    (close)="alCerrar()"
+    (click)="alTocar($event)"
+    (keydown)="alTeclear($event)"
+  >
+    <div
+      class="ampliada"
+      (pointerdown)="alApoyar($event)"
+      (pointerup)="alSoltar($event)"
+      (pointercancel)="alCancelar()"
+    >
+      @if (rota(actual())) {
+        <svg lucideWrench class="icono-foto" aria-hidden="true"></svg>
+      } @else {
+        <img [src]="fotos()[actual()]" [alt]="alt(actual())" decoding="async" draggable="false" (error)="marcarRota(actual())" />
+      }
+    </div>
+
+    <div class="controles">
+      @if (total() > 1) {
+        <button
+          type="button"
+          class="flecha anterior"
+          aria-label="Foto anterior"
+          [attr.aria-disabled]="alInicio()"
+          (click)="anterior()"
+        >
+          <svg lucideChevronLeft aria-hidden="true"></svg>
+        </button>
+        <p class="posicion" aria-live="polite">
+          <span aria-hidden="true">{{ actual() + 1 }} / {{ total() }}</span>
+          <span class="solo-lectores">Foto {{ actual() + 1 }} de {{ total() }}</span>
+        </p>
+        <button
+          type="button"
+          class="flecha siguiente"
+          aria-label="Foto siguiente"
+          [attr.aria-disabled]="alFinal()"
+          (click)="siguiente()"
+        >
+          <svg lucideChevronRight aria-hidden="true"></svg>
+        </button>
+      }
+      <button #botonCerrar type="button" class="flecha cerrar" aria-label="Cerrar" (click)="cerrar()">
+        <svg lucideX aria-hidden="true"></svg>
+      </button>
+    </div>
+  </dialog>
+}

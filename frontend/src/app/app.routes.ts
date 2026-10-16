@@ -47,6 +47,13 @@ export const routes: Routes = [
     title: `Catálogo · ${MARCA.nombre}`,
     loadComponent: () => import('./features/catalogo/catalogo.page').then((m) => m.CatalogoPage),
   },
+  // El detalle de un producto (HU-10): público; el título lo pone la pantalla
+  // con el nombre del producto
+  {
+    path: 'producto/:id',
+    title: MARCA.nombre,
+    loadComponent: () => import('./features/detalle/detalle.page').then((m) => m.DetallePage),
+  },
   {
     path: 'panel',
     title: `Panel · ${MARCA.nombre}`,

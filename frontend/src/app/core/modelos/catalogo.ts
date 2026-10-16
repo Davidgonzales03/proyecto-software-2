@@ -1,5 +1,5 @@
 import { DatosDeTarjeta } from '../../shared/tarjeta-producto/tarjeta-producto';
-import { UnidadVenta } from './producto';
+import { Caracteristica, UnidadVenta } from './producto';
 
 // Espejo de ProductoTarjetaResponse, PortadaResponse y de los parámetros de
 // GET /api/productos (HU-09). La API nunca dice cuánto stock hay: solo si hay
@@ -64,6 +64,38 @@ export const SIN_FILTROS: FiltrosDeCatalogo = {
 	pagina: 0,
 };
 
+// Espejo de ProductoDetalleResponse (HU-10): como la tarjeta, sin la cantidad
+// en stock. imagenes son nombres de archivo; la primera es la principal
+export interface ProductoEnDetalle {
+	idProducto: number;
+	codigo: string;
+	nombre: string;
+	marca: string | null;
+	idCategoria: number;
+	categoria: string;
+	precio: number;
+	unidad: UnidadVenta;
+	descripcion: string | null;
+	ficha: Caracteristica[];
+	imagenes: string[];
+	disponible: boolean;
+	relacionados: ProductoEnTienda[];
+}
+
+// El número de producto de la dirección (HU-10 RF-9): solo cifras, mayor que
+// 0 y que entre en un Long sin perder precisión; si no, null
+export function idDeProducto(texto: string | null): number | null {
+	if (texto === null || !/^[1-9]\d*$/.test(texto)) {
+		return null;
+	}
+	const id = Number(texto);
+	return Number.isSafeInteger(id) ? id : null;
+}
+
+export function urlDeImagen(idProducto: number, imagen: string): string {
+	return `/api/productos/${idProducto}/imagenes/${imagen}`;
+}
+
 // La ruta del detalle (HU-10)
 export function rutaDelProducto(idProducto: number): string {
 	return `/producto/${idProducto}`;
@@ -76,10 +108,7 @@ export function aTarjeta(producto: ProductoEnTienda): DatosDeTarjeta {
 		marca: producto.marca,
 		precio: producto.precio,
 		unidad: producto.unidad === 'UNIDAD' ? null : producto.unidad.toLowerCase(),
-		imagen:
-			producto.imagenPrincipal === null
-				? null
-				: `/api/productos/${producto.idProducto}/imagenes/${producto.imagenPrincipal}`,
+		imagen: producto.imagenPrincipal === null ? null : urlDeImagen(producto.idProducto, producto.imagenPrincipal),
 		agotado: !producto.disponible,
 		enlace: rutaDelProducto(producto.idProducto),
 	};
