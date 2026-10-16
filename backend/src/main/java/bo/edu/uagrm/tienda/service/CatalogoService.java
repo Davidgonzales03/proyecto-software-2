@@ -12,11 +12,13 @@ import org.springframework.transaction.annotation.Transactional;
 import bo.edu.uagrm.tienda.dto.OrdenCatalogo;
 import bo.edu.uagrm.tienda.dto.PaginaResponse;
 import bo.edu.uagrm.tienda.dto.PortadaResponse;
+import bo.edu.uagrm.tienda.dto.ProductoDetalleResponse;
 import bo.edu.uagrm.tienda.dto.ProductoTarjetaResponse;
 import bo.edu.uagrm.tienda.dto.SeccionResponse;
 import bo.edu.uagrm.tienda.entity.Producto;
 import bo.edu.uagrm.tienda.exception.CamposInvalidosException;
 import bo.edu.uagrm.tienda.exception.CamposInvalidosException.CampoInvalido;
+import bo.edu.uagrm.tienda.exception.ProductoNoEncontradoException;
 import bo.edu.uagrm.tienda.repository.CategoriaRepository;
 import bo.edu.uagrm.tienda.repository.ProductoRepository;
 import lombok.RequiredArgsConstructor;
@@ -65,6 +67,18 @@ public class CatalogoService {
 			}
 		});
 		return new PortadaResponse(vitrina(null, true), vitrina(null, false), categorias);
+	}
+
+	// HU-10: el detalle con hasta 12 de su categoría; se piden 13 por si el producto está entre ellos
+	@Transactional(readOnly = true)
+	public ProductoDetalleResponse detalle(Long idProducto) {
+		Producto producto = productoRepository.publico(idProducto).orElseThrow(ProductoNoEncontradoException::new);
+		List<ProductoTarjetaResponse> relacionados = productoRepository
+				.vitrina(producto.getCategoria().getIdCategoria(), false,
+						PageRequest.of(0, POR_CARRUSEL + 1, OrdenCatalogo.RECIENTES.orden()))
+				.stream().filter(otro -> !otro.getIdProducto().equals(idProducto)).limit(POR_CARRUSEL)
+				.map(ProductoTarjetaResponse::from).toList();
+		return ProductoDetalleResponse.from(producto, relacionados);
 	}
 
 	@Transactional(readOnly = true)

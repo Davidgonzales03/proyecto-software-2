@@ -1,0 +1,88 @@
+@if (noDisponible()) {
+  <section class="no-disponible">
+    <h1>Este producto no está disponible</h1>
+    <p role="status">Puede que ya no se venda o que la dirección esté incompleta. Busque otro en el catálogo.</p>
+    <a class="principal" routerLink="/catalogo"><span>Ver el catálogo</span></a>
+  </section>
+} @else if (errorDeCarga()) {
+  <div class="tarjeta-error">
+    <p class="aviso" role="alert">{{ errorDeCarga() }}</p>
+    <button type="button" class="secundario" (click)="recurso.reload()">Reintentar</button>
+  </div>
+} @else if (producto(); as producto) {
+  <article class="ficha-producto">
+    <app-galeria class="fotos" [fotos]="fotos()" [nombre]="producto.nombre" />
+
+    <div class="datos">
+      <p class="identidad">
+        @if (producto.marca) {
+          <span class="marca">{{ producto.marca }}</span>
+        }
+        <span class="codigo">{{ producto.codigo }}</span>
+      </p>
+      <h1 #titulo id="titulo" tabindex="-1">{{ producto.nombre }}</h1>
+      <a class="categoria" routerLink="/catalogo" [queryParams]="{ categoria: producto.idCategoria }">{{
+        producto.categoria
+      }}</a>
+
+      <p class="precio">
+        {{ precio() }}
+        @if (unidad(); as unidad) {
+          <span class="unidad">/ {{ unidad }}</span>
+        }
+      </p>
+
+      @if (producto.disponible) {
+        <p class="disponibilidad hay"><svg lucideCircleCheck aria-hidden="true"></svg>Disponible</p>
+      } @else {
+        <p class="disponibilidad agotado"><svg lucideCircleSlash aria-hidden="true"></svg>Agotado</p>
+      }
+
+      @if (esAdministrador()) {
+        <a class="editar" [routerLink]="['/productos', producto.idProducto]">
+          <svg lucidePencil aria-hidden="true"></svg>Editar producto
+        </a>
+      }
+    </div>
+
+    @if (producto.descripcion || producto.ficha.length > 0) {
+      <div class="texto">
+        @if (producto.descripcion) {
+          <section aria-labelledby="titulo-descripcion">
+            <h2 id="titulo-descripcion">Descripción</h2>
+            <p class="descripcion">{{ producto.descripcion }}</p>
+          </section>
+        }
+        @if (producto.ficha.length > 0) {
+          <section aria-labelledby="titulo-ficha">
+            <h2 id="titulo-ficha">Ficha técnica</h2>
+            <dl class="ficha">
+              @for (par of producto.ficha; track $index) {
+                <div>
+                  <dt>{{ par.nombre }}</dt>
+                  <dd>{{ par.valor }}</dd>
+                </div>
+              }
+            </dl>
+          </section>
+        }
+      </div>
+    }
+  </article>
+
+  @if (relacionados().length > 0) {
+    <div class="placa">
+      <app-carrusel
+        [titulo]="'Más de ' + producto.categoria"
+        enlace="/catalogo"
+        [parametros]="{ categoria: producto.idCategoria }"
+      >
+        @for (tarjeta of relacionados(); track tarjeta.enlace) {
+          <app-tarjeta-producto [datos]="tarjeta" />
+        }
+      </app-carrusel>
+    </div>
+  }
+} @else {
+  <p class="cargando" role="status">Cargando el producto…</p>
+}

@@ -14,13 +14,14 @@ import org.springframework.web.bind.annotation.RestController;
 import bo.edu.uagrm.tienda.dto.OrdenCatalogo;
 import bo.edu.uagrm.tienda.dto.PaginaResponse;
 import bo.edu.uagrm.tienda.dto.PortadaResponse;
+import bo.edu.uagrm.tienda.dto.ProductoDetalleResponse;
 import bo.edu.uagrm.tienda.dto.ProductoTarjetaResponse;
 import bo.edu.uagrm.tienda.service.CatalogoService;
 import bo.edu.uagrm.tienda.service.ProductoService;
 import lombok.RequiredArgsConstructor;
 
 // Lo que lee el catálogo, con o sin sesión (SecurityConfig): la lista, la portada y las marcas (HU-09) y las
-// imágenes (HU-07). El detalle llega con HU-10
+// imágenes (HU-07) y el detalle (HU-10)
 @RestController
 @RequestMapping("/api/productos")
 @RequiredArgsConstructor
@@ -48,6 +49,12 @@ public class ProductosController {
 	@GetMapping("/marcas")
 	public List<String> marcas() {
 		return catalogoService.marcas();
+	}
+
+	// Un id que no es un número sale como 400 (HU-10 RF-9); /portada y /marcas ganan por ser rutas fijas
+	@GetMapping("/{idProducto}")
+	public ProductoDetalleResponse detalle(@PathVariable Long idProducto) {
+		return catalogoService.detalle(idProducto);
 	}
 
 	@GetMapping("/{idProducto}/imagenes/{imagen}")

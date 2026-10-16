@@ -1,0 +1,306 @@
+// El detalle de un producto en el mundo «Letrero de ruta» (DESIGN.md): las
+// fotos sobre blanco a un lado, los datos al otro con el nombre en condensada
+// y el precio grande; debajo, la descripción, la ficha y «Más de» su categoría
+// sobre una placa de lona cruda
+:host {
+	display: flex;
+	flex-direction: column;
+	gap: var(--app-espacio-12);
+}
+
+.ficha-producto {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	gap: var(--app-espacio-8);
+}
+
+@media (min-width: 860px) {
+	.ficha-producto {
+		grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+		align-items: start;
+	}
+
+	.texto {
+		grid-column: 1 / -1;
+	}
+}
+
+.datos {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: var(--app-espacio-3);
+	min-width: 0;
+}
+
+// Marca y código: datos, no antetítulo (DESIGN.md → Sin Antetítulos)
+.identidad {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: var(--app-espacio-3);
+	margin: 0;
+	color: var(--app-texto-suave);
+}
+
+.marca {
+	font-family: var(--app-familia-titulos);
+	font-size: 18px;
+	font-weight: 700;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	color: var(--app-texto);
+}
+
+.codigo {
+	font-family: var(--app-familia-datos);
+	font-size: 14px;
+}
+
+h1 {
+	margin: 0;
+	padding-bottom: var(--app-espacio-3);
+	border-bottom: 3px solid var(--app-ambar);
+	color: var(--app-titulo);
+	font-size: clamp(34px, 5vw, 56px);
+	font-weight: 800;
+	line-height: 1;
+	text-transform: uppercase;
+	text-wrap: balance;
+	overflow-wrap: anywhere;
+	outline: none;
+	align-self: stretch;
+}
+
+.categoria {
+	display: inline-flex;
+	align-items: center;
+	min-height: var(--app-area-tocable);
+	color: var(--app-acento-texto);
+	font-family: var(--app-familia-titulos);
+	font-size: 20px;
+	font-weight: 700;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	text-underline-offset: 4px;
+}
+
+.precio {
+	margin: 0;
+	color: var(--app-texto);
+	font-family: var(--app-familia-titulos);
+	font-size: clamp(40px, 6vw, 56px);
+	font-weight: 700;
+	font-variant-numeric: tabular-nums;
+	line-height: 1;
+}
+
+.unidad {
+	color: var(--app-texto-suave);
+	font-size: 0.5em;
+	font-weight: 600;
+}
+
+// Estado con ícono, texto y forma: el agotado va cosido en paralelogramo, como
+// en la tarjeta
+.disponibilidad {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--app-espacio-2);
+	margin: 0;
+	font-family: var(--app-familia-titulos);
+	font-size: 20px;
+	font-weight: 700;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+}
+
+.disponibilidad svg {
+	width: 20px;
+	height: 20px;
+}
+
+.hay {
+	color: var(--app-exito);
+}
+
+.agotado {
+	padding: var(--app-espacio-1) var(--app-espacio-4);
+	background: var(--app-lona);
+	color: var(--app-sobre-lona);
+	outline: 1px dashed var(--app-sobre-lona);
+	outline-offset: -5px;
+	clip-path: polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%);
+}
+
+.editar {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--app-espacio-2);
+	min-height: var(--app-area-tocable);
+	margin-top: var(--app-espacio-2);
+	padding: 0 var(--app-espacio-4);
+	border: 1px solid var(--app-borde-control);
+	color: var(--app-texto);
+	font-weight: 600;
+	text-decoration: none;
+	transition:
+		background-color var(--app-transicion),
+		color var(--app-transicion);
+}
+
+.editar svg {
+	width: var(--app-icono);
+	height: var(--app-icono);
+}
+
+@media (hover: hover) and (pointer: fine) {
+	.editar:hover {
+		background: var(--app-superficie-alta);
+		color: var(--app-acento-texto);
+	}
+}
+
+.texto {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	gap: var(--app-espacio-8);
+}
+
+@media (min-width: 860px) {
+	.texto {
+		grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+	}
+}
+
+h2 {
+	margin: 0 0 var(--app-espacio-3);
+	font-size: 26px;
+	font-weight: 800;
+	letter-spacing: 0.02em;
+	text-transform: uppercase;
+}
+
+.descripcion {
+	margin: 0;
+	max-width: 68ch;
+	font-size: 17px;
+	line-height: 1.6;
+	white-space: pre-line;
+	overflow-wrap: anywhere;
+}
+
+// La ficha como la placa de datos de una herramienta: filas con costura
+.ficha {
+	margin: 0;
+	border-top: 2px dashed var(--app-borde-control);
+}
+
+.ficha div {
+	display: grid;
+	grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+	gap: var(--app-espacio-4);
+	padding: var(--app-espacio-3) 0;
+	border-bottom: 1px solid var(--app-borde);
+}
+
+.ficha dt {
+	color: var(--app-texto-suave);
+	font-weight: 600;
+	overflow-wrap: anywhere;
+}
+
+.ficha dd {
+	margin: 0;
+	overflow-wrap: anywhere;
+}
+
+// La placa de sección de la portada, con su costura amarilla
+.placa {
+	--app-acento-texto: var(--app-sobre-lona);
+	padding: var(--app-espacio-6) clamp(var(--app-espacio-4), 3vw, var(--app-espacio-8));
+	background: var(--app-lona-tejida) var(--app-textura-cruda);
+	background-blend-mode: soft-light;
+	color: var(--app-sobre-lona);
+	border-top: 2px dashed var(--app-ambar);
+	outline: 1px solid var(--app-ambar);
+	outline-offset: -1px;
+}
+
+.no-disponible {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: var(--app-espacio-4);
+	max-width: 60ch;
+}
+
+.no-disponible p {
+	margin: 0;
+	color: var(--app-texto-suave);
+	font-size: 18px;
+}
+
+// La acción principal de la tienda: amarilla, en sesgo, con el texto derecho
+.principal {
+	display: inline-flex;
+	align-items: center;
+	min-height: var(--app-area-tocable);
+	padding: 0 var(--app-espacio-6);
+	background: var(--app-ambar);
+	color: var(--app-sobre-ambar);
+	font-family: var(--app-familia-titulos);
+	font-size: 20px;
+	font-weight: 800;
+	text-decoration: none;
+	text-transform: uppercase;
+	transform: skewX(var(--app-sesgo));
+	transition:
+		background-color var(--app-transicion),
+		transform var(--app-duracion-rapida) var(--app-curva-salida);
+}
+
+.principal span {
+	transform: skewX(calc(var(--app-sesgo) * -1));
+}
+
+@media (hover: hover) and (pointer: fine) {
+	.principal:hover {
+		background: var(--app-ambar-fuerte);
+	}
+}
+
+.principal:active {
+	transform: skewX(var(--app-sesgo)) scale(0.96);
+}
+
+.cargando {
+	margin: 0;
+	color: var(--app-texto-suave);
+}
+
+.tarjeta-error {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: var(--app-espacio-3);
+}
+
+.aviso {
+	margin: 0;
+	padding: var(--app-espacio-3);
+	border: 1px solid var(--app-error);
+	background: var(--app-error-fondo);
+	color: var(--app-error);
+}
+
+.secundario {
+	min-height: var(--app-area-tocable);
+	padding: 0 var(--app-espacio-4);
+	border: 2px solid currentColor;
+	background: transparent;
+	color: var(--app-texto);
+	font: inherit;
+	font-weight: 600;
+	cursor: pointer;
+}

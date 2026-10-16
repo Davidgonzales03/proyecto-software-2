@@ -17,7 +17,7 @@ solo las secciones que tocan la tarea. Al agregar una decisión, sumarla al
 - **[Seguridad](#seguridad)**: [`Usuario` es una sola clase con `rol` enumerado](#usuario-es-una-sola-clase-con-rol-enumerado) · [Autenticación por JWT stateless](#autenticación-por-jwt-stateless) · [Contraseñas con BCrypt](#contraseñas-con-bcrypt) · [Administrador inicial al arrancar](#administrador-inicial-al-arrancar) · [Registro](#registro) · [Inicio de sesión](#inicio-de-sesión) · [Recuperación de contraseña](#recuperación-de-contraseña) · [Datos personales](#datos-personales) · [Gestión de usuarios](#gestión-de-usuarios)
 - **[Notificaciones](#notificaciones)**: [Envío de correo detrás de `NotificadorCorreo`](#envío-de-correo-detrás-de-notificadorcorreo) · [Gmail por SMTP, sin servidor de correo propio](#gmail-por-smtp-sin-servidor-de-correo-propio)
 - **[Sistema de diseño (frontend)](#sistema-de-diseño-frontend)**: [La aplicación es un producto, no un trabajo académico](#la-aplicación-es-un-producto-no-un-trabajo-académico) · [Lo visual vive en `DESIGN.md`](#lo-visual-vive-en-designmd) · [Decisiones técnicas del frontend](#decisiones-técnicas-del-frontend)
-- **[Decisiones del proyecto](#decisiones-del-proyecto)**: [Tienda propia, no marketplace](#tienda-propia-no-marketplace) · [Roles de la tienda](#roles-de-la-tienda) · [Pago con Libélula, sin facturación SIAT](#pago-con-libélula-sin-facturación-siat) · [Rediseño del frontend dentro del flujo](#rediseño-del-frontend-dentro-del-flujo) · [Rubro: ferretería, con vista 3D](#rubro-ferretería-con-vista-3d) · [Categorías del catálogo](#categorías-del-catálogo) · [Productos](#productos) · [Inventario](#inventario) · [Catálogo público](#catálogo-público)
+- **[Decisiones del proyecto](#decisiones-del-proyecto)**: [Tienda propia, no marketplace](#tienda-propia-no-marketplace) · [Roles de la tienda](#roles-de-la-tienda) · [Pago con Libélula, sin facturación SIAT](#pago-con-libélula-sin-facturación-siat) · [Rediseño del frontend dentro del flujo](#rediseño-del-frontend-dentro-del-flujo) · [Rubro: ferretería, con vista 3D](#rubro-ferretería-con-vista-3d) · [Categorías del catálogo](#categorías-del-catálogo) · [Productos](#productos) · [Inventario](#inventario) · [Catálogo público](#catálogo-público) · [Detalle del producto](#detalle-del-producto)
 
 ---
 
@@ -549,3 +549,25 @@ proveedores quedan fuera porque los reportes son de ventas e ingresos.
 **Motivo:** la portada vende y el catálogo encuentra; un carrusel que avanza
 solo le quita el producto a quien lo estaba mirando; mostrar la cantidad en
 stock expone el inventario a cualquiera.
+
+### Detalle del producto
+
+*16/10/2026 (HU-10).* Cada producto que se puede listar tiene su página
+pública en `/producto/:id`, con o sin sesión.
+
+- **Muestra:** las fotos (la principal grande, miniaturas para cambiar y
+  pantalla completa), nombre, marca, código, categoría (enlaza al catálogo
+  filtrado), precio con su unidad, «Disponible» o «Agotado» (nunca la
+  cantidad), descripción y ficha técnica. Debajo, «Más de <categoría>»: hasta
+  12 disponibles de la misma categoría, sin el producto.
+- **No disponible:** un producto inactivo, de una categoría oculta o que no
+  existe responde 404, igual en los tres casos, y la pantalla dice que no
+  está disponible, con un enlace al catálogo.
+- **Sin compra todavía:** el botón para agregar al carrito llega con HU-11; el
+  modelo 3D, con HU-15 y HU-16.
+- **El Administrador** ve un acceso «Editar producto» (usabilidad; el permiso
+  lo valida el backend).
+
+**Motivo:** el código ayuda a pedir por teléfono o en el local; un 404 igual
+para los tres casos no revela qué productos existen; un botón que todavía no
+anda promete algo que la tienda no cumple.

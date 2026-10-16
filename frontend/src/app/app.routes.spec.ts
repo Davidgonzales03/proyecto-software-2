@@ -121,6 +121,12 @@ describe('rutas', () => {
     expect(await navegarComo('EMPLEADO', '/panel')).toBe('/panel');
   });
 
+  // HU-10 RF-1
+  it('el detalle del producto es público', async () => {
+    expect(await navegarComo(null, '/producto/7')).toBe('/producto/7');
+    expect(await navegarComo('CLIENTE', '/producto/7')).toBe('/producto/7');
+  });
+
   it('mis datos pide sesión', async () => {
     expect(await navegarComo(null, '/mis-datos')).toBe('/inicio-sesion?destino=%2Fmis-datos');
     expect(await navegarComo('CLIENTE', '/mis-datos')).toBe('/mis-datos');
