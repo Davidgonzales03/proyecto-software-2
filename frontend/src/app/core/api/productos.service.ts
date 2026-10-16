@@ -1,6 +1,7 @@
 import { HttpClient, httpResource, HttpResourceRef } from '@angular/common/http';
 import { inject, Injectable, Signal } from '@angular/core';
 
+import { urlDeImagen } from '../modelos/catalogo';
 import { Pagina } from '../modelos/pagina';
 import {
 	Caracteristica,
@@ -78,7 +79,7 @@ export class ProductosService {
 
 	// La imagen se sirve sin sesión, como la verá el catálogo
 	urlDeImagen(idProducto: number, imagen: string): string {
-		return `/api/productos/${idProducto}/imagenes/${encodeURIComponent(imagen)}`;
+		return urlDeImagen(idProducto, imagen);
 	}
 }
 

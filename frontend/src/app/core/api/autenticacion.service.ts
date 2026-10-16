@@ -2,7 +2,7 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 
-import { ErrorApi, esErrorApi } from '../modelos/error-api';
+import { ErrorApi, esErrorApi, SIN_CONEXION } from '../modelos/error-api';
 import { DatosDeRegistro } from '../modelos/registro';
 import { Sesion } from '../modelos/sesion';
 
@@ -82,5 +82,13 @@ export function comoErrorApi(error: unknown): ErrorApi {
 	if (error instanceof HttpErrorResponse && esErrorApi(error.error)) {
 		return error.error;
 	}
-	return { status: 0, detail: 'No se pudo contactar al servidor', codigo: 'SIN_CONEXION' };
+	// El servidor contestó sin el cuerpo de la API (un proxy, un error que no
+	// pasó por el backend): un 5xx puede pasar reintentando; un 4xx no, y va
+	// sin código, al mensaje general. No es falta de conexión
+	if (error instanceof HttpErrorResponse && error.status > 0) {
+		return error.status >= 500
+			? { status: error.status, detail: 'El servidor no pudo responder', codigo: 'ERROR_SERVIDOR' }
+			: { status: error.status, detail: 'El servidor rechazó el pedido' };
+	}
+	return { ...SIN_CONEXION };
 }

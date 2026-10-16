@@ -1,4 +1,4 @@
-import { provideHttpClient } from '@angular/common/http';
+import { HttpErrorResponse, provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 
@@ -6,7 +6,7 @@ import { ErrorApi } from '../modelos/error-api';
 import { DatosDeRegistro } from '../modelos/registro';
 import { Sesion } from '../modelos/sesion';
 import { Usuario } from '../modelos/usuario';
-import { AutenticacionService } from './autenticacion.service';
+import { AutenticacionService, comoErrorApi } from './autenticacion.service';
 
 const RESPUESTA: Sesion = {
   token: 'jwt.de.prueba',
@@ -111,6 +111,17 @@ describe('AutenticacionService', () => {
     );
 
     await expect(promesa).rejects.toMatchObject({ codigo: 'INTENTOS_EXCEDIDOS' });
+  });
+
+  // Revisión de HU-10: un 5xx con cuerpo HTML (de un proxy) no es falta de conexión
+  it('una respuesta de error sin cuerpo propio es un error del servidor', () => {
+    const html = new HttpErrorResponse({ status: 502, error: '<html>Bad Gateway</html>' });
+    expect(comoErrorApi(html)).toMatchObject({ status: 502, codigo: 'ERROR_SERVIDOR' });
+    expect(comoErrorApi(new HttpErrorResponse({ status: 0 }))).toMatchObject({ codigo: 'SIN_CONEXION' });
+    // Un 4xx sin cuerpo (un 413 del proxy) no se arregla reintentando
+    const rechazo = comoErrorApi(new HttpErrorResponse({ status: 413, error: '' }));
+    expect(rechazo.status).toBe(413);
+    expect(rechazo.codigo).toBeUndefined();
   });
 
   it('rechaza con un error propio cuando el servidor no responde', async () => {

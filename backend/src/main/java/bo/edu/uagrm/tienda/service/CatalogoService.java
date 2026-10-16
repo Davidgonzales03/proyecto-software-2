@@ -73,11 +73,9 @@ public class CatalogoService {
 	@Transactional(readOnly = true)
 	public ProductoDetalleResponse detalle(Long idProducto) {
 		Producto producto = productoRepository.publico(idProducto).orElseThrow(ProductoNoEncontradoException::new);
-		List<ProductoTarjetaResponse> relacionados = productoRepository
-				.vitrina(producto.getCategoria().getIdCategoria(), false,
-						PageRequest.of(0, POR_CARRUSEL + 1, OrdenCatalogo.RECIENTES.orden()))
-				.stream().filter(otro -> !otro.getIdProducto().equals(idProducto)).limit(POR_CARRUSEL)
-				.map(ProductoTarjetaResponse::from).toList();
+		List<ProductoTarjetaResponse> relacionados = vitrina(producto.getCategoria().getIdCategoria(), false,
+				POR_CARRUSEL + 1).stream().filter(otro -> !otro.idProducto().equals(idProducto)).limit(POR_CARRUSEL)
+				.toList();
 		return ProductoDetalleResponse.from(producto, relacionados);
 	}
 
@@ -87,8 +85,13 @@ public class CatalogoService {
 	}
 
 	private List<ProductoTarjetaResponse> vitrina(Long idCategoria, boolean soloDestacados) {
+		return vitrina(idCategoria, soloDestacados, POR_CARRUSEL);
+	}
+
+	// Los carruseles de la portada y «Más de…» del detalle: la misma regla y el mismo orden
+	private List<ProductoTarjetaResponse> vitrina(Long idCategoria, boolean soloDestacados, int cantidad) {
 		return productoRepository
-				.vitrina(idCategoria, soloDestacados, PageRequest.of(0, POR_CARRUSEL, OrdenCatalogo.RECIENTES.orden()))
+				.vitrina(idCategoria, soloDestacados, PageRequest.of(0, cantidad, OrdenCatalogo.RECIENTES.orden()))
 				.stream().map(ProductoTarjetaResponse::from).toList();
 	}
 

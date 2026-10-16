@@ -35,6 +35,7 @@ const MENSAJES: Record<string, string> = {
 	IMAGEN_INVALIDA: 'Ese archivo no es una imagen JPG, PNG o WebP.',
 	IMAGEN_DEMASIADO_GRANDE: 'La imagen pesa más de 2 MB. Elige una más liviana.',
 	SIN_CONEXION: 'No pudimos conectar con el servidor. Intenta de nuevo.',
+	ERROR_SERVIDOR: 'El servidor tuvo un problema. Vuelva a intentarlo en un momento.',
 };
 
 const GENERICO = 'No pudimos completar la operación. Intenta de nuevo.';

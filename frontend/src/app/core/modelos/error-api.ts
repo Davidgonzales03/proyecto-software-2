@@ -36,7 +36,13 @@ export function errorDelCampo(error: ErrorApi | null, campo: string): string | n
 // error de programación, una promesa rechazada sin cuerpo) se trata como falta
 // de conexión, para que la pantalla siempre tenga un mensaje que mostrar
 export function comoError(error: unknown): ErrorApi {
-	return esErrorApi(error)
-		? error
-		: { status: 0, detail: 'No se pudo contactar al servidor', codigo: 'SIN_CONEXION' };
+	return esErrorApi(error) ? error : { ...SIN_CONEXION };
 }
+
+// Lo que se muestra cuando no hay respuesta del servidor. Congelado, y cada
+// llamada devuelve una copia: una pantalla que la cambie no afecta a otra
+export const SIN_CONEXION: Readonly<ErrorApi> = Object.freeze({
+	status: 0,
+	detail: 'No se pudo contactar al servidor',
+	codigo: 'SIN_CONEXION',
+});

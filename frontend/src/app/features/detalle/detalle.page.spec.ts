@@ -132,6 +132,13 @@ describe('DetallePage', () => {
     expect(pantalla().querySelector('h1')?.textContent?.trim()).toBe('Taladro percutor 750 W');
   });
 
+  // Revisión de HU-10: al entrar, el foco no se mueve (solo al pasar de un producto a otro)
+  it('al entrar no mueve el foco', async () => {
+    await abrir();
+
+    expect(document.activeElement).not.toBe(pantalla().querySelector('h1'));
+  });
+
   // HU-10 RF-2
   it('muestra los datos del producto', async () => {
     await abrir();
