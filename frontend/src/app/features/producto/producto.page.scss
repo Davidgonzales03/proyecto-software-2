@@ -34,10 +34,11 @@ h2 {
 	color: var(--app-texto-suave);
 	font-size: 14px;
 	text-decoration: none;
+	transition: color var(--app-transicion);
 }
 
 .volver:hover {
-	color: var(--app-texto);
+	color: var(--app-acento-texto);
 }
 
 .icono {

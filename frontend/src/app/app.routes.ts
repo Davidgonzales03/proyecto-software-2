@@ -34,13 +34,22 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./features/restablecer/restablecer.page').then((m) => m.RestablecerPage),
   },
-  // La portada es el panel con los accesos de cada rol. Sin sesión, el guard
-  // manda a iniciar sesión; cuando el proyecto tenga una portada pública (un
-  // catálogo), va acá y el panel pasa a /panel
+  // La portada es la tienda, para todos (HU-09). El panel con los accesos de
+  // cada rol pasa a /panel
   {
     path: '',
     pathMatch: 'full',
     title: MARCA.nombre,
+    loadComponent: () => import('./features/portada/portada.page').then((m) => m.PortadaPage),
+  },
+  {
+    path: 'catalogo',
+    title: `Catálogo · ${MARCA.nombre}`,
+    loadComponent: () => import('./features/catalogo/catalogo.page').then((m) => m.CatalogoPage),
+  },
+  {
+    path: 'panel',
+    title: `Panel · ${MARCA.nombre}`,
     canActivate: [sesionGuard],
     loadComponent: () => import('./features/panel/panel.page').then((m) => m.PanelPage),
   },

@@ -181,6 +181,14 @@ describe('StockPage', () => {
     await harness.fixture.whenStable();
   }
 
+  // 16/10/2026: con stock 0 la marca es «Agotado», no «Stock bajo»
+  it('marca como agotado un producto sin stock', async () => {
+    await abrir('/inventario/7', 'EMPLEADO', (falso) => falso.producto.value.set({ ...TALADRO, stock: 0 }));
+
+    const marca = (pantalla().querySelector('.bajo')?.textContent ?? '').trim();
+    expect(marca).toBe('Agotado');
+  });
+
   // HU-08 RF-9, RF-11: cabecera con stock, mínimo y la marca; historial con signo, motivo, quién y la nota
   it('muestra el stock, el mínimo y el historial', async () => {
     await abrir();

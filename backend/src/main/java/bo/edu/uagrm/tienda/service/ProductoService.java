@@ -71,6 +71,7 @@ public class ProductoService {
 		Producto producto = productoRepository.saveAndFlush(Producto.crear(solicitud.nombre(), solicitud.marca(),
 				solicitud.descripcion(), solicitud.precio(), solicitud.unidad(), categoria, ficha(solicitud),
 				LocalDateTime.now(clock)));
+		producto.marcarDestacado(solicitud.destacado());
 		producto.asignarCodigo(prefijo(categoria.getNombre()) + "-" + "%04d".formatted(producto.getIdProducto()));
 		return ProductoResponse.from(producto);
 	}
@@ -86,6 +87,7 @@ public class ProductoService {
 		}
 		producto.editar(solicitud.nombre(), solicitud.marca(), solicitud.descripcion(), solicitud.precio(),
 				solicitud.unidad(), categoria(solicitud.idCategoria()), ficha(solicitud));
+		producto.marcarDestacado(solicitud.destacado());
 		return ProductoResponse.from(producto);
 	}
 

@@ -2,6 +2,7 @@ import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
 
 import { Rol } from '../modelos/usuario';
+import { inicioDe } from '../sesion/inicio';
 import { SesionService } from '../sesion/sesion.service';
 
 // La ruta declara el rol que necesita, { data: { rol: 'ADMINISTRADOR' } }, o
@@ -17,9 +18,9 @@ export const rolGuard: CanActivateFn = (ruta, estado) => {
 		});
 	}
 
-	// Con sesión pero sin el rol, vuelve al inicio: no es una sesión caída
+	// Con sesión pero sin el rol, vuelve a su inicio (HU-09 RF-16): no es una sesión caída
 	const uno = ruta.data['rol'] as Rol | undefined;
 	const permitidos = (ruta.data['roles'] as readonly Rol[] | undefined) ?? (uno === undefined ? undefined : [uno]);
 	const rol = sesion.rol();
-	return permitidos === undefined || (rol !== null && permitidos.includes(rol)) ? true : router.createUrlTree(['/']);
+	return permitidos === undefined || (rol !== null && permitidos.includes(rol)) ? true : router.createUrlTree([inicioDe(rol)]);
 };

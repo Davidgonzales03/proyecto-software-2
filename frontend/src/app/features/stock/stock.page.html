@@ -24,7 +24,15 @@
       <dt>Mínimo</dt>
       <dd class="numero">{{ producto.stockMinimo === null ? 'Sin mínimo' : cantidad(producto.stockMinimo) }}</dd>
     </div>
-    @if (producto.stockBajo) {
+    @if (producto.stock === 0) {
+      <div class="dato">
+        <dt class="solo-lectores">Alerta</dt>
+        <dd class="bajo">
+          <svg lucideCircleSlash class="icono" aria-hidden="true"></svg>
+          Agotado
+        </dd>
+      </div>
+    } @else if (producto.stockBajo) {
       <div class="dato">
         <dt class="solo-lectores">Alerta</dt>
         <dd class="bajo">

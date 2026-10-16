@@ -1,5 +1,5 @@
 // Sistema de diseño de la aplicación. Los valores y su motivo están en
-// docs/decisiones.md → "Sistema de diseño (frontend)".
+// DESIGN.md (el sistema visual completo).
 // Ningún componente escribe un color a mano: todos salen de acá.
 //
 // Dos modos: el oscuro, por defecto, en :root, y el claro, que lo pisa con
@@ -8,34 +8,54 @@
 
 :root {
 	// Color
-	// Grafito con amarillo de señalización, el de las herramientas y los avisos
-	// de obra (decisiones.md → Paleta y modos)
-	--app-fondo: #16181b;
-	--app-superficie: #1f2226;
-	--app-superficie-alta: #272a2f;
-	--app-texto: #ecebe6;
-	--app-texto-suave: #a2a7ae;
-	// El amarillo de relleno (botones, logotipo, raya del encabezado)
-	--app-ambar: #f2b81c;
-	--app-ambar-fuerte: #d9a516;
-	// El amarillo como texto, enlace o contorno de foco: en el modo claro es otro,
-	// porque el de relleno no llega a 4.5:1 sobre el fondo claro
-	--app-acento-texto: #f2b81c;
-	--app-borde: #33373d;
-	--app-borde-control: #6c727a;
-	--app-exito: #6cc391;
-	--app-aviso: #f0a24a;
-	--app-error: #f2998f;
-	--app-neutro: #a2a7ae;
-	// El texto sobre un fondo ámbar (botones principales, logotipo)
-	--app-sobre-ambar: #16181b;
+	// «Letrero de ruta» (16/10/2026, HU-09; DESIGN.md): lona verde botella como
+	// fondo, amarillo cromo solo para las leyendas y la acción principal, y lona
+	// clara para el texto corrido y las placas
+	--app-fondo: #0c3326;
+	--app-superficie: #114032;
+	--app-superficie-alta: #164d3c;
+	--app-texto: #f2efe6;
+	--app-texto-suave: #b9c7bd;
+	// El amarillo de relleno (botones principales, logotipo, leyendas)
+	--app-ambar: #ffd200;
+	--app-ambar-fuerte: #e6bd00;
+	// El amarillo como texto, enlace o contorno de foco: en el modo claro es el
+	// verde, porque el amarillo no se lee sobre la lona clara
+	--app-acento-texto: #ffd200;
+	--app-borde: #2a5a48;
+	--app-borde-control: #7f9a8c;
+	--app-exito: #7fd3a0;
+	--app-aviso: #ffb45c;
+	--app-error: #ff9e94;
+	--app-neutro: #b9c7bd;
+	// El texto sobre un fondo amarillo (botones principales, logotipo)
+	--app-sobre-ambar: #0c3326;
 	// Lo que oscurece la página detrás de un diálogo
-	--app-velo: rgb(22 24 27 / 0.75);
+	--app-velo: rgb(6 26 19 / 0.75);
+	// La lona clara de las placas (el carrusel, las tarjetas) y su tinta
+	--app-lona: #f2efe6;
+	// La lona cruda de las placas que llevan tarjetas: más cálida y oscura, para
+	// que la tarjeta se separe de su placa
+	--app-lona-tejida: #e4dcc6;
+	--app-sobre-lona: #0f2a1d;
+	--app-sobre-lona-suave: #4d5f55;
+	// El marco de la ventana del letrero
+	--app-ventana: #061a12;
+	// El tejido de la lona: mosaicos grises que se funden con el color de cada
+	// superficie (soft-light), así la textura no cambia la paleta. Fotos CC0 de
+	// Poly Haven, procesadas (DESIGN.md → Texturas)
+	--app-textura-lona: url('/texturas/lona-verde.webp');
+	--app-textura-cruda: url('/texturas/lona-cruda.webp');
+	// Los títulos grandes de pantalla: amarillo sobre la lona verde
+	--app-titulo: #ffd200;
+	// Detrás de la foto de un producto: blanco, como el fondo de casi todas las
+	// fotos de catálogo, en los dos modos
+	--app-foto: #ffffff;
 
 	// Fondos tenues de las etiquetas de estado
-	--app-exito-fondo: #18291f;
-	--app-aviso-fondo: #2e2414;
-	--app-error-fondo: #2e1c1b;
+	--app-exito-fondo: #12452f;
+	--app-aviso-fondo: #3a3214;
+	--app-error-fondo: #3d2420;
 
 	// El código QR: oscuro sobre claro, como piden los lectores, sea cual sea el
 	// tema de la interfaz
@@ -52,8 +72,11 @@
 	--app-espacio-12: 48px;
 
 	// Forma
-	--app-radio: 8px;
-	--app-radio-control: 6px;
+	// Esquinas rectas, como la lona cortada (DESIGN.md)
+	--app-radio: 2px;
+	--app-radio-control: 0;
+	// El sesgo de los paneles y las placas del letrero; el texto va derecho
+	--app-sesgo: -12deg;
 	--app-ancho-maximo: 1120px;
 	--app-ancho-formulario: 420px;
 	// Lo mínimo que mide algo que se toca con el dedo (decisiones.md → Reglas)
@@ -68,7 +91,7 @@
 
 	// Movimiento: sin recalcular el layout (transform, opacity, clip-path,
 	// filter), hasta 300 ms; 400 ms solo para diálogos y paneles laterales
-	// (decisiones.md → Reglas que valen para toda la interfaz). Con
+	// (DESIGN.md → Do's and Don'ts). Con
 	// prefers-reduced-motion se quita el desplazamiento y quedan los fundidos
 	// (styles.scss)
 	--app-duracion-rapida: 150ms;
@@ -81,6 +104,8 @@
 	--app-curva-salida: cubic-bezier(0.23, 1, 0.32, 1);
 	// Acelera y frena: para lo que se mueve dentro de la pantalla (un carrusel)
 	--app-curva-mover: cubic-bezier(0.77, 0, 0.175, 1);
+	// El paso del rollo del letrero: entra, se pasa un poco y se asienta
+	--app-curva-paso: cubic-bezier(0.34, 1.2, 0.64, 1);
 	// Arranca lento: solo para lo que se va, y con la duración rápida. Nunca para
 	// entrar ni para responder, porque se siente lento
 	--app-curva-irse: cubic-bezier(0.4, 0, 1, 1);
@@ -91,27 +116,34 @@
 	--app-icono: 18px;
 }
 
-// Modo claro: solo cambian los colores. El amarillo sigue de relleno con texto
-// oscuro encima; como texto o enlace va uno oscuro (--app-acento-texto)
+// Modo claro: la lona clara pasa a ser el fondo. El amarillo sigue de relleno con
+// texto verde encima; como texto o enlace va el verde (--app-acento-texto)
 :root[data-tema='claro'] {
 	color-scheme: light;
 
-	--app-fondo: #f3f2ee;
-	--app-superficie: #ffffff;
-	--app-superficie-alta: #ebe9e3;
-	--app-texto: #1d1f22;
-	--app-texto-suave: #5d636b;
-	--app-ambar: #e0a100;
-	--app-ambar-fuerte: #c99000;
-	--app-acento-texto: #8a5a00;
-	--app-borde: #d9d7cf;
-	--app-borde-control: #7d8086;
+	--app-fondo: #f2efe6;
+	--app-superficie: #fbfaf6;
+	--app-superficie-alta: #e7e2d4;
+	--app-texto: #0f2a1d;
+	--app-texto-suave: #4d5f55;
+	--app-ambar: #ffd200;
+	--app-ambar-fuerte: #e6bd00;
+	--app-acento-texto: #0e3a2e;
+	--app-borde: #d6d0bf;
+	--app-borde-control: #6f7d74;
 	--app-exito: #1f6b3f;
 	--app-aviso: #8a4b00;
 	--app-error: #b3261e;
-	--app-neutro: #5d636b;
-	--app-sobre-ambar: #1d1f22;
-	--app-velo: rgb(29 31 34 / 0.45);
+	--app-neutro: #4d5f55;
+	--app-sobre-ambar: #0e3a2e;
+	--app-velo: rgb(15 42 29 / 0.45);
+	--app-lona: #fbfaf6;
+	--app-lona-tejida: #e4dcc6;
+	--app-sobre-lona: #0f2a1d;
+	--app-sobre-lona-suave: #4d5f55;
+	--app-ventana: #0c3326;
+	// Sobre la lona clara, el amarillo no se lee: el título va en verde
+	--app-titulo: #0e3a2e;
 
 	--app-exito-fondo: #e3f1e8;
 	--app-aviso-fondo: #f8ecd9;

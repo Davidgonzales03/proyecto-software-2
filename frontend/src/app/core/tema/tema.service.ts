@@ -4,7 +4,7 @@ import { guardarTema, leerTema, Tema } from './almacen-tema';
 
 // El color de la barra del navegador en el celular: el fondo de cada modo
 // (--app-fondo en _tokens.scss)
-const COLOR_DE_LA_BARRA: Record<Tema, string> = { oscuro: '#0b1020', claro: '#f6f7fb' };
+const COLOR_DE_LA_BARRA: Record<Tema, string> = { oscuro: '#0c3326', claro: '#f2efe6' };
 
 // El modo de la interfaz. El oscuro va sin marca en <html> porque es el de
 // :root; el claro se activa con data-tema="claro" (styles/_tokens.scss)

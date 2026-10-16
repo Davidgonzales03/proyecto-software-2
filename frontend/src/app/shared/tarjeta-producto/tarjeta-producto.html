@@ -1,0 +1,33 @@
+<a class="placa" [routerLink]="datos().enlace" [class.sin-stock]="datos().agotado">
+  <span class="foto" [class.sin-foto]="datos().imagen === null || fotoRota()">
+    @if (!fotoRota() && datos().imagen; as imagen) {
+      <img
+        [src]="imagen"
+        alt=""
+        loading="lazy"
+        decoding="async"
+        width="320"
+        height="240"
+        (error)="fotoRota.set(true)"
+      />
+    } @else {
+      <svg lucideWrench class="icono-foto" aria-hidden="true"></svg>
+    }
+  </span>
+  <span class="cuerpo">
+    <!-- La línea de la marca se reserva aunque no haya: los nombres de una fila quedan alineados -->
+    <span class="marca" [title]="datos().marca ?? ''">{{ datos().marca ?? '' }}</span>
+    <span class="nombre" [title]="datos().nombre">{{ datos().nombre }}</span>
+    <span class="pie">
+      <span class="precio">
+        {{ precio() }}
+        @if (datos().unidad; as unidad) {
+          <span class="unidad">/ {{ unidad }}</span>
+        }
+      </span>
+      @if (datos().agotado) {
+        <span class="agotado"><svg lucideCircleSlash aria-hidden="true"></svg>Agotado</span>
+      }
+    </span>
+  </span>
+</a>

@@ -1,0 +1,335 @@
+// El catálogo dentro del letrero de ruta (DESIGN.md): filtros sobre la lona
+// verde, la grilla de placas de lona clara con un ritmo estricto y las páginas
+// cortadas en sesgo
+:host {
+	display: flex;
+	flex-direction: column;
+	gap: var(--app-espacio-6);
+}
+
+.cabecera {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: var(--app-espacio-3);
+	padding-bottom: var(--app-espacio-3);
+	border-bottom: 3px solid var(--app-ambar);
+}
+
+h1 {
+	color: var(--app-titulo);
+	outline: none;
+	font-size: clamp(44px, 8vw, 88px);
+	font-weight: 800;
+	text-transform: uppercase;
+	line-height: 0.95;
+}
+
+.total {
+	margin: 0;
+	color: var(--app-texto-suave);
+	font-family: var(--app-familia-titulos);
+	font-size: 22px;
+	font-weight: 700;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+}
+
+// Búsqueda ancha en lona clara, con «Buscar» amarillo: la acción principal
+.busqueda {
+	display: flex;
+	min-height: 56px;
+}
+
+.busqueda input {
+	caret-color: var(--app-sobre-lona);
+}
+
+.busqueda input::placeholder {
+	color: var(--app-sobre-lona-suave);
+	opacity: 1;
+}
+
+.busqueda input {
+	flex: 1;
+	min-width: 0;
+	padding: 0 var(--app-espacio-4);
+	border: 0;
+	background: var(--app-lona);
+	color: var(--app-sobre-lona);
+	font: inherit;
+	font-size: 18px;
+}
+
+.busqueda button,
+.abrir-filtros {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--app-espacio-2);
+	padding: 0 var(--app-espacio-6);
+	border: 0;
+	background: var(--app-ambar);
+	color: var(--app-sobre-ambar);
+	font-family: var(--app-familia-titulos);
+	font-size: 20px;
+	font-weight: 800;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	cursor: pointer;
+	transition: transform var(--app-duracion-rapida) var(--app-curva-salida);
+}
+
+// La acción principal y el botón de filtros, cortados en sesgo con el texto derecho
+.busqueda button,
+.abrir-filtros {
+	transform: skewX(var(--app-sesgo));
+}
+
+.busqueda button {
+	margin-left: -6px;
+	margin-right: 5px;
+}
+
+.abrir-filtros {
+	margin-left: 5px;
+}
+
+.derecho {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--app-espacio-2);
+	transform: skewX(calc(var(--app-sesgo) * -1));
+}
+
+.busqueda button:active,
+.abrir-filtros:active {
+	transform: skewX(var(--app-sesgo)) scale(0.97);
+}
+
+svg {
+	width: var(--app-icono);
+	height: var(--app-icono);
+}
+
+.cuerpo {
+	display: grid;
+	grid-template-columns: 240px minmax(0, 1fr);
+	align-items: start;
+	gap: var(--app-espacio-8);
+}
+
+.abrir-filtros {
+	display: none;
+	min-height: var(--app-area-tocable);
+	justify-self: start;
+	background: transparent;
+	color: var(--app-texto);
+	box-shadow: inset 0 0 0 2px currentColor;
+}
+
+.filtros {
+	display: flex;
+	flex-direction: column;
+	gap: var(--app-espacio-4);
+}
+
+.campo {
+	display: flex;
+	flex-direction: column;
+	gap: var(--app-espacio-1);
+	min-width: 0;
+	margin: 0;
+	padding: 0;
+	border: 0;
+}
+
+label:not(.casilla),
+legend {
+	padding: 0;
+	color: var(--app-texto-suave);
+	font-size: 12px;
+	font-weight: 600;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+}
+
+.selector {
+	position: relative;
+	display: block;
+}
+
+.selector svg {
+	position: absolute;
+	top: 50%;
+	right: var(--app-espacio-3);
+	transform: translateY(-50%);
+	pointer-events: none;
+	color: var(--app-acento-texto);
+}
+
+select {
+	appearance: none;
+	cursor: pointer;
+}
+
+select,
+.rango input {
+	width: 100%;
+	min-height: var(--app-area-tocable);
+	padding: 0 var(--app-espacio-3);
+	border: 1px solid var(--app-borde-control);
+	background: var(--app-superficie);
+	color: var(--app-texto);
+	font: inherit;
+}
+
+.selector select {
+	padding-right: var(--app-espacio-8);
+}
+
+.rango {
+	display: grid;
+	grid-template-columns: 1fr auto 1fr;
+	align-items: center;
+	gap: var(--app-espacio-2);
+}
+
+::placeholder {
+	color: var(--app-texto-suave);
+	opacity: 1;
+}
+
+[aria-invalid='true'] {
+	border-color: var(--app-error);
+	box-shadow: inset 0 0 0 1px var(--app-error);
+}
+
+.error {
+	margin: var(--app-espacio-1) 0 0;
+	color: var(--app-error);
+	font-size: 14px;
+}
+
+.secundario {
+	min-height: var(--app-area-tocable);
+	padding: 0 var(--app-espacio-4);
+	border: 2px solid currentColor;
+	background: transparent;
+	color: var(--app-texto);
+	font: inherit;
+	font-weight: 600;
+	cursor: pointer;
+}
+
+// Placas del mismo tamaño y ritmo: cambia el producto, no la forma
+.grilla {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+	gap: var(--app-espacio-4);
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.paginas {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: var(--app-espacio-2);
+	margin-top: var(--app-espacio-8);
+}
+
+.paginas button {
+	min-width: var(--app-area-tocable);
+	min-height: var(--app-area-tocable);
+	border: 2px solid var(--app-texto);
+	background: transparent;
+	color: var(--app-texto);
+	font-family: var(--app-familia-titulos);
+	font-size: 20px;
+	font-weight: 700;
+	font-variant-numeric: tabular-nums;
+	cursor: pointer;
+	transform: skewX(var(--app-sesgo));
+}
+
+.paginas button svg {
+	transform: skewX(calc(var(--app-sesgo) * -1));
+}
+
+.paginas button[aria-current='page'] {
+	border-color: var(--app-ambar);
+	background: var(--app-ambar);
+	color: var(--app-sobre-ambar);
+}
+
+.paginas button[aria-disabled='true'] {
+	border-style: dashed;
+	opacity: 0.4;
+	cursor: default;
+}
+
+.vacio {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: var(--app-espacio-3);
+	font-size: 18px;
+}
+
+.vacio p,
+.cargando {
+	margin: 0;
+	color: var(--app-texto-suave);
+}
+
+.aviso {
+	padding: var(--app-espacio-3);
+	border: 1px solid var(--app-error);
+	background: var(--app-error-fondo);
+	color: var(--app-error);
+}
+
+.solo-lectores {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	clip-path: inset(50%);
+	white-space: nowrap;
+}
+
+// En el celular, los filtros se pliegan detrás de un botón
+@media (max-width: 760px) {
+	.cuerpo {
+		grid-template-columns: minmax(0, 1fr);
+		gap: var(--app-espacio-4);
+	}
+
+	.abrir-filtros {
+		display: inline-flex;
+	}
+
+	.filtros:not(.abiertos) {
+		display: none;
+	}
+
+	.grilla {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: var(--app-espacio-3);
+	}
+
+	.busqueda .texto {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+		clip-path: inset(50%);
+	}
+}
+
+// En el modo claro la lona del buscador casi no se distingue del fondo
+:host-context([data-tema='claro']) .busqueda input {
+	box-shadow: inset 0 0 0 1px var(--app-borde-control);
+}

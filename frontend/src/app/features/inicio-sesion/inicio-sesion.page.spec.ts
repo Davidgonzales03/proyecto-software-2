@@ -151,6 +151,30 @@ describe('InicioSesionPage', () => {
     expect(navegaciones).toEqual(['/']);
   });
 
+  // HU-09 RF-16: el personal entra a su panel; el cliente vuelve a la tienda
+  it('el personal va al panel', async () => {
+    autenticacion.respuesta = Promise.resolve({ ...SESION, usuario: { ...SESION.usuario, rol: 'EMPLEADO' } });
+    escribir('correo', 'ana@mail.com');
+    escribir('contrasena', 'secreta12');
+
+    await enviar();
+
+    expect(navegaciones).toEqual(['/panel']);
+  });
+
+  // HU-09 RF-16
+  it('con destino, el personal va al destino', async () => {
+    destino = '/inventario?pagina=2';
+    await preparar();
+    autenticacion.respuesta = Promise.resolve({ ...SESION, usuario: { ...SESION.usuario, rol: 'EMPLEADO' } });
+    escribir('correo', 'ana@mail.com');
+    escribir('contrasena', 'secreta12');
+
+    await enviar();
+
+    expect(navegaciones).toEqual(['/inventario?pagina=2']);
+  });
+
   // HU-02 RF-3: mismo mensaje exista o no el correo
   it('muestra el mensaje de credenciales incorrectas y no entra', async () => {
     autenticacion.respuesta = rechaza('CREDENCIALES_INCORRECTAS');

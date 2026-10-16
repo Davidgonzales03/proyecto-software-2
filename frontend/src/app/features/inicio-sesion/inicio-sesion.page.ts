@@ -6,6 +6,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AutenticacionService } from '../../core/api/autenticacion.service';
 import { mensajeDeError, primerMensaje } from '../../core/api/mensajes-error';
 import { comoError } from '../../core/modelos/error-api';
+import { inicioDe } from '../../core/sesion/inicio';
 import { SesionService } from '../../core/sesion/sesion.service';
 import { enfocarCampo, primerCampoConError } from '../../shared/formularios/primer-campo-con-error';
 import { VerContrasena } from '../../shared/formularios/ver-contrasena';
@@ -119,9 +120,10 @@ export class InicioSesionPage {
 		enfocarCampo(this.elemento.nativeElement, campo);
 	}
 
-	// A dónde ir después de entrar: la ruta que la persona quería, si es del sitio
+	// A dónde ir después de entrar: la ruta que la persona quería, si es del
+	// sitio; si no, su inicio (HU-09 RF-16)
 	private destino(): string {
-		return destinoInterno(this.ruta.snapshot.queryParamMap.get('destino')) ?? '/';
+		return destinoInterno(this.ruta.snapshot.queryParamMap.get('destino')) ?? inicioDe(this.sesion.rol());
 	}
 }
 

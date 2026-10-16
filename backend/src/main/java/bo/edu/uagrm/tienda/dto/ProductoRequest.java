@@ -43,12 +43,16 @@ public record ProductoRequest(
 		BigDecimal precio,
 
 		@Size(max = 15, message = "admite hasta 15 características")
-		List<@Valid CaracteristicaRequest> ficha) {
+		List<@Valid CaracteristicaRequest> ficha,
+
+		// Sale en «Destacados» de la portada (HU-09 RF-4); sin decirlo, no
+		Boolean destacado) {
 
 	public ProductoRequest {
 		nombre = nombre == null ? null : nombre.strip();
 		marca = marca == null ? null : marca.strip();
 		descripcion = descripcion == null ? null : descripcion.strip();
+		destacado = Boolean.TRUE.equals(destacado);
 		ficha = ficha == null ? List.of()
 				: ficha.stream().filter(Objects::nonNull).filter(par -> !par.estaVacia()).toList();
 	}

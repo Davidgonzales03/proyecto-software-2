@@ -21,6 +21,9 @@
               Inicio
             </a>
           </li>
+          <li>
+            <a routerLink="/catalogo" routerLinkActive="actual" ariaCurrentWhenActive="page">Catálogo</a>
+          </li>
           @for (modulo of modulos(); track modulo.ruta) {
             <li>
               <a [routerLink]="modulo.ruta" routerLinkActive="actual" ariaCurrentWhenActive="page">
@@ -31,6 +34,23 @@
         </ul>
       </nav>
     </div>
+
+    @if (!enCatalogo()) {
+    <form class="buscar" role="search" aria-label="Tienda" (submit)="$event.preventDefault(); buscar()">
+      <label for="buscar-en-la-tienda" class="solo-lectores">Buscar en la tienda</label>
+      <input
+        id="buscar-en-la-tienda"
+        type="search"
+        name="q"
+        autocomplete="off"
+        placeholder="¿Qué herramienta busca?"
+        maxlength="100"
+        [value]="busqueda()"
+        (input)="busqueda.set($any($event.target).value)"
+      />
+      <button type="submit" aria-label="Buscar"><svg lucideSearch class="icono" aria-hidden="true"></svg></button>
+    </form>
+    }
 
     <div class="sesion">
       <button
@@ -61,7 +81,7 @@
         <button type="button" class="salir" (click)="salir()">Cerrar sesión</button>
       } @else {
         <a class="entrar" routerLink="/inicio-sesion">Iniciar sesión</a>
-        <a class="crear-cuenta" routerLink="/registro">Crear cuenta</a>
+        <a class="crear-cuenta" routerLink="/registro"><span>Crear cuenta</span></a>
       }
     </div>
   </div>

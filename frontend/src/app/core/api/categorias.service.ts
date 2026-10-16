@@ -1,7 +1,7 @@
 import { HttpClient, httpResource, HttpResourceRef } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 
-import { CategoriaGestion, DatosDeCategoria } from '../modelos/categoria';
+import { Categoria, CategoriaGestion, DatosDeCategoria } from '../modelos/categoria';
 import { escribir } from './escribir';
 
 const GESTION = '/api/gestion/categorias';
@@ -11,6 +11,11 @@ const GESTION = '/api/gestion/categorias';
 @Injectable({ providedIn: 'root' })
 export class CategoriasService {
 	private readonly http = inject(HttpClient);
+
+	// Las visibles, sin sesión (HU-06 RF-11): el filtro del catálogo de la tienda (HU-09)
+	catalogo(): HttpResourceRef<Categoria[] | undefined> {
+		return httpResource<Categoria[]>(() => '/api/categorias');
+	}
 
 	// httpResource necesita un contexto de inyección: se llama al construir la pantalla
 	gestion(): HttpResourceRef<CategoriaGestion[] | undefined> {

@@ -9,46 +9,16 @@ $margen-lateral: clamp(var(--app-espacio-4), 5vw, var(--app-espacio-12));
 	min-height: 100%;
 }
 
-// Cuánto del fondo deja ver el borde de abajo del encabezado: 1 es sólido. Se
-// registra para que el navegador pueda animarlo
-@property --cabecera-solidez {
-	syntax: '<number>';
-	inherits: false;
-	initial-value: 1;
-}
-
-// Al bajar, el encabezado pasa de sólido a translúcido en degradé (sólido arriba,
-// más transparente hacia el borde de abajo) en los primeros 80 px
-@keyframes cabecera-al-desplazar {
-	to {
-		--cabecera-solidez: 0.3;
-	}
-}
-
-// La raya amarilla de abajo es la firma de la marca. Queda fija arriba al
-// desplazarse, para tener siempre a mano el menú y la sesión
+// La raya amarilla de abajo es la firma de la marca. En la pantalla ancha queda
+// fija arriba, para tener siempre a mano la búsqueda, el menú y la sesión. Lona
+// sólida, sin vidrio ni desenfoque (DESIGN.md → Letrero de ruta)
 header {
 	position: sticky;
 	top: 0;
 	z-index: 5;
 	border-bottom: 3px solid var(--app-ambar);
-	background: linear-gradient(
-		to top,
-		color-mix(in srgb, var(--app-fondo) calc(var(--cabecera-solidez) * 100%), transparent),
-		var(--app-fondo)
-	);
-	// Lo que pasa por detrás se desenfoca, para que el menú se siga leyendo
-	backdrop-filter: blur(10px);
-}
-
-// La transición la marca el propio desplazamiento, sin JavaScript. Donde no hay
-// soporte, el encabezado queda sólido
-@supports (animation-timeline: scroll()) {
-	header {
-		animation: cabecera-al-desplazar linear both;
-		animation-timeline: scroll(root);
-		animation-range: 0 80px;
-	}
+	background: var(--app-fondo) var(--app-textura-lona);
+	background-blend-mode: soft-light;
 }
 
 .barra,
@@ -65,6 +35,7 @@ main {
 	align-items: center;
 	justify-content: space-between;
 	column-gap: var(--app-espacio-4);
+	row-gap: var(--app-espacio-2);
 	padding-block: var(--app-espacio-2);
 }
 
@@ -73,12 +44,101 @@ main {
 	padding-block: var(--app-espacio-8);
 }
 
-// La marca y la navegación, juntas a la izquierda
+// Arriba la marca, la búsqueda ancha y la sesión; abajo, a todo el ancho, la
+// navegación (HU-09: la búsqueda en todas las pantallas)
 .principal {
-	min-width: 0;
+	display: contents;
+}
+
+.marca {
+	order: 1;
+	min-height: var(--app-area-tocable);
+}
+
+:host-context([data-tema='claro']) .buscar input {
+	box-shadow: inset 0 0 0 1px var(--app-borde-control);
+}
+
+.buscar {
+	order: 2;
+	flex: 1 1 280px;
 	display: flex;
-	align-items: center;
-	gap: var(--app-espacio-6);
+	min-width: 0;
+	max-width: 560px;
+	min-height: var(--app-area-tocable);
+}
+
+.buscar input {
+	flex: 1;
+	min-width: 0;
+	padding: 0 var(--app-espacio-3);
+	border: 0;
+	background: var(--app-lona);
+	color: var(--app-sobre-lona);
+	font: inherit;
+}
+
+.buscar input {
+	caret-color: var(--app-sobre-lona);
+}
+
+.buscar input::placeholder {
+	color: var(--app-sobre-lona-suave);
+	opacity: 1;
+}
+
+// La acción principal, cortada en sesgo con el ícono derecho
+// El contorno de foco amarillo no se ve sobre el botón amarillo
+.buscar button:focus-visible,
+.crear-cuenta:focus-visible {
+	outline-color: var(--app-texto);
+}
+
+.buscar input:focus-visible {
+	position: relative;
+	z-index: 1;
+}
+
+.buscar button {
+	display: grid;
+	place-items: center;
+	width: 56px;
+	margin-left: -6px;
+	margin-right: 5px;
+	border: 0;
+	background: var(--app-ambar);
+	color: var(--app-sobre-ambar);
+	cursor: pointer;
+	transform: skewX(var(--app-sesgo));
+	transition: transform var(--app-duracion-rapida) var(--app-curva-salida);
+}
+
+.buscar button svg {
+	transform: skewX(calc(var(--app-sesgo) * -1));
+}
+
+.buscar button:active {
+	transform: skewX(var(--app-sesgo)) scale(0.95);
+}
+
+.sesion {
+	order: 3;
+}
+
+nav {
+	order: 4;
+	width: 100%;
+	overflow-x: auto;
+	overscroll-behavior-x: contain;
+}
+
+.solo-lectores {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	clip-path: inset(50%);
+	white-space: nowrap;
 }
 
 .marca {
@@ -245,11 +305,16 @@ nav a.actual,
 }
 
 .crear-cuenta {
+	margin-right: 5px;
 	padding-inline: var(--app-espacio-4);
-	border-radius: var(--app-radio-control);
 	background: var(--app-ambar);
 	color: var(--app-sobre-ambar);
+	transform: skewX(var(--app-sesgo));
 	transition: background-color var(--app-transicion);
+}
+
+.crear-cuenta span {
+	transform: skewX(calc(var(--app-sesgo) * -1));
 }
 
 .crear-cuenta:hover {
@@ -259,15 +324,20 @@ nav a.actual,
 // En el celular la navegación baja a una segunda fila, que se desplaza de
 // costado si no entra, y del perfil queda el ícono
 @media (max-width: 640px) {
-	.principal {
-		display: contents;
+	// En el celular el encabezado ocupa dos filas: no queda fijo, para no
+	// tapar un cuarto de la pantalla
+	header {
+		position: static;
+	}
+
+	.buscar {
+		order: 4;
+		flex-basis: 100%;
+		max-width: none;
 	}
 
 	nav {
-		order: 3;
-		width: 100%;
-		overflow-x: auto;
-		overscroll-behavior-x: contain;
+		order: 5;
 	}
 
 	// Con desplazamiento el contorno de foco se recortaría: se le deja lugar

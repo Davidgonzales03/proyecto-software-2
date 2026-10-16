@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, DestroyRef, inject, linkedSignal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
-import { LucideTriangleAlert } from '@lucide/angular';
+import { LucideCircleSlash, LucideTriangleAlert } from '@lucide/angular';
 
 import { comoErrorApi } from '../../core/api/autenticacion.service';
 import { InventarioService } from '../../core/api/inventario.service';
@@ -19,7 +19,7 @@ const ESPERA_DE_BUSQUEDA_MS = 300;
 // viven en la URL, como en «Productos». Cada fila lleva a su stock y su historial.
 @Component({
 	selector: 'app-inventario',
-	imports: [RouterLink, LucideTriangleAlert],
+	imports: [RouterLink, LucideCircleSlash, LucideTriangleAlert],
 	templateUrl: './inventario.page.html',
 	styleUrl: './inventario.page.scss',
 	changeDetection: ChangeDetectionStrategy.OnPush,

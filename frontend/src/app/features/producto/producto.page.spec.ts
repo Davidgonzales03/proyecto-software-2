@@ -27,6 +27,7 @@ const TALADRO: Producto = {
   fechaAlta: '2026-10-10T09:00:00',
   ficha: [{ nombre: 'Potencia', valor: '750 W' }],
   imagenes: ['a.png', 'b.png'],
+  destacado: false,
 };
 
 const CATEGORIAS: CategoriaGestion[] = [
@@ -238,6 +239,7 @@ describe('ProductoPage', () => {
         unidad: 'UNIDAD',
         precio: '420,5',
         ficha: [],
+        destacado: false,
       },
     ]);
     expect(TestBed.inject(Router).url).toBe('/productos/7');
@@ -311,6 +313,19 @@ describe('ProductoPage', () => {
     expect(productos.editados[0].id).toBe(7);
     expect(productos.editados[0].datos.idCategoria).toBe('4');
     expect(texto()).toContain('Cambios guardados.');
+  });
+
+  // HU-09 RF-4: la casilla «Destacado» viaja con el producto
+  it('guarda «Destacado»', async () => {
+    await abrir('/productos/7', (falso) => falso.recurso.value.set(TALADRO));
+    const casilla = campo('destacado');
+    expect(casilla.checked).toBe(false);
+
+    casilla.click();
+    await harness.fixture.whenStable();
+    await pulsar('Guardar cambios');
+
+    expect(productos.editados[0].datos.destacado).toBe(true);
   });
 
   // HU-07 RF-6: un par vacío se descarta al guardar y no queda como cambio sin guardar

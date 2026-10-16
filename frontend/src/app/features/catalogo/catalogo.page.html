@@ -1,0 +1,191 @@
+<header class="cabecera">
+  <h1 tabindex="-1" #titulo>Catálogo</h1>
+  <!-- Siempre en el DOM: solo cambia su texto, así se anuncia -->
+  <p class="total" role="status">
+    @if (pagina(); as resultado) {
+      {{ cantidad(resultado.totalElementos) }} {{ resultado.totalElementos === 1 ? 'producto' : 'productos' }}
+    }
+  </p>
+</header>
+
+<form class="busqueda" role="search" aria-label="Catálogo" (submit)="$event.preventDefault(); buscarYa()">
+  <label for="busqueda" class="solo-lectores">Buscar en el catálogo</label>
+  <input
+    id="busqueda"
+    type="search"
+    name="q"
+    autocomplete="off"
+    placeholder="Nombre, marca o código"
+    [maxLength]="busquedaMaxima"
+    [value]="textoEscrito()"
+    (input)="alEscribir($any($event.target).value)"
+  />
+  <button type="submit">
+    <span class="derecho"><svg lucideSearch aria-hidden="true"></svg><span class="texto">Buscar</span></span>
+  </button>
+</form>
+
+<div class="cuerpo">
+  <button
+    type="button"
+    class="abrir-filtros"
+    [attr.aria-expanded]="filtrosAbiertos()"
+    aria-controls="filtros"
+    (click)="filtrosAbiertos.set(!filtrosAbiertos())"
+  >
+    <span class="derecho"><svg lucideSlidersHorizontal aria-hidden="true"></svg>Filtros</span>
+  </button>
+
+  <aside id="filtros" class="filtros" [class.abiertos]="filtrosAbiertos()" aria-label="Filtros">
+    <div class="campo">
+      <label for="categoria">Categoría</label>
+      <span class="selector"><select id="categoria" (change)="alElegirCategoria($any($event.target).value)">
+        <option value="" [selected]="filtros().categoria === null">Todas</option>
+        @for (categoria of categorias(); track categoria.idCategoria) {
+          <option [value]="categoria.idCategoria" [selected]="categoria.idCategoria === filtros().categoria">
+            {{ categoria.nombre }}
+          </option>
+        }
+      </select><svg lucideChevronDown aria-hidden="true"></svg></span>
+    </div>
+
+    <div class="campo">
+      <label for="marca">Marca</label>
+      <span class="selector"><select id="marca" (change)="alElegirMarca($any($event.target).value)">
+        <option value="" [selected]="filtros().marca === null">Todas</option>
+        @for (marca of marcas(); track marca) {
+          <option [value]="marca" [selected]="marca === filtros().marca">{{ marca }}</option>
+        }
+      </select><svg lucideChevronDown aria-hidden="true"></svg></span>
+    </div>
+
+    <fieldset class="campo precio">
+      <legend>Precio (Bs)</legend>
+      <div class="rango">
+        <div>
+          <label for="precio-min" class="solo-lectores">Precio mínimo</label>
+          <input
+            id="precio-min"
+            name="precioMin"
+            inputmode="decimal"
+            placeholder="Desde"
+            autocomplete="off"
+            [value]="precioEscrito().precioMin"
+            [attr.aria-invalid]="problemaDePrecio().precioMin ? 'true' : null"
+            [attr.aria-describedby]="problemaDePrecio().precioMin ? 'precio-min-error' : null"
+            (input)="alEscribirPrecio('precioMin', $any($event.target).value)"
+            (change)="aplicarPrecios()"
+          />
+        </div>
+        <span aria-hidden="true">a</span>
+        <div>
+          <label for="precio-max" class="solo-lectores">Precio máximo</label>
+          <input
+            id="precio-max"
+            name="precioMax"
+            inputmode="decimal"
+            placeholder="Hasta"
+            autocomplete="off"
+            [value]="precioEscrito().precioMax"
+            [attr.aria-invalid]="problemaDePrecio().precioMax ? 'true' : null"
+            [attr.aria-describedby]="problemaDePrecio().precioMax ? 'precio-max-error' : null"
+            (input)="alEscribirPrecio('precioMax', $any($event.target).value)"
+            (change)="aplicarPrecios()"
+          />
+        </div>
+      </div>
+      @if (problemaDePrecio().precioMin; as problema) {
+        <p class="error" id="precio-min-error" role="alert">{{ problema }}</p>
+      }
+      @if (problemaDePrecio().precioMax; as problema) {
+        <p class="error" id="precio-max-error" role="alert">{{ problema }}</p>
+      }
+    </fieldset>
+
+    <label class="casilla" for="disponibles">
+      <input
+        id="disponibles"
+        type="checkbox"
+        [checked]="filtros().disponibles"
+        (change)="alMarcarDisponibles($any($event.target).checked)"
+      />
+      Solo disponibles
+    </label>
+
+    <div class="campo">
+      <label for="orden">Ordenar por</label>
+      <span class="selector"><select id="orden" (change)="alElegirOrden($any($event.target).value)">
+        @for (orden of ordenes; track orden) {
+          <option [value]="orden" [selected]="orden === filtros().orden">{{ nombresDeOrden[orden] }}</option>
+        }
+      </select><svg lucideChevronDown aria-hidden="true"></svg></span>
+    </div>
+
+    @if (hayFiltros()) {
+      <button type="button" class="secundario" (click)="quitarFiltros()">Quitar filtros</button>
+    }
+  </aside>
+
+  <section class="resultados" aria-label="Productos">
+    @if (pagina(); as resultado) {
+      @if (tarjetas().length > 0) {
+        <ul class="grilla">
+          @for (tarjeta of tarjetas(); track tarjeta.enlace) {
+            <li><app-tarjeta-producto [datos]="tarjeta" /></li>
+          }
+        </ul>
+
+        @if (numeros().length > 0) {
+          <nav class="paginas" aria-label="Páginas">
+            <button
+              type="button"
+              class="paso"
+              aria-label="Página anterior"
+              [attr.aria-disabled]="resultado.pagina === 0"
+              (click)="irAPagina(resultado.pagina - 1)"
+            >
+              <svg lucideChevronLeft aria-hidden="true"></svg>
+            </button>
+            @for (numero of numeros(); track numero) {
+              <button
+                type="button"
+                [attr.aria-current]="numero === resultado.pagina ? 'page' : null"
+                (click)="irAPagina(numero)"
+              >
+                {{ numero + 1 }}
+              </button>
+            }
+            <button
+              type="button"
+              class="paso"
+              aria-label="Página siguiente"
+              [attr.aria-disabled]="resultado.pagina + 1 >= resultado.totalPaginas"
+              (click)="irAPagina(resultado.pagina + 1)"
+            >
+              <svg lucideChevronRight aria-hidden="true"></svg>
+            </button>
+          </nav>
+        }
+      } @else if (resultado.totalElementos > 0) {
+        <div class="vacio" role="status">
+          <p>No hay productos en esta página.</p>
+          <button type="button" class="secundario" (click)="irAPagina(0)">Volver a la primera página</button>
+        </div>
+      } @else {
+        <div class="vacio" role="status">
+          <p>No hay productos para esta búsqueda.</p>
+          @if (hayFiltros()) {
+            <button type="button" class="secundario" (click)="quitarFiltros()">Quitar filtros</button>
+          }
+        </div>
+      }
+    } @else if (errorDeCarga()) {
+      <div class="vacio">
+        <p class="aviso" role="alert">{{ errorDeCarga() }}</p>
+        <button type="button" class="secundario" (click)="listado.reload()">Reintentar</button>
+      </div>
+    } @else {
+      <p class="cargando" role="status">Cargando productos…</p>
+    }
+  </section>
+</div>

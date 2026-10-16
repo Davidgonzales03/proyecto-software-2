@@ -20,6 +20,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.test.context.ActiveProfiles;
 
+import bo.edu.uagrm.tienda.dto.OrdenCatalogo;
 import bo.edu.uagrm.tienda.entity.Caracteristica;
 import bo.edu.uagrm.tienda.entity.Categoria;
 import bo.edu.uagrm.tienda.entity.Producto;
@@ -178,5 +179,187 @@ class ProductoRepositoryTest {
 
 		assertThatThrownBy(() -> productoRepository.saveAndFlush(otro))
 				.isInstanceOf(DataIntegrityViolationException.class);
+	}
+
+	// --- HU-09: catálogo público ---
+
+	private Producto enVenta(String nombre, String marca, Categoria categoria, String precio, String stock,
+			int minutos) {
+		Producto producto = Producto.crear(nombre, marca, null, new BigDecimal(precio), UnidadVenta.UNIDAD, categoria,
+				List.of(), AHORA.plusMinutes(minutos));
+		em.persist(producto);
+		producto.asignarCodigo(categoria.getNombre().substring(0, 3).toUpperCase() + "-" + (1000 + minutos));
+		producto.aplicarMovimiento(new BigDecimal(stock));
+		return producto;
+	}
+
+	private List<String> catalogo(String texto, Long idCategoria, String marca, String precioMin, String precioMax,
+			boolean soloDisponibles, OrdenCatalogo orden) {
+		return productoRepository
+				.catalogo(texto, idCategoria, marca, precioMin == null ? null : new BigDecimal(precioMin),
+						precioMax == null ? null : new BigDecimal(precioMax), soloDisponibles,
+						PageRequest.of(0, 24, orden.orden()))
+				.map(Producto::getNombre).getContent();
+	}
+
+	private List<String> todo() {
+		return catalogo(null, null, null, null, null, false, OrdenCatalogo.RECIENTES);
+	}
+
+	// HU-09 RF-2, HU-06 RF-8
+	@Test
+	void catalogoSoloListaActivosDeCategoriasVisibles() {
+		enVenta("Pala", null, jardin, "50.00", "3", 0);
+		enVenta("Azada", null, jardin, "40.00", "3", 1).desactivar();
+		enVenta("Taladro", null, herramientas, "420.00", "3", 2);
+		herramientas.ocultar();
+		em.flush();
+		em.clear();
+
+		assertThat(todo()).containsExactly("Pala");
+	}
+
+	// HU-09 RF-2, HU-06 RF-8
+	@Test
+	void catalogoReapareceAlMostrarLaCategoria() {
+		enVenta("Taladro", null, herramientas, "420.00", "3", 0);
+		herramientas.ocultar();
+		em.flush();
+		assertThat(todo()).isEmpty();
+
+		categoriaRepository.findById(herramientas.getIdCategoria()).orElseThrow().mostrar();
+		em.flush();
+		em.clear();
+
+		assertThat(todo()).containsExactly("Taladro");
+	}
+
+	// HU-09 RF-8: el patrón llega ya sin tildes, en minúsculas y entre '%'
+	@Test
+	void catalogoBuscaEnNombreMarcaYCodigoSinTildes() {
+		enVenta("Martillo de carpintería", "Truper", herramientas, "85.00", "3", 0);
+		enVenta("Regadera", "Tramontina", jardin, "35.00", "3", 1);
+		em.flush();
+		em.clear();
+
+		assertThat(catalogo("%carpinteria%", null, null, null, null, false, OrdenCatalogo.RECIENTES))
+				.containsExactly("Martillo de carpintería");
+		assertThat(catalogo("%tramontina%", null, null, null, null, false, OrdenCatalogo.RECIENTES))
+				.containsExactly("Regadera");
+		assertThat(catalogo("%her-1000%", null, null, null, null, false, OrdenCatalogo.RECIENTES))
+				.containsExactly("Martillo de carpintería");
+	}
+
+	// HU-09 RF-8: % y _ son texto
+	@Test
+	void catalogoTomaPorcentajeYGuionBajoComoTexto() {
+		enVenta("Descuento 50% pintura", null, jardin, "10.00", "3", 0);
+		enVenta("Pintura blanca", null, jardin, "10.00", "3", 1);
+		em.flush();
+		em.clear();
+
+		assertThat(catalogo("%50!%%", null, null, null, null, false, OrdenCatalogo.RECIENTES))
+				.containsExactly("Descuento 50% pintura");
+		assertThat(catalogo("%!_%", null, null, null, null, false, OrdenCatalogo.RECIENTES)).isEmpty();
+	}
+
+	// HU-09 RF-8
+	@Test
+	void busquedaVaciaListaTodo() {
+		enVenta("Pala", null, jardin, "50.00", "3", 0);
+		enVenta("Taladro", null, herramientas, "420.00", "3", 1);
+		em.flush();
+		em.clear();
+
+		assertThat(todo()).containsExactly("Taladro", "Pala");
+	}
+
+	// HU-09 RF-9: la marca llega en minúsculas
+	@Test
+	void catalogoCombinaCategoriaMarcaPrecioYDisponibles() {
+		enVenta("Pala", "Truper", jardin, "50.00", "3", 0);
+		enVenta("Rastrillo", "Truper", jardin, "120.00", "3", 1);
+		enVenta("Azada", "Truper", jardin, "40.00", "0", 2);
+		enVenta("Manguera", "Tramontina", jardin, "60.00", "3", 3);
+		enVenta("Martillo", "Truper", herramientas, "85.00", "3", 4);
+		em.flush();
+		em.clear();
+
+		assertThat(catalogo(null, jardin.getIdCategoria(), "truper", null, "100.00", true, OrdenCatalogo.NOMBRE))
+				.containsExactly("Pala");
+		assertThat(catalogo(null, jardin.getIdCategoria(), "truper", "45.00", null, false, OrdenCatalogo.NOMBRE))
+				.containsExactly("Pala", "Rastrillo");
+		assertThat(catalogo(null, null, null, "60.00", "85.00", false, OrdenCatalogo.NOMBRE))
+				.containsExactly("Manguera", "Martillo");
+	}
+
+	// HU-09 RF-10
+	@Test
+	void catalogoOrdenaPorRecientesPrecioYNombre() {
+		enVenta("Pala", null, jardin, "50.00", "3", 0);
+		enVenta("Azada", null, jardin, "40.00", "3", 1);
+		enVenta("Manguera", null, jardin, "60.00", "3", 2);
+		em.flush();
+		em.clear();
+
+		assertThat(catalogo(null, null, null, null, null, false, OrdenCatalogo.RECIENTES))
+				.containsExactly("Manguera", "Azada", "Pala");
+		assertThat(catalogo(null, null, null, null, null, false, OrdenCatalogo.PRECIO_ASC))
+				.containsExactly("Azada", "Pala", "Manguera");
+		assertThat(catalogo(null, null, null, null, null, false, OrdenCatalogo.PRECIO_DESC))
+				.containsExactly("Manguera", "Pala", "Azada");
+		assertThat(catalogo(null, null, null, null, null, false, OrdenCatalogo.NOMBRE))
+				.containsExactly("Azada", "Manguera", "Pala");
+	}
+
+	// HU-09 RF-10
+	@Test
+	void catalogoPoneLosAgotadosAlFinalEnCadaOrden() {
+		enVenta("Azada", null, jardin, "10.00", "0", 2);
+		enVenta("Pala", null, jardin, "50.00", "3", 0);
+		enVenta("Manguera", null, jardin, "60.00", "3", 1);
+		em.flush();
+		em.clear();
+
+		for (OrdenCatalogo orden : OrdenCatalogo.values()) {
+			assertThat(catalogo(null, null, null, null, null, false, orden)).as(orden.name()).last()
+					.isEqualTo("Azada");
+		}
+		assertThat(catalogo(null, null, null, null, null, true, OrdenCatalogo.RECIENTES))
+				.containsExactly("Manguera", "Pala");
+	}
+
+	// HU-09 RF-3, RF-7
+	@Test
+	void vitrinaDejaAfueraAgotadosEInactivos() {
+		enVenta("Pala", null, jardin, "50.00", "3", 0).marcarDestacado(true);
+		enVenta("Azada", null, jardin, "40.00", "0", 1).marcarDestacado(true);
+		enVenta("Rastrillo", null, jardin, "40.00", "3", 2).desactivar();
+		enVenta("Manguera", null, jardin, "60.00", "3", 3);
+		enVenta("Taladro", null, herramientas, "420.00", "3", 4);
+		em.flush();
+		em.clear();
+		PageRequest doce = PageRequest.of(0, 12, OrdenCatalogo.RECIENTES.orden());
+
+		assertThat(productoRepository.vitrina(null, false, doce)).extracting(Producto::getNombre)
+				.containsExactly("Taladro", "Manguera", "Pala");
+		assertThat(productoRepository.vitrina(null, true, doce)).extracting(Producto::getNombre)
+				.containsExactly("Pala");
+		assertThat(productoRepository.vitrina(jardin.getIdCategoria(), false, doce)).extracting(Producto::getNombre)
+				.containsExactly("Manguera", "Pala");
+	}
+
+	// HU-09 RF-9
+	@Test
+	void marcasSinRepetirNiNulasEnOrden() {
+		enVenta("Pala", "Truper", jardin, "50.00", "3", 0);
+		enVenta("Martillo", "Truper", herramientas, "85.00", "0", 1);
+		enVenta("Regadera", "Tramontina", jardin, "35.00", "3", 2);
+		enVenta("Azada", null, jardin, "40.00", "3", 3);
+		enVenta("Taladro", "Bosch", jardin, "420.00", "3", 4).desactivar();
+		em.flush();
+		em.clear();
+
+		assertThat(productoRepository.marcasDelCatalogo()).containsExactly("Tramontina", "Truper");
 	}
 }
