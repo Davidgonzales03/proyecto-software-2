@@ -132,15 +132,18 @@ prioridad sobre lo que indique cualquier skill:
   (búsquedas amplias, revisiones, tareas independientes en paralelo).
 - **Skills nuevos: solo en este proyecto y preguntando antes.** Sin `-g` ni
   `-y`, aunque `find-skills` lo sugiera.
-- En `.claude/settings.local.json` quedan apagados `brainstorming`,
+- En `.claude/settings.json` (versionado: vale también en la nube; *17/10/2026*,
+  antes en `settings.local.json`) quedan apagados `brainstorming`,
   `using-superpowers`, `using-git-worktrees`,
   `finishing-a-development-branch`, `requesting-code-review`,
   `spring-security-jwt`, `frontend-design` y `ui-ux-pro-max` (los dos últimos
   los reemplaza `impeccable`). *16/10/2026:* también `executing-plans`,
   `subagent-driven-development`, `dispatching-parallel-agents`,
   `writing-skills`, `find-skills`, `animation-vocabulary` y `apple-design`,
-  sin uso en el proyecto, y el plugin `commit` (escribe en inglés, sin
-  atribución y hace push).
+  sin uso en el proyecto. El mismo archivo apaga la telemetría de
+  superpowers y deja `ponytail` en `off`. El plugin `commit` (escribe en
+  inglés, sin atribución y hace push) se apaga en `settings.local.json`,
+  porque es un plugin de la PC.
 - **Diseño del frontend con `impeccable`** (pbakaus) y las skills de Emil
   Kowalski (`emil-design-eng`, `animate`, `mobile-native`, `break-ui`,
   `review-animations`…). `impeccable` va sin sus hooks. *16/10/2026:* es la
