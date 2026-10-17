@@ -24,10 +24,9 @@ if [ -n "${CLAUDE_ENV_FILE:-}" ]; then
 	echo "export PATH=\"$(dirname "$(nvm which 22)"):\$PATH\"" >> "$CLAUDE_ENV_FILE"
 fi
 
-# Las apagadas en .claude/settings.local.json de la PC (CLAUDE.md → Uso de skills): acá no se enlazan
-APAGADAS=" brainstorming using-superpowers using-git-worktrees finishing-a-development-branch requesting-code-review
-spring-security-jwt frontend-design ui-ux-pro-max executing-plans subagent-driven-development dispatching-parallel-agents
-writing-skills find-skills animation-vocabulary apple-design "
+# Las apagadas en skillOverrides de .claude/settings.json (CLAUDE.md → Uso de skills): acá no se enlazan
+APAGADAS=" $(python3 -c 'import json, sys
+print(" ".join(n for n, v in json.load(open(sys.argv[1]))["skillOverrides"].items() if v == "off"))' .claude/settings.json) "
 
 # --- Skills de skills-lock.json ---------------------------------------------------------------------------------
 # La CLI instala la última versión de cada skill y reescribe el lock con sus hashes: se instala en una carpeta aparte,
