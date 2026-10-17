@@ -44,7 +44,6 @@ Desktop.ini
 .playwright/
 .playwright-cli/
 .claude/settings.local.json
-skills-lock.json
 .superpowers/
 
 # Documentación académica: se trabaja fuera del repositorio
