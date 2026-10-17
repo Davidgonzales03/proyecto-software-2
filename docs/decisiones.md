@@ -17,7 +17,7 @@ solo las secciones que tocan la tarea. Al agregar una decisión, sumarla al
 - **[Seguridad](#seguridad)**: [`Usuario` es una sola clase con `rol` enumerado](#usuario-es-una-sola-clase-con-rol-enumerado) · [Autenticación por JWT stateless](#autenticación-por-jwt-stateless) · [Contraseñas con BCrypt](#contraseñas-con-bcrypt) · [Administrador inicial al arrancar](#administrador-inicial-al-arrancar) · [Registro](#registro) · [Inicio de sesión](#inicio-de-sesión) · [Recuperación de contraseña](#recuperación-de-contraseña) · [Datos personales](#datos-personales) · [Gestión de usuarios](#gestión-de-usuarios)
 - **[Notificaciones](#notificaciones)**: [Envío de correo detrás de `NotificadorCorreo`](#envío-de-correo-detrás-de-notificadorcorreo) · [Gmail por SMTP, sin servidor de correo propio](#gmail-por-smtp-sin-servidor-de-correo-propio)
 - **[Sistema de diseño (frontend)](#sistema-de-diseño-frontend)**: [La aplicación es un producto, no un trabajo académico](#la-aplicación-es-un-producto-no-un-trabajo-académico) · [Lo visual vive en `DESIGN.md`](#lo-visual-vive-en-designmd) · [Decisiones técnicas del frontend](#decisiones-técnicas-del-frontend)
-- **[Decisiones del proyecto](#decisiones-del-proyecto)**: [Tienda propia, no marketplace](#tienda-propia-no-marketplace) · [Roles de la tienda](#roles-de-la-tienda) · [Pago con Libélula, sin facturación SIAT](#pago-con-libélula-sin-facturación-siat) · [Rediseño del frontend dentro del flujo](#rediseño-del-frontend-dentro-del-flujo) · [Rubro: ferretería, con vista 3D](#rubro-ferretería-con-vista-3d) · [Categorías del catálogo](#categorías-del-catálogo) · [Productos](#productos) · [Inventario](#inventario) · [Catálogo público](#catálogo-público) · [Detalle del producto](#detalle-del-producto)
+- **[Decisiones del proyecto](#decisiones-del-proyecto)**: [Tienda propia, no marketplace](#tienda-propia-no-marketplace) · [Roles de la tienda](#roles-de-la-tienda) · [Pago con Libélula, sin facturación SIAT](#pago-con-libélula-sin-facturación-siat) · [Rediseño del frontend dentro del flujo](#rediseño-del-frontend-dentro-del-flujo) · [Rubro: ferretería, con vista 3D](#rubro-ferretería-con-vista-3d) · [Categorías del catálogo](#categorías-del-catálogo) · [Productos](#productos) · [Inventario](#inventario) · [Catálogo público](#catálogo-público) · [Detalle del producto](#detalle-del-producto) · [Catálogo de demostración](#catálogo-de-demostración)
 
 ---
 
@@ -571,3 +571,37 @@ pública en `/producto/:id`, con o sin sesión.
 **Motivo:** el código ayuda a pedir por teléfono o en el local; un 404 igual
 para los tres casos no revela qué productos existen; un botón que todavía no
 anda promete algo que la tienda no cumple.
+
+### Catálogo de demostración
+
+*17/10/2026 (issue #25).* El catálogo con el que se muestra la tienda se carga
+al arrancar desde una carpeta (`TIENDA_DEMO_DIRECTORIO`, en Docker de solo
+lectura) con `catalogo.csv` y sus imágenes. Lo hace `CatalogoDemo`.
+
+- **Solo una vez:** sin la variable no hace nada; con productos en la base,
+  tampoco.
+- **`catalogo.csv`:** una fila por producto, con
+  `categoria,nombre,descripcion,precio_bs,stock_inicial,imagenes,modelo_3d,destacado,unidad`.
+  Separado por comas y sin comillas: **ningún campo lleva comas**. Precio y
+  stock con punto decimal; `imagenes`, archivos de la carpeta separados por
+  `|`; `modelo_3d` se ignora hasta el spike #14; `destacado`, `si` o vacío
+  (sale en «Destacados» de la portada); `unidad`, `unidad`, `metro`, `kilo`,
+  `litro`, `caja`, `par` o `rollo`, y vacía es `unidad`.
+- **Las reglas de siempre:** categorías, productos, imágenes (2 MB, JPG, PNG o
+  WebP, hasta cinco, sin repetir) y stock pasan por los mismos servicios y
+  validaciones que la gestión. Las categorías que faltan se crean; una fila
+  de una categoría oculta es inválida, porque no se vería.
+- **Todo o nada:** una fila inválida se informa en el registro con su número y
+  el motivo, y no se carga nada; un fallo durante la carga la revierte entera.
+  La aplicación arranca igual, con el catálogo vacío. Una variable que no
+  apunta a una carpeta con `catalogo.csv` impide arrancar, aunque ya haya
+  productos.
+- **El stock inicial respeta la unidad:** entero, salvo en metro, kilo o
+  litro, que admiten dos decimales. Marca y ficha quedan vacías.
+- **El stock inicial es una entrada** a nombre de la cuenta de
+  `TIENDA_ADMIN_CORREO` si es un Administrador activo, o de otro Administrador
+  activo; nunca de un cliente.
+
+**Motivo:** como la carga no se repite, saltar filas dejaría un catálogo a
+medias que no se completa corrigiendo el CSV; pasar por los servicios evita
+reglas duplicadas que se desfasen.

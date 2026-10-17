@@ -72,9 +72,12 @@ cuando existan las categorías y los productos.
   taladros, destornilladores, alicates, escaleras, regaderas…). Los productos
   con modelo 3D salen de ahí; el resto puede ir solo con fotos.
 - `catalogo.csv`, una fila por producto, con estas columnas:
-  `categoria,nombre,descripcion,precio_bs,stock_inicial,imagenes,modelo_3d`.
+  `categoria,nombre,descripcion,precio_bs,stock_inicial,imagenes,modelo_3d,destacado,unidad`.
   `imagenes` lleva los nombres de archivo separados por `|`; `modelo_3d`, el
-  nombre del `.glb` o vacío.
+  nombre del `.glb` o vacío; `destacado`, `si` en los que salen en
+  «Destacados» de la portada (el carrusel muestra hasta 12), vacío en el resto; `unidad`, vacía para lo que se vende por unidad,
+  o `metro`, `kilo`, `litro`, `caja`, `par` o `rollo`. **Ningún campo lleva
+  comas** (tampoco la descripción); los decimales van con punto.
 - Entre 15 y 25 productos, en 4 a 6 categorías, con precios creíbles en
   bolivianos y descripciones cortas y propias (no copiadas de otra tienda).
   Algunos productos (los del spike) llevan modelo 3D.

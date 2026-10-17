@@ -8,6 +8,8 @@ import java.util.stream.Collectors;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,9 +24,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 // Crea el Administrador inicial en el despliegue (CLAUDE.md, decisiones.md): sin administradores,
-// ningún CU permite recuperarse, así que si no puede crearlo la aplicación no arranca
+// ningún CU permite recuperarse, así que si no puede crearlo la aplicación no arranca. Va primero: CatalogoDemo
+// registra el stock inicial a su nombre
 @Slf4j
 @Service
+@Order(Ordered.HIGHEST_PRECEDENCE)
 @RequiredArgsConstructor
 @EnableConfigurationProperties(AdministradorInicialProperties.class)
 public class AdministradorInicial implements ApplicationRunner {

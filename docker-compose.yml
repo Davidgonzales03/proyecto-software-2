@@ -46,8 +46,13 @@ services:
       TIENDA_CORREO_CONTRASENA: ${TIENDA_CORREO_CONTRASENA:-}
       TIENDA_CORREO_REMITENTE: ${TIENDA_MARCA:-Tienda Montero} <${TIENDA_CORREO_USUARIO:-no-responder@localhost}>
       TIENDA_SITIO_URL: ${TIENDA_SITIO_URL:-http://localhost}
+      # Catálogo de demostración (issue #25): con la carpeta del .env, la API la ve en /datos/demo y la carga si
+      # todavía no hay productos; sin ella, la variable queda vacía y no se carga nada
+      TIENDA_DEMO_DIRECTORIO: ${TIENDA_DEMO_DIRECTORIO:+/datos/demo}
     volumes:
       - imagenes:/datos/imagenes
+      # Solo lectura. Sin TIENDA_DEMO_DIRECTORIO se monta una carpeta vacía del repositorio, que no se lee
+      - ${TIENDA_DEMO_DIRECTORIO:-./backend/demo-vacia}:/datos/demo:ro
     # Sin puertos publicados: se llega por nginx, bajo /api
 
   frontend:

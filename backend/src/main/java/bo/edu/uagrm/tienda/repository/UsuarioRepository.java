@@ -49,6 +49,9 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
 
 	boolean existsByRol(Rol rol);
 
+	// El stock inicial del catálogo de demostración, cuando TIENDA_ADMIN_CORREO ya no es de un administrador activo
+	Optional<Usuario> findFirstByRolAndEstadoOrderByIdUsuario(Rol rol, EstadoCuenta estado);
+
 	// correo es la única restricción UNIQUE de la tabla usuario
 	static boolean esCorreoDuplicado(DataIntegrityViolationException ex) {
 		return ViolacionesDeIntegridad.esViolacionUnica(ex);

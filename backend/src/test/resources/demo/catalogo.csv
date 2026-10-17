@@ -1,0 +1,4 @@
+categoria,nombre,descripcion,precio_bs,stock_inicial,imagenes,modelo_3d,destacado,unidad
+Herramientas manuales,Martillo de uña 16 oz,Mango de fibra de vidrio y cabeza forjada.,85.50,12,martillo.png,martillo.glb,si,
+jardin,Pala de punta,Hoja de acero templado y mango de madera.,120,4,pala.png|pala-detalle.png,,,
+Herramientas manuales,Cinta métrica 5 m,Carcasa de goma antigolpes.,35.00,0,,,,
