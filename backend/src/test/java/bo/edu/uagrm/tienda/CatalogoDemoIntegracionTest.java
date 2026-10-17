@@ -2,15 +2,20 @@ package bo.edu.uagrm.tienda;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mock;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.stream.Stream;
 import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.AfterEach;
@@ -29,11 +34,14 @@ import org.springframework.util.unit.DataSize;
 
 import bo.edu.uagrm.tienda.config.AdministradorInicialProperties;
 import bo.edu.uagrm.tienda.config.CatalogoDemoProperties;
+import bo.edu.uagrm.tienda.config.ImagenesProperties;
+import bo.edu.uagrm.tienda.dto.EntradaRequest;
 import bo.edu.uagrm.tienda.dto.ProductoResponse;
 import bo.edu.uagrm.tienda.entity.Categoria;
 import bo.edu.uagrm.tienda.entity.MovimientoStock;
 import bo.edu.uagrm.tienda.entity.TipoMovimiento;
 import bo.edu.uagrm.tienda.entity.UnidadVenta;
+import bo.edu.uagrm.tienda.entity.Usuario;
 import bo.edu.uagrm.tienda.repository.CategoriaRepository;
 import bo.edu.uagrm.tienda.repository.MovimientoStockRepository;
 import bo.edu.uagrm.tienda.repository.ProductoRepository;
@@ -77,6 +85,9 @@ class CatalogoDemoIntegracionTest {
 	private AlmacenImagenes almacen;
 
 	@Autowired
+	private ImagenesProperties imagenes;
+
+	@Autowired
 	private Validator validator;
 
 	@Autowired
@@ -109,17 +120,35 @@ class CatalogoDemoIntegracionTest {
 		}
 	}
 
+	// También las imágenes que guardó la carga: la carpeta de las pruebas es compartida
 	@AfterEach
 	void limpiar() {
+		transaccion.execute(estado -> productoRepository.findAll().stream()
+				.flatMap(producto -> producto.getImagenes().stream()).toList()).forEach(almacen::borrar);
 		movimientoRepository.deleteAll();
 		productoRepository.deleteAll();
 		categoriaRepository.deleteAll();
 	}
 
 	private void cargar(Path directorio) {
-		new CatalogoDemo(new CatalogoDemoProperties(directorio), administrador, categoriaService, productoService,
-				inventarioService, productoRepository, categoriaRepository, usuarioRepository, validator, transaccion,
+		cargar(directorio, administrador, inventarioService);
+	}
+
+	private void cargar(Path directorio, AdministradorInicialProperties admin, InventarioService inventario) {
+		new CatalogoDemo(new CatalogoDemoProperties(directorio), admin, categoriaService, productoService, inventario,
+				productoRepository, categoriaRepository, usuarioRepository, validator, transaccion,
 				DataSize.ofMegabytes(2)).run(new DefaultApplicationArguments());
+	}
+
+	private long imagenesGuardadas() throws IOException {
+		try (Stream<Path> archivos = Files.list(imagenes.directorio())) {
+			return archivos.count();
+		}
+	}
+
+	private List<Long> usuariosDeLosMovimientos() {
+		return transaccion.execute(estado -> movimientoRepository.findAll().stream()
+				.map(m -> m.getUsuario().getIdUsuario()).distinct().toList());
 	}
 
 	private void escribirCatalogo(String filas) throws IOException {
@@ -223,7 +252,7 @@ class CatalogoDemoIntegracionTest {
 				.contains("Fila 5: imagenes: no-existe.png")
 				.contains("Fila 6: imagenes: grande.png")
 				.contains("Fila 7: imagenes: texto.png")
-				.contains("Fila 8: imagenes: ../catalogo.csv")
+				.contains("Fila 8: imagenes: ../catalogo.csv no es un archivo de la carpeta")
 				.contains("Fila 9: tiene 8 columnas")
 				.contains("Fila 10: precio_bs")
 				.doesNotContain("Fila 2:")
@@ -256,5 +285,73 @@ class CatalogoDemoIntegracionTest {
 
 		assertThat(productoRepository.count()).isZero();
 		assertThat(salida.getOut()).contains("Fila 2: precio_bs: admite hasta dos decimales");
+	}
+
+	@Test
+	void unFalloDuranteLaCargaSeRevierteEntero(CapturedOutput salida) throws IOException {
+		// Falla el último paso de la primera fila, con su categoría, su producto y su imagen ya guardados
+		InventarioService inventarioQueFalla = mock(InventarioService.class);
+		given(inventarioQueFalla.registrarEntrada(any(), any(), any(EntradaRequest.class)))
+				.willThrow(new IllegalStateException("falla de prueba"));
+		long antes = imagenesGuardadas();
+
+		cargar(carpeta, administrador, inventarioQueFalla);
+
+		assertThat(productoRepository.count()).isZero();
+		assertThat(categoriaRepository.count()).isZero();
+		assertThat(imagenesGuardadas()).isEqualTo(antes);
+		assertThat(salida.getOut()).contains("No se cargó el catálogo de demostración").contains("falla de prueba");
+	}
+
+	@Test
+	void sinLaCuentaDeTiendaAdminCorreoElStockVaAOtroAdministradorActivo() {
+		cargar(carpeta, new AdministradorInicialProperties("ya-no-existe@tienda.test", "clave-admin-pruebas"),
+				inventarioService);
+
+		assertThat(productoRepository.count()).isEqualTo(3);
+		assertThat(usuariosDeLosMovimientos())
+				.containsExactly(usuarioRepository.findByCorreo(ADMIN).orElseThrow().getIdUsuario());
+	}
+
+	@Test
+	void elStockNuncaQuedaANombreDeUnCliente() {
+		Usuario cliente = usuarioRepository.save(Usuario.registrarCliente("Ana", "Pérez", "ana-demo@mail.com",
+				"hash", null, LocalDateTime.of(2026, 10, 17, 9, 0)));
+		try {
+			cargar(carpeta, new AdministradorInicialProperties("ana-demo@mail.com", "clave-admin-pruebas"),
+					inventarioService);
+
+			assertThat(usuariosDeLosMovimientos())
+					.containsExactly(usuarioRepository.findByCorreo(ADMIN).orElseThrow().getIdUsuario());
+		} finally {
+			limpiar();
+			usuarioRepository.delete(cliente);
+		}
+	}
+
+	@Test
+	void unPrecioInvalidoNoOcultaLosDemasErroresDeLaFila(CapturedOutput salida) throws IOException {
+		escribirCatalogo(",,%s,doce,3,,\n".formatted("a".repeat(1001)));
+
+		cargar(carpeta);
+
+		assertThat(salida.getOut())
+				.contains("Fila 2: categoria: es obligatorio")
+				.contains("Fila 2: nombre: es obligatorio")
+				.contains("Fila 2: descripcion: admite hasta 1000 caracteres")
+				.contains("Fila 2: precio_bs: «doce» no es un número");
+	}
+
+	@Test
+	void unEnlaceSimbolicoHaciaAfueraDeLaCarpetaSeRechaza(CapturedOutput salida, @TempDir Path afuera)
+			throws IOException {
+		Path foto = Files.copy(carpeta.resolve("pala.png"), afuera.resolve("privada.png"));
+		Files.createSymbolicLink(carpeta.resolve("enlace.png"), foto);
+		escribirCatalogo("Herramientas manuales,Martillo,Bueno.,85.50,12,enlace.png,\n");
+
+		cargar(carpeta);
+
+		assertThat(productoRepository.count()).isZero();
+		assertThat(salida.getOut()).contains("Fila 2: imagenes: enlace.png no es un archivo de la carpeta");
 	}
 }

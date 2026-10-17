@@ -1,6 +1,7 @@
 package bo.edu.uagrm.tienda.service;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
@@ -31,6 +32,8 @@ import bo.edu.uagrm.tienda.dto.CategoriaRequest;
 import bo.edu.uagrm.tienda.dto.EntradaRequest;
 import bo.edu.uagrm.tienda.dto.ProductoRequest;
 import bo.edu.uagrm.tienda.entity.Categoria;
+import bo.edu.uagrm.tienda.entity.EstadoCuenta;
+import bo.edu.uagrm.tienda.entity.Rol;
 import bo.edu.uagrm.tienda.entity.UnidadVenta;
 import bo.edu.uagrm.tienda.entity.Usuario;
 import bo.edu.uagrm.tienda.repository.CategoriaRepository;
@@ -47,7 +50,8 @@ import lombok.extern.slf4j.Slf4j;
 // stock van con punto decimal; imagenes, los archivos de la carpeta separados por '|'; modelo_3d se ignora (spike
 // #14). Todo pasa por los servicios y las validaciones de la gestión. Si una fila tiene errores, se informan todas
 // con su número (la 1 es el encabezado) y no se carga nada: una carga a medias ya no se podría completar, porque
-// con productos en la base no se vuelve a cargar
+// con productos en la base no se vuelve a cargar. Un fallo durante la carga la revierte entera; en los dos casos la
+// aplicación arranca igual, con el catálogo vacío (decisiones.md → Catálogo de demostración)
 @Slf4j
 @Service
 @Order(Ordered.LOWEST_PRECEDENCE)
@@ -59,8 +63,12 @@ public class CatalogoDemo implements ApplicationRunner {
 	// Provisional, hasta que el CSV traiga la unidad de venta (pregunta abierta en el PR de #25)
 	private static final UnidadVenta UNIDAD = UnidadVenta.UNIDAD;
 	private static final String NOTA_STOCK = "Catálogo de demostración";
-	// La categoría todavía no existe al validar la fila; @NotNull solo necesita un valor
+	// La categoría todavía no existe al validar la fila, y el precio puede no ser un número: @NotNull solo necesita un
+	// valor, y el error del precio ya se informó
 	private static final Long CATEGORIA_POR_RESOLVER = 0L;
+	private static final BigDecimal PRECIO_POR_RESOLVER = BigDecimal.ONE;
+	// Lo que FormatoImagen necesita leer para reconocer el formato
+	private static final int BYTES_DE_FIRMA = 12;
 	private static final Pattern NUMERO = Pattern.compile("\\d{1,9}(\\.\\d{1,9})?");
 
 	private final CatalogoDemoProperties propiedades;
@@ -108,12 +116,12 @@ public class CatalogoDemo implements ApplicationRunner {
 			throw new IllegalStateException("No se puede cargar el catálogo de demostración: "
 					+ errores.stream().map(ConstraintViolation::getMessage).sorted().collect(Collectors.joining("; ")));
 		}
-		Path carpeta = propiedades.directorio().toAbsolutePath().normalize();
+		Path carpeta = carpetaReal();
 		List<String> problemas = new ArrayList<>();
 		List<Fila> filas = leer(carpeta, problemas);
-		Optional<Usuario> admin = usuarioRepository.findByCorreo(administrador.correo());
+		Optional<Usuario> admin = administradorActivo();
 		if (admin.isEmpty() && filas.stream().anyMatch(fila -> fila.stock().signum() > 0)) {
-			problemas.add("el stock inicial se registra a nombre de TIENDA_ADMIN_CORREO, y esa cuenta no existe");
+			problemas.add("el stock inicial se registra a nombre de un administrador activo, y no hay ninguno");
 		}
 		if (!problemas.isEmpty()) {
 			problemas.forEach(problema -> log.warn("Catálogo de demostración: {}", problema));
@@ -127,9 +135,32 @@ public class CatalogoDemo implements ApplicationRunner {
 		}
 		// Todo o nada: si algo falla, la transacción se revierte y ArchivosAlTerminar borra las imágenes guardadas
 		int[] categoriasNuevas = { 0 };
-		transaccion.executeWithoutResult(estado -> categoriasNuevas[0] = cargar(filas, admin.orElse(null)));
+		try {
+			transaccion.executeWithoutResult(estado -> categoriasNuevas[0] = cargar(filas, admin.orElse(null)));
+		} catch (RuntimeException e) {
+			log.error("No se cargó el catálogo de demostración: falló la carga y se revirtió entera.", e);
+			return;
+		}
 		log.info("Catálogo de demostración cargado: {} productos y {} categorías nuevas.", filas.size(),
 				categoriasNuevas[0]);
+	}
+
+	// Ya validada: es una carpeta con el catálogo. Con su camino real se reconocen los enlaces que salen de ella
+	private Path carpetaReal() {
+		try {
+			return propiedades.directorio().toRealPath();
+		} catch (IOException e) {
+			throw new UncheckedIOException("No se pudo abrir TIENDA_DEMO_DIRECTORIO", e);
+		}
+	}
+
+	// La cuenta de TIENDA_ADMIN_CORREO si sigue siendo de un administrador activo; si no, otro administrador activo.
+	// Nunca un cliente ni una cuenta desactivada
+	private Optional<Usuario> administradorActivo() {
+		return usuarioRepository.findByCorreo(administrador.correo())
+				.filter(usuario -> usuario.getRol() == Rol.ADMINISTRADOR && usuario.getEstado() == EstadoCuenta.ACTIVA)
+				.or(() -> usuarioRepository.findFirstByRolAndEstadoOrderByIdUsuario(Rol.ADMINISTRADOR,
+						EstadoCuenta.ACTIVA));
 	}
 
 	private int cargar(List<Fila> filas, Usuario admin) {
@@ -192,15 +223,13 @@ public class CatalogoDemo implements ApplicationRunner {
 		BigDecimal stock = numero(campos[4], "stock_inicial", errores);
 		Fila fila = new Fila(categoria, campos[1].strip(), campos[2].strip(), precio, stock,
 				imagenes(carpeta, campos[5].strip(), errores));
-		if (precio != null) {
-			errores(validator.validate(fila.producto(CATEGORIA_POR_RESOLVER)), Map.of("precio", "precio_bs"),
-					errores);
-		}
+		errores(validator.validate(fila.producto(CATEGORIA_POR_RESOLVER, precio != null ? precio : PRECIO_POR_RESOLVER)),
+				Map.of("precio", "precio_bs"), errores);
 		if (stock != null && stock.signum() > 0) {
 			errores(validator.validate(new EntradaRequest(stock, NOTA_STOCK)), Map.of("cantidad", "stock_inicial"),
 					errores);
 			if (!InventarioService.admiteDecimales(UNIDAD, stock)) {
-				errores.add("stock_inicial: tiene que ser un número entero");
+				errores.add("stock_inicial: " + InventarioService.mensajeDecimales(UNIDAD));
 			}
 		}
 		errores.forEach(error -> problemas.add("Fila " + numero + ": " + error));
@@ -216,7 +245,7 @@ public class CatalogoDemo implements ApplicationRunner {
 		return new BigDecimal(texto);
 	}
 
-	// Solo nombres de archivo de la misma carpeta: ninguna ruta sale de ella
+	// Solo nombres de archivo de la misma carpeta: ninguna ruta sale de ella, tampoco por un enlace simbólico
 	private List<Path> imagenes(Path carpeta, String campo, List<String> errores) {
 		if (campo.isEmpty()) {
 			return List.of();
@@ -231,26 +260,36 @@ public class CatalogoDemo implements ApplicationRunner {
 			String nombre = sinRecortar.strip();
 			Path archivo = carpeta.resolve(nombre).normalize();
 			if (nombre.isEmpty() || !carpeta.equals(archivo.getParent())) {
-				errores.add("imagenes: " + nombre + " no es un nombre de archivo de la carpeta");
+				errores.add("imagenes: " + nombre + " no es un archivo de la carpeta");
 			} else if (!Files.isRegularFile(archivo)) {
 				errores.add("imagenes: " + nombre + " no existe en la carpeta");
-			} else {
-				validarImagen(nombre, archivo, errores);
+			} else if (validarImagen(carpeta, nombre, archivo, errores)) {
 				imagenes.add(archivo);
 			}
 		}
 		return imagenes;
 	}
 
-	private void validarImagen(String nombre, Path archivo, List<String> errores) {
+	private boolean validarImagen(Path carpeta, String nombre, Path archivo, List<String> errores) {
 		try {
-			if (Files.size(archivo) > maximoImagen.toBytes()) {
+			if (!carpeta.equals(archivo.toRealPath().getParent())) {
+				errores.add("imagenes: " + nombre + " no es un archivo de la carpeta");
+			} else if (Files.size(archivo) > maximoImagen.toBytes()) {
 				errores.add("imagenes: " + nombre + " pasa de " + maximoImagen.toMegabytes() + " MB");
-			} else if (FormatoImagen.detectar(Files.readAllBytes(archivo)).isEmpty()) {
+			} else if (FormatoImagen.detectar(firma(archivo)).isEmpty()) {
 				errores.add("imagenes: " + nombre + " no es JPG, PNG ni WebP");
+			} else {
+				return true;
 			}
 		} catch (IOException e) {
 			errores.add("imagenes: " + nombre + " no se pudo leer");
+		}
+		return false;
+	}
+
+	private static byte[] firma(Path archivo) throws IOException {
+		try (InputStream entrada = Files.newInputStream(archivo)) {
+			return entrada.readNBytes(BYTES_DE_FIRMA);
 		}
 	}
 
@@ -275,6 +314,10 @@ public class CatalogoDemo implements ApplicationRunner {
 			List<Path> imagenes) {
 
 		ProductoRequest producto(Long idCategoria) {
+			return producto(idCategoria, precio);
+		}
+
+		ProductoRequest producto(Long idCategoria, BigDecimal precio) {
 			return new ProductoRequest(nombre, null, descripcion, idCategoria, UNIDAD, precio, null, null);
 		}
 	}

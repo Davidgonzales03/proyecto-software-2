@@ -120,9 +120,12 @@ public class InventarioService {
 
 	private static void exigirDecimales(UnidadVenta unidad, BigDecimal cantidad, String campo) {
 		if (!admiteDecimales(unidad, cantidad)) {
-			String mensaje = unidad.decimales() == 0 ? "tiene que ser un número entero" : "admite hasta dos decimales";
-			throw new CamposInvalidosException(List.of(new CampoInvalido(campo, mensaje)));
+			throw new CamposInvalidosException(List.of(new CampoInvalido(campo, mensajeDecimales(unidad))));
 		}
+	}
+
+	static String mensajeDecimales(UnidadVenta unidad) {
+		return unidad.decimales() == 0 ? "tiene que ser un número entero" : "admite hasta dos decimales";
 	}
 
 	private Producto bloquear(Long idProducto) {
