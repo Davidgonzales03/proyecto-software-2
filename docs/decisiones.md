@@ -17,7 +17,7 @@ solo las secciones que tocan la tarea. Al agregar una decisión, sumarla al
 - **[Seguridad](#seguridad)**: [`Usuario` es una sola clase con `rol` enumerado](#usuario-es-una-sola-clase-con-rol-enumerado) · [Autenticación por JWT stateless](#autenticación-por-jwt-stateless) · [Contraseñas con BCrypt](#contraseñas-con-bcrypt) · [Administrador inicial al arrancar](#administrador-inicial-al-arrancar) · [Registro](#registro) · [Inicio de sesión](#inicio-de-sesión) · [Recuperación de contraseña](#recuperación-de-contraseña) · [Datos personales](#datos-personales) · [Gestión de usuarios](#gestión-de-usuarios)
 - **[Notificaciones](#notificaciones)**: [Envío de correo detrás de `NotificadorCorreo`](#envío-de-correo-detrás-de-notificadorcorreo) · [Gmail por SMTP, sin servidor de correo propio](#gmail-por-smtp-sin-servidor-de-correo-propio)
 - **[Sistema de diseño (frontend)](#sistema-de-diseño-frontend)**: [La aplicación es un producto, no un trabajo académico](#la-aplicación-es-un-producto-no-un-trabajo-académico) · [Lo visual vive en `DESIGN.md`](#lo-visual-vive-en-designmd) · [Decisiones técnicas del frontend](#decisiones-técnicas-del-frontend)
-- **[Decisiones del proyecto](#decisiones-del-proyecto)**: [Tienda propia, no marketplace](#tienda-propia-no-marketplace) · [Roles de la tienda](#roles-de-la-tienda) · [Pago con Libélula, sin facturación SIAT](#pago-con-libélula-sin-facturación-siat) · [Rediseño del frontend dentro del flujo](#rediseño-del-frontend-dentro-del-flujo) · [Rubro: ferretería, con vista 3D](#rubro-ferretería-con-vista-3d) · [Categorías del catálogo](#categorías-del-catálogo) · [Productos](#productos) · [Inventario](#inventario) · [Catálogo público](#catálogo-público) · [Detalle del producto](#detalle-del-producto) · [Catálogo de demostración](#catálogo-de-demostración)
+- **[Decisiones del proyecto](#decisiones-del-proyecto)**: [Tienda propia, no marketplace](#tienda-propia-no-marketplace) · [Roles de la tienda](#roles-de-la-tienda) · [Pago con Libélula, sin facturación SIAT](#pago-con-libélula-sin-facturación-siat) · [Rediseño del frontend dentro del flujo](#rediseño-del-frontend-dentro-del-flujo) · [Rubro: ferretería, con vista 3D](#rubro-ferretería-con-vista-3d) · [Visor 3D y modelos](#visor-3d-y-modelos) · [Categorías del catálogo](#categorías-del-catálogo) · [Productos](#productos) · [Inventario](#inventario) · [Catálogo público](#catálogo-público) · [Detalle del producto](#detalle-del-producto) · [Catálogo de demostración](#catálogo-de-demostración)
 
 ---
 
@@ -451,6 +451,56 @@ cliente gira, acerca, aleja y mueve (HU-15 y HU-16).
 Haven tiene unos 70 modelos de herramientas con licencia CC0 y calidad
 realista, y el prototipo del spike (#14) los mostró con `<model-viewer>` sin
 problemas.
+
+### Visor 3D y modelos
+
+*17/10/2026 (spike #14).* El visor del detalle del producto (HU-16) es
+**`<model-viewer>`** (Google), con los modelos en **`.glb`**.
+
+- **Por qué `<model-viewer>` y no Three.js a mano:** los dos se probaron en la
+  tienda real (Angular 22) con los mismos modelos. `<model-viewer>` trae lo que
+  el otro obliga a programar y probar: encuadre automático, fondo
+  transparente, sombra, giro, zoom y paneo con mouse y con los dedos, aviso de
+  carga, accesibilidad y la realidad aumentada (WebXR y Scene Viewer en
+  Android, Quick Look en iPhone, convirtiendo a USDZ en el momento). Pesa unos
+  86 kB más.
+- **Peso:** 295 kB transferidos (1 040 kB sin comprimir), en un fragmento
+  aparte que se carga recién al abrir el visor; la carga inicial de la tienda
+  no cambia. Se integra como elemento web (`CUSTOM_ELEMENTS_SCHEMA`) con un
+  `import()` dentro de `afterNextRender`.
+- **Versiones:** `@google/model-viewer` 4.4.0 pide Three.js `^0.183.0`; Three.js
+  se instala en la versión que pida él, no en la última.
+- **Escala:** glTF mide en metros y los modelos de Poly Haven vienen en tamaño
+  real (martillo de 30 cm, caja de 40 cm), así que la realidad aumentada los
+  muestra en su tamaño sin ajustes.
+- **Tamaño de cada modelo:** el peso está casi todo en las texturas. Se
+  preparan **fuera de la aplicación** con texturas de 1k recomprimidas en
+  JPEG (`npx @gltf-transform/cli jpeg entrada.glb salida.glb --quality 75`),
+  sin diferencia visible: la caja pasa de 2,74 a 0,95 MB y el martillo de
+  1,51 a 0,40 MB. En 4G lenta cada MB tarda unos 5 s. **Límite al subir:
+  3 MB; lo recomendado, menos de 1 MB.**
+- **JPEG y no WebP:** WebP achica un poco más (la caja queda en 0,82 MB), pero
+  necesita la extensión `EXT_texture_webp`, y no se pudo confirmar que la
+  acepten Scene Viewer (Android) ni la conversión a USDZ de Quick Look
+  (iPhone). Con JPEG el modelo queda en glTF estándar.
+- **Modelos de demostración probados** (Poly Haven, CC0): martillo de peña
+  (`cross_pein_hammer`), llave combinada (`combination_wrench`), taladro
+  (`Drill_01`), wincha (`measuring_tape_01`), caja de herramientas
+  (`metal_toolbox`) y regadera (`watering_can_metal_01`). Alcanzan para la
+  demo; se pueden sumar otros de Poly Haven preparándolos igual.
+- **Carga a pedido:** el modelo se descarga recién con «Ver en 3D», con la foto
+  principal como póster mientras carga.
+- **Probado en celulares (Fabio):** la realidad aumentada funciona en Android
+  con `<model-viewer>`; en un celular sin soporte el botón no aparece; en uno
+  de gama baja el giro y el zoom son fluidos. **Pendiente para HU-16:** la
+  realidad aumentada en iPhone y con los modelos propios servidos por HTTPS
+  (Scene Viewer necesita descargarlos de una dirección pública; un archivo
+  abierto desde el celular no la ofrece).
+
+**Motivo:** el visor es un detalle del producto, no el producto: conviene la
+pieza que ya resuelve los casos difíciles (realidad aumentada en dos
+sistemas, gestos, accesibilidad) aunque pese un poco más, y con modelos
+livianos la diferencia que se nota es la de los modelos, no la de la librería.
 
 ### Categorías del catálogo
 
