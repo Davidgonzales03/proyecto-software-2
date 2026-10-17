@@ -581,10 +581,12 @@ lectura) con `catalogo.csv` y sus imágenes. Lo hace `CatalogoDemo`.
 - **Solo una vez:** sin la variable no hace nada; con productos en la base,
   tampoco.
 - **`catalogo.csv`:** una fila por producto, con
-  `categoria,nombre,descripcion,precio_bs,stock_inicial,imagenes,modelo_3d`.
+  `categoria,nombre,descripcion,precio_bs,stock_inicial,imagenes,modelo_3d,destacado,unidad`.
   Separado por comas y sin comillas: **ningún campo lleva comas**. Precio y
   stock con punto decimal; `imagenes`, archivos de la carpeta separados por
-  `|`; `modelo_3d` se ignora hasta el spike #14.
+  `|`; `modelo_3d` se ignora hasta el spike #14; `destacado`, `si` o vacío
+  (sale en «Destacados» de la portada); `unidad`, `unidad`, `metro`, `kilo`,
+  `litro`, `caja`, `par` o `rollo`, y vacía es `unidad`.
 - **Las reglas de siempre:** categorías, productos, imágenes (2 MB, JPG, PNG o
   WebP, hasta cinco, sin repetir) y stock pasan por los mismos servicios y
   validaciones que la gestión. Las categorías que faltan se crean; una fila
@@ -594,8 +596,8 @@ lectura) con `catalogo.csv` y sus imágenes. Lo hace `CatalogoDemo`.
   La aplicación arranca igual, con el catálogo vacío. Una variable que no
   apunta a una carpeta con `catalogo.csv` impide arrancar, aunque ya haya
   productos.
-- **Unidad de venta `UNIDAD` para todos,** por eso el stock inicial es entero.
-  Marca, ficha y destacado quedan vacíos.
+- **El stock inicial respeta la unidad:** entero, salvo en metro, kilo o
+  litro, que admiten dos decimales. Marca y ficha quedan vacías.
 - **El stock inicial es una entrada** a nombre de la cuenta de
   `TIENDA_ADMIN_CORREO` si es un Administrador activo, o de otro Administrador
   activo; nunca de un cliente.

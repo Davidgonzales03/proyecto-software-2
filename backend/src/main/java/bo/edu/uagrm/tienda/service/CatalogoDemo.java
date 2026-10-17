@@ -8,9 +8,11 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -44,10 +46,11 @@ import lombok.extern.slf4j.Slf4j;
 
 // Carga el catálogo de demostración (issue #25) al arrancar, solo con TIENDA_DEMO_DIRECTORIO y solo si todavía no
 // hay productos. catalogo.csv lleva una fila por producto, con estas columnas:
-//   categoria,nombre,descripcion,precio_bs,stock_inicial,imagenes,modelo_3d
+//   categoria,nombre,descripcion,precio_bs,stock_inicial,imagenes,modelo_3d,destacado,unidad
 // El lector es simple: separa por comas, sin comillas, así que ningún campo puede llevar una coma. El precio y el
 // stock van con punto decimal; imagenes, los archivos de la carpeta separados por '|'; modelo_3d se ignora (spike
-// #14). Todo pasa por los servicios y las validaciones de la gestión. Si una fila tiene errores, se informan todas
+// #14); destacado, «si» o vacío; unidad, una de UnidadVenta o vacía (UNIDAD). Todo pasa por los servicios y las
+// validaciones de la gestión. Si una fila tiene errores, se informan todas
 // con su número (la 1 es el encabezado) y no se carga nada: una carga a medias ya no se podría completar, porque
 // con productos en la base no se vuelve a cargar. Un fallo durante la carga la revierte entera; en los dos casos la
 // aplicación arranca igual, con el catálogo vacío (decisiones.md → Catálogo de demostración)
@@ -56,10 +59,9 @@ import lombok.extern.slf4j.Slf4j;
 @EnableConfigurationProperties(CatalogoDemoProperties.class)
 public class CatalogoDemo implements ApplicationRunner {
 
-	static final String ENCABEZADO = "categoria,nombre,descripcion,precio_bs,stock_inicial,imagenes,modelo_3d";
-	private static final int COLUMNAS = 7;
-	// Provisional, hasta que el CSV traiga la unidad de venta (pregunta abierta en el PR de #25)
-	private static final UnidadVenta UNIDAD = UnidadVenta.UNIDAD;
+	static final String ENCABEZADO =
+			"categoria,nombre,descripcion,precio_bs,stock_inicial,imagenes,modelo_3d,destacado,unidad";
+	private static final int COLUMNAS = 9;
 	private static final String NOTA_STOCK = "Catálogo de demostración";
 	// La categoría todavía no existe al validar la fila, y el precio puede no ser un número: @NotNull solo necesita un
 	// valor, y el error del precio ya se informó
@@ -233,15 +235,17 @@ public class CatalogoDemo implements ApplicationRunner {
 		}
 		BigDecimal precio = numero(campos[3], "precio_bs", errores);
 		BigDecimal stock = numero(campos[4], "stock_inicial", errores);
+		boolean destacado = destacado(campos[7].strip(), errores);
+		UnidadVenta unidad = unidad(campos[8].strip(), errores);
 		Fila fila = new Fila(numero, categoria, campos[1].strip(), campos[2].strip(), precio, stock,
-				imagenes(carpeta, campos[5].strip(), errores));
+				imagenes(carpeta, campos[5].strip(), errores), destacado, unidad);
 		ProductoRequest producto = fila.producto(CATEGORIA_POR_RESOLVER, precio != null ? precio : PRECIO_POR_RESOLVER);
 		errores(validator.validate(producto), Map.of("precio", "precio_bs"), errores);
 		if (stock != null && stock.signum() > 0) {
 			errores(validator.validate(new EntradaRequest(stock, NOTA_STOCK)), Map.of("cantidad", "stock_inicial"),
 					errores);
-			if (!InventarioService.admiteDecimales(UNIDAD, stock)) {
-				errores.add("stock_inicial: " + InventarioService.mensajeDecimales(UNIDAD));
+			if (!InventarioService.admiteDecimales(unidad, stock)) {
+				errores.add("stock_inicial: " + InventarioService.mensajeDecimales(unidad));
 			}
 		}
 		errores.forEach(error -> problemas.add("Fila " + numero + ": " + error));
@@ -255,6 +259,32 @@ public class CatalogoDemo implements ApplicationRunner {
 			return null;
 		}
 		return new BigDecimal(texto);
+	}
+
+	// Vacío es no destacado: lo normal es que la mayoría no lo sea
+	private static boolean destacado(String campo, List<String> errores) {
+		if (campo.isEmpty() || campo.equalsIgnoreCase("no")) {
+			return false;
+		}
+		if (!campo.equalsIgnoreCase("si") && !campo.equalsIgnoreCase("sí")) {
+			errores.add("destacado: «" + campo + "» tiene que ser si o quedar vacío");
+		}
+		return true;
+	}
+
+	// Vacía es UNIDAD, lo más común en una ferretería; METRO, KILO y LITRO admiten stock con decimales
+	private static UnidadVenta unidad(String campo, List<String> errores) {
+		if (campo.isEmpty()) {
+			return UnidadVenta.UNIDAD;
+		}
+		for (UnidadVenta unidad : UnidadVenta.values()) {
+			if (unidad.name().equalsIgnoreCase(campo)) {
+				return unidad;
+			}
+		}
+		errores.add("unidad: «" + campo + "» no es una unidad de venta (" + Arrays.stream(UnidadVenta.values())
+				.map(u -> u.name().toLowerCase(Locale.ROOT)).collect(Collectors.joining(", ")) + " o vacía)");
+		return UnidadVenta.UNIDAD;
 	}
 
 	// Solo nombres de archivo de la misma carpeta: ninguna ruta sale de ella, tampoco por un enlace simbólico
@@ -326,14 +356,14 @@ public class CatalogoDemo implements ApplicationRunner {
 
 	// Una fila válida del CSV. Las imágenes se vuelven a leer al cargar, para no tener todas en memoria
 	private record Fila(int numero, String categoria, String nombre, String descripcion, BigDecimal precio,
-			BigDecimal stock, List<Path> imagenes) {
+			BigDecimal stock, List<Path> imagenes, boolean destacado, UnidadVenta unidad) {
 
 		ProductoRequest producto(Long idCategoria) {
 			return producto(idCategoria, precio);
 		}
 
 		ProductoRequest producto(Long idCategoria, BigDecimal precio) {
-			return new ProductoRequest(nombre, null, descripcion, idCategoria, UNIDAD, precio, null, null);
+			return new ProductoRequest(nombre, null, descripcion, idCategoria, unidad, precio, null, destacado);
 		}
 	}
 }
