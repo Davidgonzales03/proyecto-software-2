@@ -34,6 +34,8 @@ const MENSAJES: Record<string, string> = {
 		'El stock o el mínimo de este producto tienen decimales y esa unidad no los admite. Ajusta el stock antes de cambiarla.',
 	IMAGEN_INVALIDA: 'Ese archivo no es una imagen JPG, PNG o WebP.',
 	IMAGEN_DEMASIADO_GRANDE: 'La imagen pesa más de 2 MB. Elige una más liviana.',
+	PRODUCTO_AGOTADO: 'Este producto está agotado.',
+	CARRITO_LLENO: 'Su carrito ya tiene 50 productos distintos. Quite alguno para agregar otro.',
 	SIN_CONEXION: 'No pudimos conectar con el servidor. Intenta de nuevo.',
 	ERROR_SERVIDOR: 'El servidor tuvo un problema. Vuelva a intentarlo en un momento.',
 };
