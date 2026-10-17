@@ -95,12 +95,12 @@ export class CarritoPage {
 			await this.servicio.cambiarCantidad(linea.idProducto, nueva);
 		} catch (rechazo: unknown) {
 			const error = rechazo as ErrorApi;
+			campo.value = cantidad(linea.cantidad);
 			// La línea ya no existe (se quitó en otro dispositivo): el carrito se pide de nuevo
 			if (error.status === 404) {
 				this.recurso.reload();
 				return;
 			}
-			campo.value = cantidad(linea.cantidad);
 			this.ponerError(linea.idProducto, mensajeDelRechazo(error));
 		}
 	}

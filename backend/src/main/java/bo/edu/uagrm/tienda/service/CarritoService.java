@@ -40,6 +40,9 @@ public class CarritoService {
 
 	static final int MAXIMO_LINEAS = 50;
 	static final BigDecimal MAXIMO_CANTIDAD = new BigDecimal(CantidadDeCarrito.MAXIMA);
+	private static final String TOPE = "admite hasta " + CantidadDeCarrito.MAXIMA;
+	// La suma se explica distinto: es lo que ya estaba más lo nuevo
+	private static final String TOPE_DE_LA_SUMA = "sumada a la del carrito pasaría de " + CantidadDeCarrito.MAXIMA;
 
 	private final LineaCarritoRepository lineaRepository;
 	private final ProductoRepository productoRepository;
@@ -62,17 +65,14 @@ public class CarritoService {
 		if (producto.getStock().signum() == 0) {
 			throw new ProductoAgotadoException();
 		}
+		// Primero lo pedido; después la suma, que si pasa del tope es por lo que ya estaba (RF-2, RF-3)
+		exigirCantidad(producto.getUnidad(), solicitud.cantidad(), TOPE);
 		Optional<LineaCarrito> existente = lineaRepository
 				.findByUsuario_IdUsuarioAndProducto_IdProducto(idUsuario, producto.getIdProducto());
 		BigDecimal cantidad = existente.map(linea -> linea.getCantidad().add(solicitud.cantidad()))
 				.orElse(solicitud.cantidad());
-		// La cantidad pedida ya pasó la solicitud: si se pasa, es por lo que ya estaba (RF-2, RF-3)
-		if (existente.isPresent() && cantidad.compareTo(MAXIMO_CANTIDAD) > 0) {
-			throw new CamposInvalidosException(List.of(new CampoInvalido("cantidad",
-					"sumada a la del carrito pasaría de " + CantidadDeCarrito.MAXIMA)));
-		}
-		exigirCantidad(producto.getUnidad(), cantidad);
 		if (existente.isPresent()) {
+			exigirCantidad(producto.getUnidad(), cantidad, TOPE_DE_LA_SUMA);
 			existente.get().cambiar(cantidad);
 		} else {
 			if (lineaRepository.countByUsuario_IdUsuario(idUsuario) >= MAXIMO_LINEAS) {
@@ -90,7 +90,7 @@ public class CarritoService {
 		bloquear(idUsuario);
 		LineaCarrito linea = lineaRepository.findByUsuario_IdUsuarioAndProducto_IdProducto(idUsuario, idProducto)
 				.orElseThrow(ProductoNoEncontradoException::new);
-		exigirCantidad(linea.getProducto().getUnidad(), solicitud.cantidad());
+		exigirCantidad(linea.getProducto().getUnidad(), solicitud.cantidad(), TOPE);
 		linea.cambiar(solicitud.cantidad());
 		return armar(idUsuario);
 	}
@@ -117,14 +117,14 @@ public class CarritoService {
 
 	// Los decimales según la unidad y el tope de la línea, también para el resultado de una suma (RF-3). Que sea mayor
 	// que 0 y tenga hasta dos decimales ya lo validó la solicitud
-	private static void exigirCantidad(UnidadVenta unidad, BigDecimal cantidad) {
+	private static void exigirCantidad(UnidadVenta unidad, BigDecimal cantidad, String tope) {
 		if (!InventarioService.admiteDecimales(unidad, cantidad)) {
 			throw new CamposInvalidosException(
 					List.of(new CampoInvalido("cantidad", InventarioService.mensajeDecimales(unidad))));
 		}
 		if (cantidad.compareTo(MAXIMO_CANTIDAD) > 0) {
 			throw new CamposInvalidosException(
-					List.of(new CampoInvalido("cantidad", "admite hasta " + CantidadDeCarrito.MAXIMA)));
+					List.of(new CampoInvalido("cantidad", tope)));
 		}
 	}
 

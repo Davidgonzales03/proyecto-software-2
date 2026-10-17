@@ -78,7 +78,7 @@
           <p class="subtotal">{{ linea.subtotal === null ? '' : precio(linea.subtotal) }}</p>
 
           <button type="button" class="quitar" [attr.aria-label]="'Quitar ' + linea.nombre" (click)="quitar(linea)">
-            <svg lucideTrash2 aria-hidden="true"></svg><span>Quitar</span>
+            <svg lucideTrash2 aria-hidden="true"></svg>
           </button>
         </li>
       }

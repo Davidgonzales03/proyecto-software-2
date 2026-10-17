@@ -115,7 +115,7 @@ describe('CarritoPage', () => {
 
   function boton(textoDelBoton: string, dentro: HTMLElement = pantalla()): HTMLButtonElement {
     const encontrado = Array.from(dentro.querySelectorAll('button')).find((cada) =>
-      cada.textContent?.trim().startsWith(textoDelBoton),
+      (cada.getAttribute('aria-label') ?? cada.textContent?.trim())?.startsWith(textoDelBoton),
     );
     if (encontrado === undefined) {
       throw new Error(`No hay botón «${textoDelBoton}»`);

@@ -230,6 +230,17 @@ class CarritoIntegracionTest {
 		assertThat(get(CARRITO, ana)).bodyJson().extractingPath("$.lineas[0].cantidad").isEqualTo(900.0);
 	}
 
+	// HU-11 RF-3: lo pedido se explica antes que la suma
+	@Test
+	void losDecimalesDeLoPedidoGananALaSuma() {
+		agregar(ana, martillo, "900");
+
+		MvcTestResult conDecimales = agregar(ana, martillo, "100.5");
+
+		assertThat(conDecimales).bodyJson().extractingPath("$.errores[0].mensaje")
+				.isEqualTo("tiene que ser un número entero");
+	}
+
 	// HU-11 RF-4
 	@Test
 	void agotadoNoSeAgrega() throws Exception {

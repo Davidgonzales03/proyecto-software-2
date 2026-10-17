@@ -30,13 +30,13 @@ h1 {
 
 // Foto | datos | cantidad | subtotal | quitar, con columnas fijas para que las
 // cifras queden alineadas entre líneas; en el celular, la cantidad y el
-// subtotal bajan a una segunda fila. Sobre la lona clara, el acento y el error
+// subtotal bajan a una segunda fila. El subtotal crece si no entra en 12ch. Sobre la lona clara, el acento y el error
 // van oscuros: los del modo oscuro no se leen
 .linea {
 	--app-acento-texto: var(--app-sobre-lona);
 	--app-error: var(--app-error-sobre-lona);
 	display: grid;
-	grid-template-columns: 88px minmax(0, 1fr) 7.5rem 12ch var(--app-area-tocable);
+	grid-template-columns: 88px minmax(0, 1fr) 7.5rem minmax(12ch, max-content) var(--app-area-tocable);
 	grid-template-areas: 'foto datos cantidad subtotal quitar';
 	align-items: center;
 	gap: var(--app-espacio-4);
@@ -51,10 +51,10 @@ h1 {
 
 @media (max-width: 640px) {
 	.linea {
-		grid-template-columns: 72px minmax(0, 1fr) var(--app-area-tocable);
+		grid-template-columns: 72px minmax(0, 1fr) max-content var(--app-area-tocable);
 		grid-template-areas:
-			'foto datos quitar'
-			'cantidad subtotal subtotal';
+			'foto datos datos quitar'
+			'cantidad cantidad subtotal subtotal';
 		align-items: start;
 	}
 }
@@ -209,16 +209,6 @@ input[aria-invalid='true'] {
 	.quitar:hover {
 		text-decoration: underline;
 	}
-}
-
-// El texto «Quitar» queda para los lectores (va en el aria-label): la papelera
-// alcanza y deja lugar a las cifras
-.quitar span {
-	position: absolute;
-	width: 1px;
-	height: 1px;
-	overflow: hidden;
-	clip-path: inset(50%);
 }
 
 .pie {

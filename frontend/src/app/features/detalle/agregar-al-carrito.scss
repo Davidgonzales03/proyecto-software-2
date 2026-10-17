@@ -21,12 +21,14 @@ form {
 	display: contents;
 }
 
-label {
-	grid-column: 1 / -1;
+// Con fila y columna fijas: un elemento con solo la fila se ubica antes que
+// los demás y le quitaría la primera columna al campo
+input {
+	grid-area: 2 / 1;
 }
 
 .principal {
-	grid-row: 2;
+	grid-area: 2 / 2;
 }
 
 // En el celular angosto el botón baja a su propia fila
@@ -35,13 +37,18 @@ label {
 		grid-template-columns: minmax(0, 1fr);
 	}
 
+	input,
 	.principal {
-		grid-row: auto;
+		grid-area: auto;
+	}
+
+	.principal {
 		justify-self: start;
 	}
 }
 
 label {
+	grid-column: 1 / -1;
 	color: var(--app-texto-suave);
 	font-size: 12px;
 	font-weight: 600;

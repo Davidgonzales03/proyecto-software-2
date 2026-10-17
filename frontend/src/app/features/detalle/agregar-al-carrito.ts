@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
-import { form, FormField, required, submit, validate } from '@angular/forms/signals';
+import { form, FormField, submit, validate } from '@angular/forms/signals';
 import { Router, RouterLink } from '@angular/router';
 import { LucideShoppingCart } from '@lucide/angular';
 
@@ -41,7 +41,7 @@ export class AgregarAlCarrito {
 
 	private readonly datos = signal({ cantidad: '1' });
 	protected readonly compra = form(this.datos, (ruta) => {
-		required(ruta.cantidad, { message: 'Escriba la cantidad.' });
+		// En blanco, o solo con espacios, falta la cantidad
 		validate(ruta.cantidad, ({ value }) => {
 			if (value().trim() === '') {
 				return { kind: 'required', message: 'Escriba la cantidad.' };
