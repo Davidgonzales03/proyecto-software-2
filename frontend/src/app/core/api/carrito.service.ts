@@ -22,9 +22,18 @@ export class CarritoService {
 
 	readonly carrito = httpResource<Carrito>(() => (this.esCliente() ? CARRITO : undefined));
 
-	readonly cantidadLineas = computed(() =>
-		this.esCliente() && this.carrito.hasValue() ? this.carrito.value().cantidadLineas : 0,
-	);
+	// null si el carrito no cargó: no se sabe cuántos hay (el encabezado no afirma que está vacío)
+	readonly cantidadLineas = computed<number | null>(() => {
+		if (!this.esCliente()) {
+			return 0;
+		}
+		return this.carrito.hasValue() ? this.carrito.value().cantidadLineas : null;
+	});
+
+	// Las escrituras van una después de la otra: el servidor las aplica en orden, y así la respuesta
+	// más vieja nunca pisa a la más nueva. Una rechazada no traba las siguientes. Sin otra en curso,
+	// sale en el acto
+	private enCurso: Promise<unknown> | null = null;
 
 	agregar(idProducto: number, cantidad: number): Promise<Carrito> {
 		return this.guardar(this.http.post<Carrito>(`${CARRITO}/lineas`, { idProducto, cantidad }));
@@ -42,9 +51,21 @@ export class CarritoService {
 		return this.guardar(this.http.delete<Carrito>(CARRITO));
 	}
 
-	private async guardar(pedido: Parameters<typeof escribir<Carrito>>[0]): Promise<Carrito> {
-		const carrito = await escribir(pedido);
-		this.carrito.set(carrito);
-		return carrito;
+	private guardar(pedido: Parameters<typeof escribir<Carrito>>[0]): Promise<Carrito> {
+		const aplicar = async (): Promise<Carrito> => {
+			const carrito = await escribir(pedido);
+			this.carrito.set(carrito);
+			return carrito;
+		};
+		const escritura = this.enCurso === null ? aplicar() : this.enCurso.then(aplicar, aplicar);
+		this.enCurso = escritura;
+		// Se registra antes que quien espera la escritura: al seguir, ya no figura en curso
+		const terminar = (): void => {
+			if (this.enCurso === escritura) {
+				this.enCurso = null;
+			}
+		};
+		escritura.then(terminar, terminar);
+		return escritura;
 	}
 }

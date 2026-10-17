@@ -4,7 +4,7 @@ import { Router, RouterLink } from '@angular/router';
 import { LucideShoppingCart } from '@lucide/angular';
 
 import { CarritoService } from '../../core/api/carrito.service';
-import { mensajeDeCampo, mensajeDeError, primerMensaje } from '../../core/api/mensajes-error';
+import { mensajeDelCampo, mensajeDelRechazo } from '../../core/api/mensajes-error';
 import { CANTIDAD_MAXIMA_EN_CARRITO } from '../../core/modelos/carrito';
 import { ProductoEnDetalle } from '../../core/modelos/catalogo';
 import { ErrorApi } from '../../core/modelos/error-api';
@@ -43,6 +43,9 @@ export class AgregarAlCarrito {
 	protected readonly compra = form(this.datos, (ruta) => {
 		required(ruta.cantidad, { message: 'Escriba la cantidad.' });
 		validate(ruta.cantidad, ({ value }) => {
+			if (value().trim() === '') {
+				return { kind: 'required', message: 'Escriba la cantidad.' };
+			}
 			const problema = problemaDeCantidad(value(), {
 				decimales: DECIMALES_DE_UNIDAD[this.producto().unidad],
 				maximo: CANTIDAD_MAXIMA_EN_CARRITO,
@@ -51,9 +54,13 @@ export class AgregarAlCarrito {
 			return problema === null ? null : { kind: 'cantidad', message: problema };
 		});
 	});
+	// El rechazo de la API sobre la cantidad va junto al campo mientras siga escrita la misma
+	private readonly rechazoDeCantidad = signal<{ texto: string; error: ErrorApi } | null>(null);
 	protected readonly errorDeCantidad = computed(() => {
 		const campo = this.compra.cantidad();
-		return campo.touched() && campo.invalid() ? primerMensaje(campo.errors()) : '';
+		const rechazo = this.rechazoDeCantidad();
+		const vigente = rechazo !== null && rechazo.texto === campo.value() ? rechazo.error : null;
+		return mensajeDelCampo(campo, 'cantidad', vigente);
 	});
 	protected readonly agregando = signal(false);
 	protected readonly agregado = signal(false);
@@ -73,14 +80,21 @@ export class AgregarAlCarrito {
 		}
 		this.agregado.set(false);
 		this.error.set('');
+		this.rechazoDeCantidad.set(null);
 		this.agregando.set(true);
 		await submit(this.compra, {
 			action: async (campos) => {
+				const texto = campos().value().cantidad;
 				try {
-					await this.carrito.agregar(producto.idProducto, leerCantidad(campos().value().cantidad) ?? 0);
+					await this.carrito.agregar(producto.idProducto, leerCantidad(texto) ?? 0);
 					this.agregado.set(true);
 				} catch (rechazo: unknown) {
-					this.error.set(mensajeDelRechazo(rechazo as ErrorApi));
+					const error = rechazo as ErrorApi;
+					if (error.errores?.some((cada) => cada.campo === 'cantidad')) {
+						this.rechazoDeCantidad.set({ texto, error });
+					} else {
+						this.error.set(mensajeDelRechazoAlAgregar(error));
+					}
 				}
 				return undefined;
 			},
@@ -89,12 +103,8 @@ export class AgregarAlCarrito {
 	}
 }
 
-// Un dato rechazado se explica con su campo; el producto que dejó de venderse,
-// con las palabras de la historia; lo demás, con el diccionario
-function mensajeDelRechazo(error: ErrorApi): string {
-	const primero = error.errores?.[0];
-	if (primero !== undefined) {
-		return mensajeDeCampo(primero.campo, primero.mensaje);
-	}
-	return error.codigo === 'PRODUCTO_NO_ENCONTRADO' ? 'Este producto ya no está disponible.' : mensajeDeError(error);
+// El producto que dejó de venderse se dice con las palabras de la historia; lo
+// demás, como en el resto de la aplicación
+function mensajeDelRechazoAlAgregar(error: ErrorApi): string {
+	return error.codigo === 'PRODUCTO_NO_ENCONTRADO' ? 'Este producto ya no está disponible.' : mensajeDelRechazo(error);
 }

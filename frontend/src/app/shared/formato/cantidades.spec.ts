@@ -38,6 +38,6 @@ describe('problemaDeCantidad', () => {
     expect(problemaDeCantidad('25,555', POR_METRO)).toBe('La cantidad admite hasta dos decimales.');
     expect(problemaDeCantidad('100000', POR_UNIDAD)).toBe('La cantidad admite hasta 99.999,99.');
     expect(problemaDeCantidad('0', POR_UNIDAD)).toBe('La cantidad tiene que ser mayor que 0.');
-    expect(problemaDeCantidad('-3', CONTADA)).toBe('Escribe la cantidad con números, por ejemplo 12,5.');
+    expect(problemaDeCantidad('-3', CONTADA)).toBe('Escriba la cantidad con números, por ejemplo 12,5.');
   });
 });

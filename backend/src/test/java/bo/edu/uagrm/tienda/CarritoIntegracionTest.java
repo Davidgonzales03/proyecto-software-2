@@ -224,7 +224,9 @@ class CarritoIntegracionTest {
 		MvcTestResult demasiado = agregar(ana, cable, "100");
 
 		assertThat(demasiado).hasStatus(HttpStatus.BAD_REQUEST);
-		assertThat(demasiado).bodyJson().extractingPath("$.errores[0].mensaje").isEqualTo("admite hasta 999");
+		// La suma se explica distinto que una cantidad fuera de rango: es lo que ya estaba más lo nuevo
+		assertThat(demasiado).bodyJson().extractingPath("$.errores[0].mensaje")
+				.isEqualTo("sumada a la del carrito pasaría de 999");
 		assertThat(get(CARRITO, ana)).bodyJson().extractingPath("$.lineas[0].cantidad").isEqualTo(900.0);
 	}
 

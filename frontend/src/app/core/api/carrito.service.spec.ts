@@ -175,4 +175,54 @@ describe('CarritoService', () => {
     await estable();
     expect(carrito.cantidadLineas()).toBe(0);
   });
+
+  // Revisión de HU-11 (/code-review): dos escrituras seguidas se aplican en orden, y la respuesta
+  // más vieja no pisa a la nueva
+  it('las escrituras van una después de la otra', async () => {
+    const carrito = servicio();
+    cuenta.set(usuario(1, 'CLIENTE'));
+    TestBed.tick();
+    http.expectOne('/api/carrito').flush(CON_MARTILLO);
+    await estable();
+
+    const cambiado = carrito.cambiarCantidad(7, 3);
+    const quitado = carrito.quitar(7);
+    const cambio = http.expectOne({ method: 'PUT', url: '/api/carrito/lineas/7' });
+    http.expectNone({ method: 'DELETE', url: '/api/carrito/lineas/7' });
+    cambio.flush(CON_MARTILLO);
+    await cambiado;
+
+    http.expectOne({ method: 'DELETE', url: '/api/carrito/lineas/7' }).flush(VACIO);
+    await quitado;
+    expect(carrito.cantidadLineas()).toBe(0);
+  });
+
+  // Revisión de HU-11 (/code-review): si una escritura falla, la siguiente igual se manda
+  it('una escritura rechazada no traba las siguientes', async () => {
+    const carrito = servicio();
+    cuenta.set(usuario(1, 'CLIENTE'));
+    TestBed.tick();
+    http.expectOne('/api/carrito').flush(CON_MARTILLO);
+
+    const rechazado = carrito.cambiarCantidad(7, 3);
+    const quitado = carrito.quitar(7);
+    http
+      .expectOne({ method: 'PUT', url: '/api/carrito/lineas/7' })
+      .flush({ status: 404, codigo: 'PRODUCTO_NO_ENCONTRADO', detail: '' }, { status: 404, statusText: 'Not Found' });
+    await expect(rechazado).rejects.toMatchObject({ status: 404 });
+
+    http.expectOne({ method: 'DELETE', url: '/api/carrito/lineas/7' }).flush(VACIO);
+    await expect(quitado).resolves.toEqual(VACIO);
+  });
+
+  // Revisión de HU-11 (/code-review): sin carrito cargado no se sabe cuántos hay
+  it('si el carrito no cargó, la cantidad es desconocida', async () => {
+    const carrito = servicio();
+    cuenta.set(usuario(1, 'CLIENTE'));
+    TestBed.tick();
+    http.expectOne('/api/carrito').flush(null, { status: 500, statusText: 'Error' });
+    await estable();
+
+    expect(carrito.cantidadLineas()).toBeNull();
+  });
 });

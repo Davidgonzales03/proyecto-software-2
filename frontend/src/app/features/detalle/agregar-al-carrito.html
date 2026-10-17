@@ -1,5 +1,5 @@
 @if (esCliente() || esVisitante()) {
-  <form (submit)="agregar($event)" novalidate aria-label="Agregar al carrito">
+  <form (submit)="agregar($event)" novalidate>
     @if (esCliente() && producto().disponible) {
       <div class="campo">
         <label for="cantidad">
@@ -17,15 +17,21 @@
           [attr.aria-invalid]="errorDeCantidad() ? 'true' : null"
           [attr.aria-describedby]="errorDeCantidad() ? 'error-cantidad' : null"
         />
+        @if (errorDeCantidad()) {
+          <p class="error" id="error-cantidad">{{ errorDeCantidad() }}</p>
+        }
       </div>
     }
-    <button type="submit" class="principal" [disabled]="!producto().disponible || agregando()">
+    <!-- Mientras agrega no se deshabilita: así no pierde el foco -->
+    <button
+      type="submit"
+      class="principal"
+      [disabled]="!producto().disponible"
+      [attr.aria-disabled]="agregando() ? 'true' : null"
+    >
       <span><svg lucideShoppingCart aria-hidden="true"></svg>Agregar al carrito</span>
     </button>
   </form>
-  @if (errorDeCantidad()) {
-    <p class="error" id="error-cantidad">{{ errorDeCantidad() }}</p>
-  }
   <div class="resultado" aria-live="polite">
     @if (agregado()) {
       <p class="aviso exito">Se agregó al carrito. <a routerLink="/carrito">Ver carrito</a></p>

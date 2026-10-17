@@ -77,7 +77,7 @@
           [title]="etiquetaDelCarrito()"
         >
           <svg lucideShoppingCart class="icono" aria-hidden="true"></svg>
-          @if (lineasEnElCarrito() > 0) {
+          @if ((lineasEnElCarrito() ?? 0) > 0) {
             <span class="cuenta" aria-hidden="true">{{ lineasEnElCarrito() }}</span>
           }
         </a>

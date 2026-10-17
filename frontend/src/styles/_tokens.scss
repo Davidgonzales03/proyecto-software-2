@@ -39,6 +39,9 @@
 	--app-lona-tejida: #e4dcc6;
 	--app-sobre-lona: #0f2a1d;
 	--app-sobre-lona-suave: #4d5f55;
+	// El error sobre la lona clara, igual en los dos modos: el rojo del modo
+	// oscuro no se lee sobre ella (1,7:1)
+	--app-error-sobre-lona: #b3261e;
 	// El marco de la ventana del letrero
 	--app-ventana: #061a12;
 	// El tejido de la lona: mosaicos grises que se funden con el color de cada
@@ -141,6 +144,7 @@
 	--app-lona-tejida: #e4dcc6;
 	--app-sobre-lona: #0f2a1d;
 	--app-sobre-lona-suave: #4d5f55;
+	--app-error-sobre-lona: #b3261e;
 	--app-ventana: #0c3326;
 	// Sobre la lona clara, el amarillo no se lee: el título va en verde
 	--app-titulo: #0e3a2e;

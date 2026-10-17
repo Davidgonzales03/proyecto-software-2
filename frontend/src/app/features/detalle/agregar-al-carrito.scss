@@ -7,17 +7,38 @@
 	margin-top: var(--app-espacio-4);
 }
 
+// Etiqueta arriba, el campo y el botón en la misma fila, el error debajo del
+// campo: el botón no se mueve cuando aparece un mensaje
 form {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: flex-end;
-	gap: var(--app-espacio-4);
+	display: grid;
+	grid-template-columns: auto minmax(0, max-content);
+	align-items: center;
+	column-gap: var(--app-espacio-4);
+	row-gap: var(--app-espacio-1);
 }
 
 .campo {
-	display: flex;
-	flex-direction: column;
-	gap: var(--app-espacio-1);
+	display: contents;
+}
+
+label {
+	grid-column: 1 / -1;
+}
+
+.principal {
+	grid-row: 2;
+}
+
+// En el celular angosto el botón baja a su propia fila
+@media (max-width: 400px) {
+	form {
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	.principal {
+		grid-row: auto;
+		justify-self: start;
+	}
 }
 
 label {
@@ -35,7 +56,7 @@ label {
 input {
 	width: 7.5rem;
 	min-height: var(--app-area-tocable);
-	padding: var(--app-espacio-3);
+	padding: var(--app-espacio-2) var(--app-espacio-3);
 	border: 1px solid var(--app-borde-control);
 	border-radius: var(--app-radio-control);
 	background: var(--app-fondo);
@@ -90,6 +111,11 @@ input[aria-invalid='true'] {
 }
 
 // Desactivado (agotado o agregando): costura punteada y opacidad, sin cambiar de color
+.principal[aria-disabled='true'] {
+	opacity: 0.7;
+	cursor: progress;
+}
+
 .principal[disabled] {
 	outline: 2px dashed var(--app-sobre-ambar);
 	outline-offset: -5px;
@@ -98,6 +124,7 @@ input[aria-invalid='true'] {
 }
 
 .error {
+	grid-column: 1 / -1;
 	margin: 0;
 	color: var(--app-error);
 	font-size: 12.5px;

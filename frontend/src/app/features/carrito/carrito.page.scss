@@ -9,6 +9,7 @@
 
 h1 {
 	margin: 0;
+	outline: none;
 	padding-bottom: var(--app-espacio-3);
 	border-bottom: 3px solid var(--app-ambar);
 	color: var(--app-titulo);
@@ -27,17 +28,22 @@ h1 {
 	list-style: none;
 }
 
-// Foto | datos | cantidad | subtotal | quitar; en el celular, la cantidad y el
-// subtotal bajan a una segunda fila
+// Foto | datos | cantidad | subtotal | quitar, con columnas fijas para que las
+// cifras queden alineadas entre líneas; en el celular, la cantidad y el
+// subtotal bajan a una segunda fila. Sobre la lona clara, el acento y el error
+// van oscuros: los del modo oscuro no se leen
 .linea {
+	--app-acento-texto: var(--app-sobre-lona);
+	--app-error: var(--app-error-sobre-lona);
 	display: grid;
-	grid-template-columns: 88px minmax(0, 1fr) auto auto auto;
+	grid-template-columns: 88px minmax(0, 1fr) 7.5rem 12ch var(--app-area-tocable);
 	grid-template-areas: 'foto datos cantidad subtotal quitar';
 	align-items: center;
 	gap: var(--app-espacio-4);
 	padding: var(--app-espacio-3);
 	border-radius: var(--app-radio);
 	background: var(--app-lona) var(--app-textura-cruda);
+	background-blend-mode: soft-light;
 	color: var(--app-sobre-lona);
 	outline: 1px dashed color-mix(in srgb, var(--app-sobre-lona) 12%, transparent);
 	outline-offset: -5px;
@@ -45,10 +51,11 @@ h1 {
 
 @media (max-width: 640px) {
 	.linea {
-		grid-template-columns: 72px minmax(0, 1fr) auto;
+		grid-template-columns: 72px minmax(0, 1fr) var(--app-area-tocable);
 		grid-template-areas:
 			'foto datos quitar'
-			'cantidad cantidad subtotal';
+			'cantidad subtotal subtotal';
+		align-items: start;
 	}
 }
 
@@ -108,22 +115,26 @@ h1 {
 
 .subtotal {
 	grid-area: subtotal;
-	min-width: 7ch;
+	justify-self: end;
 	text-align: right;
 }
 
-// Lo que no se puede comprar: la foto se apaga y el estado va cosido, como
-// «Agotado» en la tarjeta
+// Lo que no se puede comprar: la foto se apaga y el estado va cosido en
+// paralelogramo con su ícono, como «Agotado» en la tarjeta y el detalle
 .apagada .foto {
 	opacity: 0.55;
 }
 
 .estado {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--app-espacio-1);
 	align-self: flex-start;
 	margin: 0;
-	padding: 0 var(--app-espacio-3);
+	padding: var(--app-espacio-1) var(--app-espacio-4);
 	outline: 1px dashed currentColor;
-	outline-offset: -3px;
+	outline-offset: -4px;
+	clip-path: polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%);
 	font-family: var(--app-familia-titulos);
 	font-size: 15px;
 	font-weight: 700;
@@ -131,15 +142,22 @@ h1 {
 	text-transform: uppercase;
 }
 
+.estado svg {
+	width: 16px;
+	height: 16px;
+}
+
 .cantidad {
 	grid-area: cantidad;
+	min-width: 0;
 	display: flex;
 	flex-direction: column;
 	gap: var(--app-espacio-1);
 }
 
 input {
-	width: 6rem;
+	width: 100%;
+	max-width: 7.5rem;
 	min-height: var(--app-area-tocable);
 	padding: var(--app-espacio-2) var(--app-espacio-3);
 	border: 1px solid var(--app-borde-control);
@@ -159,7 +177,6 @@ input[aria-invalid='true'] {
 }
 
 .error {
-	max-width: 22ch;
 	margin: 0;
 	color: var(--app-error);
 	font-size: 12.5px;
@@ -170,9 +187,11 @@ input[aria-invalid='true'] {
 	grid-area: quitar;
 	display: inline-flex;
 	align-items: center;
+	justify-content: center;
 	gap: var(--app-espacio-2);
+	min-width: var(--app-area-tocable);
 	min-height: var(--app-area-tocable);
-	padding: 0 var(--app-espacio-3);
+	padding: 0;
 	border: 0;
 	background: transparent;
 	color: inherit;
@@ -192,10 +211,14 @@ input[aria-invalid='true'] {
 	}
 }
 
-@media (max-width: 640px) {
-	.quitar span {
-		display: none;
-	}
+// El texto «Quitar» queda para los lectores (va en el aria-label): la papelera
+// alcanza y deja lugar a las cifras
+.quitar span {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	clip-path: inset(50%);
 }
 
 .pie {
@@ -218,6 +241,7 @@ input[aria-invalid='true'] {
 
 .total strong {
 	color: var(--app-titulo);
+	text-transform: none;
 	font-family: var(--app-familia-titulos);
 	font-size: clamp(28px, 4vw, 40px);
 	font-weight: 800;
@@ -297,4 +321,11 @@ input[aria-invalid='true'] {
 	overflow: hidden;
 	clip-path: inset(50%);
 	white-space: nowrap;
+}
+
+// En el celular, el total primero y después la acción de vaciar
+@media (max-width: 640px) {
+	.total {
+		order: -1;
+	}
 }

@@ -15,6 +15,7 @@ import bo.edu.uagrm.tienda.dto.CarritoResponse;
 import bo.edu.uagrm.tienda.dto.EstadoLineaCarrito;
 import bo.edu.uagrm.tienda.dto.LineaCarritoRequest;
 import bo.edu.uagrm.tienda.dto.LineaCarritoResponse;
+import bo.edu.uagrm.tienda.dto.validacion.CantidadDeCarrito;
 import bo.edu.uagrm.tienda.entity.LineaCarrito;
 import bo.edu.uagrm.tienda.entity.Producto;
 import bo.edu.uagrm.tienda.entity.UnidadVenta;
@@ -38,7 +39,7 @@ import lombok.RequiredArgsConstructor;
 public class CarritoService {
 
 	static final int MAXIMO_LINEAS = 50;
-	static final BigDecimal MAXIMO_CANTIDAD = new BigDecimal("999");
+	static final BigDecimal MAXIMO_CANTIDAD = new BigDecimal(CantidadDeCarrito.MAXIMA);
 
 	private final LineaCarritoRepository lineaRepository;
 	private final ProductoRepository productoRepository;
@@ -65,6 +66,11 @@ public class CarritoService {
 				.findByUsuario_IdUsuarioAndProducto_IdProducto(idUsuario, producto.getIdProducto());
 		BigDecimal cantidad = existente.map(linea -> linea.getCantidad().add(solicitud.cantidad()))
 				.orElse(solicitud.cantidad());
+		// La cantidad pedida ya pasó la solicitud: si se pasa, es por lo que ya estaba (RF-2, RF-3)
+		if (existente.isPresent() && cantidad.compareTo(MAXIMO_CANTIDAD) > 0) {
+			throw new CamposInvalidosException(List.of(new CampoInvalido("cantidad",
+					"sumada a la del carrito pasaría de " + CantidadDeCarrito.MAXIMA)));
+		}
 		exigirCantidad(producto.getUnidad(), cantidad);
 		if (existente.isPresent()) {
 			existente.get().cambiar(cantidad);
@@ -117,7 +123,8 @@ public class CarritoService {
 					List.of(new CampoInvalido("cantidad", InventarioService.mensajeDecimales(unidad))));
 		}
 		if (cantidad.compareTo(MAXIMO_CANTIDAD) > 0) {
-			throw new CamposInvalidosException(List.of(new CampoInvalido("cantidad", "admite hasta 999")));
+			throw new CamposInvalidosException(
+					List.of(new CampoInvalido("cantidad", "admite hasta " + CantidadDeCarrito.MAXIMA)));
 		}
 	}
 

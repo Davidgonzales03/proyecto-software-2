@@ -1,4 +1,5 @@
-<h1>Carrito</h1>
+<h1 #titulo tabindex="-1">Carrito</h1>
+<p class="solo-lectores" role="status">{{ anuncio() }}</p>
 
 @if (errorDeCarga()) {
   <div class="tarjeta-error">
@@ -25,7 +26,7 @@
         <li class="linea" [class.apagada]="linea.estado !== 'DISPONIBLE'">
           <a class="foto" [routerLink]="['/producto', linea.idProducto]" tabindex="-1" aria-hidden="true">
             @if (foto(linea); as foto) {
-              <img [src]="foto" alt="" loading="lazy" />
+              <img [src]="foto" alt="" width="88" height="66" loading="lazy" />
             } @else {
               <svg lucideWrench aria-hidden="true"></svg>
             }
@@ -40,7 +41,14 @@
               }
             </p>
             @if (linea.estado !== 'DISPONIBLE') {
-              <p class="estado">{{ avisos[linea.estado] }}</p>
+              <p class="estado" [id]="'estado-' + linea.idProducto">
+                @if (linea.estado === 'CANTIDAD_INVALIDA') {
+                  <svg lucideTriangleAlert aria-hidden="true"></svg>
+                } @else {
+                  <svg lucideCircleSlash aria-hidden="true"></svg>
+                }
+                {{ avisos[linea.estado] }}
+              </p>
             }
           </div>
 
@@ -53,15 +61,17 @@
                 inputmode="decimal"
                 autocomplete="off"
                 [value]="cantidad(linea.cantidad)"
-                [attr.aria-invalid]="error ? 'true' : null"
-                [attr.aria-describedby]="error ? 'error-' + linea.idProducto : null"
+                [attr.aria-invalid]="error || linea.estado === 'CANTIDAD_INVALIDA' ? 'true' : null"
+                [attr.aria-describedby]="
+                  error ? 'error-' + linea.idProducto : linea.estado === 'CANTIDAD_INVALIDA' ? 'estado-' + linea.idProducto : null
+                "
                 (change)="cambiar(linea, $event)"
               />
             } @else {
               <span class="fija">{{ cantidad(linea.cantidad) }}</span>
             }
             @if (error) {
-              <p class="error" [id]="'error-' + linea.idProducto">{{ error }}</p>
+              <p class="error" role="alert" [id]="'error-' + linea.idProducto">{{ error }}</p>
             }
           </div>
 

@@ -24,7 +24,7 @@ import { LucideArrowLeft, LucideCircleSlash, LucideTriangleAlert } from '@lucide
 
 import { comoErrorApi } from '../../core/api/autenticacion.service';
 import { InventarioService } from '../../core/api/inventario.service';
-import { mensajeDeCampo, mensajeDeError, primerMensaje } from '../../core/api/mensajes-error';
+import { mensajeDeError, mensajeDelRechazo, primerMensaje } from '../../core/api/mensajes-error';
 import { ConCambiosSinGuardar } from '../../core/guards/cambios-sin-guardar.guard';
 import { comoError, ErrorApi } from '../../core/modelos/error-api';
 import {
@@ -304,10 +304,4 @@ export class StockPage implements ConCambiosSinGuardar {
 
 function textoDeMinimo(minimo: number | null | undefined): string {
 	return minimo === null || minimo === undefined ? '' : String(minimo).replace('.', ',');
-}
-
-// Un dato rechazado por el backend se explica con su campo; lo demás, con el diccionario
-function mensajeDelRechazo(error: ErrorApi): string {
-	const primero = error.errores?.[0];
-	return primero === undefined ? mensajeDeError(error) : mensajeDeCampo(primero.campo, primero.mensaje);
 }

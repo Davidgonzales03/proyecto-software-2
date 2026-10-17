@@ -31,7 +31,7 @@ function sesionVigente(rol: Rol = 'CLIENTE'): Sesion {
 }
 
 describe('AppComponent', () => {
-  const lineasEnElCarrito = signal(0);
+  const lineasEnElCarrito = signal<number | null>(0);
 
   beforeEach(async () => {
     lineasEnElCarrito.set(0);
@@ -314,5 +314,16 @@ describe('AppComponent', () => {
 
     TestBed.inject(SesionService).iniciar(sesionVigente('ADMINISTRADOR'));
     expect(enlaceAlCarrito(crear())).toBeNull();
+  });
+
+  // Revisión de HU-11 (/code-review): si el carrito no cargó, no dice que está vacío
+  it('sin el carrito cargado el ícono no afirma cuántos hay', () => {
+    TestBed.inject(SesionService).iniciar(sesionVigente('CLIENTE'));
+    lineasEnElCarrito.set(null);
+    const fijo = crear();
+
+    const enlace = enlaceAlCarrito(fijo);
+    expect(enlace?.getAttribute('aria-label')).toBe('Carrito');
+    expect(enlace?.textContent?.trim()).toBe('');
   });
 });

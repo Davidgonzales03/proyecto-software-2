@@ -1,10 +1,10 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, ElementRef, inject, signal, viewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { LucideShoppingCart, LucideTrash2, LucideWrench } from '@lucide/angular';
+import { LucideCircleSlash, LucideShoppingCart, LucideTrash2, LucideTriangleAlert, LucideWrench } from '@lucide/angular';
 
 import { comoErrorApi } from '../../core/api/autenticacion.service';
 import { CarritoService } from '../../core/api/carrito.service';
-import { mensajeDeCampo, mensajeDeError } from '../../core/api/mensajes-error';
+import { mensajeDeError, mensajeDelRechazo } from '../../core/api/mensajes-error';
 import { AVISOS_DE_LINEA, CANTIDAD_MAXIMA_EN_CARRITO, LineaDeCarrito } from '../../core/modelos/carrito';
 import { urlDeImagen } from '../../core/modelos/catalogo';
 import { ErrorApi } from '../../core/modelos/error-api';
@@ -19,7 +19,15 @@ import { cantidad, precio } from '../../shared/formato/precios';
 // llega con HU-12
 @Component({
 	selector: 'app-carrito',
-	imports: [RouterLink, DialogoConfirmacion, LucideShoppingCart, LucideTrash2, LucideWrench],
+	imports: [
+		RouterLink,
+		DialogoConfirmacion,
+		LucideCircleSlash,
+		LucideShoppingCart,
+		LucideTrash2,
+		LucideTriangleAlert,
+		LucideWrench,
+	],
 	templateUrl: './carrito.page.html',
 	styleUrl: './carrito.page.scss',
 	changeDetection: ChangeDetectionStrategy.OnPush,
@@ -27,6 +35,7 @@ import { cantidad, precio } from '../../shared/formato/precios';
 export class CarritoPage {
 	private readonly servicio = inject(CarritoService);
 	private readonly dialogo = viewChild.required(DialogoConfirmacion);
+	private readonly titulo = viewChild.required<ElementRef<HTMLElement>>('titulo');
 
 	protected readonly recurso = this.servicio.carrito;
 	protected readonly carrito = computed(() => (this.recurso.hasValue() ? this.recurso.value() : undefined));
@@ -38,10 +47,18 @@ export class CarritoPage {
 	// El motivo por línea (una cantidad inválida o rechazada) y el de quitar o vaciar
 	protected readonly errores = signal<Readonly<Record<number, string>>>({});
 	protected readonly aviso = signal('');
+	// Lo que se quitó o se vació, para los lectores de pantalla
+	protected readonly anuncio = signal('');
 
 	protected readonly avisos = AVISOS_DE_LINEA;
 	protected readonly precio = precio;
 	protected readonly cantidad = cantidad;
+
+	constructor() {
+		// El carrito se cargó al entrar: al abrir la página se pide de nuevo, con el precio y la
+		// disponibilidad de hoy y lo agregado desde otro dispositivo (RF-8, RF-9, RF-13)
+		this.recurso.reload();
+	}
 
 	protected foto(linea: LineaDeCarrito): string | null {
 		return linea.imagen === null ? null : urlDeImagen(linea.idProducto, linea.imagen);
@@ -77,8 +94,14 @@ export class CarritoPage {
 		try {
 			await this.servicio.cambiarCantidad(linea.idProducto, nueva);
 		} catch (rechazo: unknown) {
+			const error = rechazo as ErrorApi;
+			// La línea ya no existe (se quitó en otro dispositivo): el carrito se pide de nuevo
+			if (error.status === 404) {
+				this.recurso.reload();
+				return;
+			}
 			campo.value = cantidad(linea.cantidad);
-			this.ponerError(linea.idProducto, mensajeDelRechazo(rechazo as ErrorApi));
+			this.ponerError(linea.idProducto, mensajeDelRechazo(error));
 		}
 	}
 
@@ -87,6 +110,7 @@ export class CarritoPage {
 		try {
 			await this.servicio.quitar(linea.idProducto);
 			this.ponerError(linea.idProducto, '');
+			this.despuesDeQuitar(`Se quitó ${linea.nombre} del carrito.`);
 		} catch (rechazo: unknown) {
 			this.aviso.set(mensajeDeError(rechazo as ErrorApi));
 		}
@@ -105,17 +129,19 @@ export class CarritoPage {
 		try {
 			await this.servicio.vaciar();
 			this.errores.set({});
+			this.despuesDeQuitar('Se vació el carrito.');
 		} catch (rechazo: unknown) {
 			this.aviso.set(mensajeDeError(rechazo as ErrorApi));
 		}
 	}
 
+	// El botón que tenía el foco ya no existe: el foco va al título, sin desplazar
+	private despuesDeQuitar(anuncio: string): void {
+		this.anuncio.set(anuncio);
+		this.titulo().nativeElement.focus({ preventScroll: true });
+	}
+
 	private ponerError(idProducto: number, mensaje: string): void {
 		this.errores.update((actuales) => ({ ...actuales, [idProducto]: mensaje }));
 	}
-}
-
-function mensajeDelRechazo(error: ErrorApi): string {
-	const primero = error.errores?.[0];
-	return primero === undefined ? mensajeDeError(error) : mensajeDeCampo(primero.campo, primero.mensaje);
 }

@@ -383,10 +383,6 @@ describe('DetallePage', () => {
     [{ status: 409, detail: '', codigo: 'PRODUCTO_AGOTADO' }, 'Este producto está agotado.'],
     [{ status: 409, detail: '', codigo: 'CARRITO_LLENO' }, 'Su carrito ya tiene 50 productos distintos.'],
     [{ status: 404, detail: '', codigo: 'PRODUCTO_NO_ENCONTRADO' }, 'Este producto ya no está disponible.'],
-    [
-      { status: 400, detail: '', codigo: 'DATOS_INVALIDOS', errores: [{ campo: 'cantidad', mensaje: 'admite hasta 999' }] },
-      'La cantidad admite hasta 999.',
-    ],
   ])('muestra el error de la API (%o)', async (rechazo, mensaje) => {
     await abrir('/producto/7', 'CLIENTE');
     carrito.agregar.mockReturnValueOnce(Promise.reject(rechazo));
@@ -410,5 +406,52 @@ describe('DetallePage', () => {
 
     expect(campoCantidad()?.value).toBe('1');
     expect(texto()).not.toContain('Se agregó al carrito');
+  });
+
+  // Revisión de HU-11 (interfaz): solo espacios no es una cantidad
+  it('una cantidad en blanco no se manda', async () => {
+    await abrir('/producto/7', 'CLIENTE');
+
+    await agregar('   ');
+
+    expect(carrito.agregar).not.toHaveBeenCalled();
+    expect(campoCantidad()?.getAttribute('aria-invalid')).toBe('true');
+    expect(texto()).toContain('Escriba la cantidad.');
+  });
+
+  // Revisión de HU-11 (interfaz): el rechazo de la suma va junto al campo y dice por qué
+  it('si la suma pasa de 999, lo dice junto al campo', async () => {
+    await abrir('/producto/7', 'CLIENTE');
+    carrito.agregar.mockReturnValueOnce(
+      Promise.reject({
+        status: 400,
+        detail: '',
+        codigo: 'DATOS_INVALIDOS',
+        errores: [{ campo: 'cantidad', mensaje: 'sumada a la del carrito pasaría de 999' }],
+      }),
+    );
+
+    await agregar('998');
+
+    expect(campoCantidad()?.getAttribute('aria-invalid')).toBe('true');
+    expect(pantalla().querySelector('.campo')?.textContent).toContain('La cantidad sumada a la del carrito pasaría de 999.');
+    expect(pantalla().querySelector('.resultado .aviso')).toBeNull();
+    // Al cambiar la cantidad, el motivo se va
+    await agregar('1');
+    expect(campoCantidad()?.getAttribute('aria-invalid')).toBeNull();
+  });
+
+  // Revisión de HU-11 (interfaz): mientras agrega, el botón no se deshabilita y no pierde el foco
+  it('mientras agrega, el botón sigue con el foco', async () => {
+    await abrir('/producto/7', 'CLIENTE');
+    carrito.agregar.mockReturnValueOnce(new Promise(() => undefined));
+    botonAgregar()?.focus();
+
+    botonAgregar()?.click();
+    await harness.fixture.whenStable();
+
+    expect(botonAgregar()?.disabled).toBe(false);
+    expect(botonAgregar()?.getAttribute('aria-disabled')).toBe('true');
+    expect(document.activeElement).toBe(botonAgregar());
   });
 });

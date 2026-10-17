@@ -28,7 +28,7 @@ export function problemaDeCantidad(texto: string, reglas: ReglasDeCantidad): str
 	}
 	const partes = FORMA.exec(limpio);
 	if (partes === null) {
-		return 'Escribe la cantidad con números, por ejemplo 12,5.';
+		return 'Escriba la cantidad con números, por ejemplo 12,5.';
 	}
 	const decimales = (partes[2] ?? '').replace(/0+$/, '').length;
 	if (decimales > reglas.decimales) {

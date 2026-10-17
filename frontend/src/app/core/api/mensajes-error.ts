@@ -87,6 +87,13 @@ export function mensajeDeCampo(campo: string, mensaje: string): string {
 	return frase.endsWith('.') ? frase : `${frase}.`;
 }
 
+// Una operación rechazada en una frase: el primer dato rechazado, con su
+// campo; si no hay ninguno, el código
+export function mensajeDelRechazo(error: ErrorApi): string {
+	const primero = error.errores?.[0];
+	return primero === undefined ? mensajeDeError(error) : mensajeDeCampo(primero.campo, primero.mensaje);
+}
+
 // Lo mínimo que hace falta de un campo de Signal Forms para elegir su mensaje
 export interface EstadoDelCampo {
 	touched(): boolean;

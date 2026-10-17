@@ -17,6 +17,7 @@ colors:
   lona-tejida: "#e4dcc6"
   sobre-lona: "#0f2a1d"
   sobre-lona-suave: "#4d5f55"
+  error-sobre-lona: "#b3261e"
   ventana: "#061a12"
   foto: "#ffffff"
   exito: "#7fd3a0"
@@ -235,7 +236,9 @@ los colores de estado a un lado.
 - **Lona verde botella** (`fondo`, `superficie`, `superficie-alta`): el fondo a
   sangre y las capas del panel, de más hondo a más alto.
 - **Lona clara** (`lona`) y **lona cruda** (`lona-tejida`): placas de producto
-  y placas de sección; su tinta es `sobre-lona` y `sobre-lona-suave`.
+  y placas de sección; su tinta es `sobre-lona` y `sobre-lona-suave`. Un error sobre
+  la lona va en `error-sobre-lona`, igual en los dos modos: el `error` del modo
+  oscuro no se lee sobre ella.
 - **Marco de ventana** (`ventana`): el negro verdoso de la ventana del letrero
   y la base de la sombra de las placas.
 - **Texto** (`texto`, `texto-suave`), **bordes** (`borde` para divisiones,

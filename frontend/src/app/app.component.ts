@@ -68,6 +68,9 @@ export class AppComponent {
   protected readonly lineasEnElCarrito = this.carrito.cantidadLineas;
   protected readonly etiquetaDelCarrito = computed(() => {
     const lineas = this.lineasEnElCarrito();
+    if (lineas === null) {
+      return 'Carrito';
+    }
     return lineas === 0 ? 'Carrito, sin productos' : `Carrito, ${lineas} ${lineas === 1 ? 'producto' : 'productos'}`;
   });
 
