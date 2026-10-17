@@ -1,0 +1,37 @@
+@if (esCliente() || esVisitante()) {
+  <form (submit)="agregar($event)" novalidate aria-label="Agregar al carrito">
+    @if (esCliente() && producto().disponible) {
+      <div class="campo">
+        <label for="cantidad">
+          Cantidad
+          @if (unidad(); as unidad) {
+            <span class="unidad">({{ unidad }})</span>
+          }
+        </label>
+        <input
+          id="cantidad"
+          type="text"
+          inputmode="decimal"
+          autocomplete="off"
+          [formField]="compra.cantidad"
+          [attr.aria-invalid]="errorDeCantidad() ? 'true' : null"
+          [attr.aria-describedby]="errorDeCantidad() ? 'error-cantidad' : null"
+        />
+      </div>
+    }
+    <button type="submit" class="principal" [disabled]="!producto().disponible || agregando()">
+      <span><svg lucideShoppingCart aria-hidden="true"></svg>Agregar al carrito</span>
+    </button>
+  </form>
+  @if (errorDeCantidad()) {
+    <p class="error" id="error-cantidad">{{ errorDeCantidad() }}</p>
+  }
+  <div class="resultado" aria-live="polite">
+    @if (agregado()) {
+      <p class="aviso exito">Se agregó al carrito. <a routerLink="/carrito">Ver carrito</a></p>
+    }
+    @if (error()) {
+      <p class="aviso" role="alert">{{ error() }}</p>
+    }
+  </div>
+}

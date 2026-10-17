@@ -67,6 +67,21 @@
         }
       </button>
 
+      @if (esCliente()) {
+        <a
+          class="carrito"
+          routerLink="/carrito"
+          routerLinkActive="actual"
+          ariaCurrentWhenActive="page"
+          [attr.aria-label]="etiquetaDelCarrito()"
+          [title]="etiquetaDelCarrito()"
+        >
+          <svg lucideShoppingCart class="icono" aria-hidden="true"></svg>
+          @if (lineasEnElCarrito() > 0) {
+            <span class="cuenta" aria-hidden="true">{{ lineasEnElCarrito() }}</span>
+          }
+        </a>
+      }
       @if (autenticado()) {
         <a
           class="perfil"

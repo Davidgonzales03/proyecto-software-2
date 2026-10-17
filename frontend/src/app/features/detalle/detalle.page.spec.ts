@@ -6,6 +6,7 @@ import { provideRouter, Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { vi } from 'vitest';
 
+import { CarritoService } from '../../core/api/carrito.service';
 import { CatalogoService } from '../../core/api/catalogo.service';
 import { ProductoEnDetalle, ProductoEnTienda } from '../../core/modelos/catalogo';
 import { Rol } from '../../core/modelos/usuario';
@@ -89,18 +90,23 @@ class CatalogoFalso {
 describe('DetallePage', () => {
   let harness: RouterTestingHarness;
   let catalogo: CatalogoFalso;
+  let carrito: { agregar: ReturnType<typeof vi.fn> };
 
   async function abrir(url = '/producto/7', rol: Rol | null = null, responder = true) {
     TestBed.resetTestingModule();
     catalogo = new CatalogoFalso();
+    carrito = { agregar: vi.fn(() => Promise.resolve({ lineas: [], total: 0, cantidadLineas: 1 })) };
     TestBed.configureTestingModule({
       providers: [
         provideRouter([
           { path: 'producto/:id', component: DetallePage },
           { path: 'catalogo', children: [] },
           { path: 'productos/:id', children: [] },
+          { path: 'inicio-sesion', children: [] },
+          { path: 'carrito', children: [] },
         ]),
         { provide: CatalogoService, useValue: catalogo },
+        { provide: CarritoService, useValue: carrito },
         { provide: SesionService, useValue: { rol: signal(rol) } },
       ],
     });
@@ -289,5 +295,120 @@ describe('DetallePage', () => {
     expect(titulo?.textContent?.trim()).toBe('Martillo');
     expect(document.activeElement).toBe(titulo);
     expect(pantalla().querySelector('app-galeria .miniaturas')).toBeNull();
+  });
+
+  // --- HU-11: agregar al carrito ---
+
+  function campoCantidad(): HTMLInputElement | null {
+    return pantalla().querySelector<HTMLInputElement>('#cantidad');
+  }
+
+  function botonAgregar(): HTMLButtonElement | undefined {
+    return Array.from(pantalla().querySelectorAll('button')).find((cada) =>
+      cada.textContent?.includes('Agregar al carrito'),
+    );
+  }
+
+  async function agregar(cantidad?: string): Promise<void> {
+    const campo = campoCantidad();
+    if (campo !== null && cantidad !== undefined) {
+      campo.value = cantidad;
+      campo.dispatchEvent(new Event('input'));
+    }
+    botonAgregar()?.click();
+    await harness.fixture.whenStable();
+  }
+
+  // HU-11 RF-1
+  it('el cliente agrega con la cantidad elegida', async () => {
+    await abrir('/producto/7', 'CLIENTE');
+    expect(campoCantidad()?.value).toBe('1');
+
+    await agregar('2');
+
+    expect(carrito.agregar).toHaveBeenCalledWith(7, 2);
+    expect(texto()).toContain('Se agregó al carrito');
+    expect(enlace('Ver carrito')?.getAttribute('href')).toBe('/carrito');
+  });
+
+  // HU-11 RF-3
+  it('valida la cantidad según la unidad', async () => {
+    await abrir('/producto/7', 'CLIENTE');
+    await agregar('1,5');
+    expect(texto()).toContain('Este producto se cuenta en números enteros.');
+    await agregar('1000');
+    expect(texto()).toContain('La cantidad admite hasta 999.');
+    await agregar('0');
+    expect(texto()).toContain('La cantidad tiene que ser mayor que 0.');
+    expect(carrito.agregar).not.toHaveBeenCalled();
+
+    catalogo.recurso.value.set({ ...TALADRO, unidad: 'METRO' });
+    await harness.fixture.whenStable();
+    await agregar('2,5');
+    expect(carrito.agregar).toHaveBeenCalledWith(7, 2.5);
+  });
+
+  // HU-11 RF-4
+  it('un producto agotado no se puede agregar', async () => {
+    await abrir('/producto/7', 'CLIENTE', false);
+    catalogo.recurso.value.set({ ...TALADRO, disponible: false });
+    await harness.fixture.whenStable();
+
+    expect(botonAgregar()?.disabled).toBe(true);
+    expect(campoCantidad()).toBeNull();
+  });
+
+  // HU-11 RF-6
+  it('sin sesión lleva a iniciar sesión y vuelve al producto', async () => {
+    await abrir('/producto/7', null);
+    expect(campoCantidad()).toBeNull();
+
+    await agregar();
+
+    expect(carrito.agregar).not.toHaveBeenCalled();
+    expect(TestBed.inject(Router).url).toBe('/inicio-sesion?destino=%2Fproducto%2F7');
+  });
+
+  // HU-11 RF-7
+  it('el personal no ve el botón', async () => {
+    for (const rol of ['ADMINISTRADOR', 'EMPLEADO', 'CONTADOR'] as const) {
+      await abrir('/producto/7', rol);
+      expect(botonAgregar()).toBeUndefined();
+      expect(campoCantidad()).toBeNull();
+    }
+  });
+
+  // HU-11 RF-3, RF-4, RF-5
+  it.each([
+    [{ status: 409, detail: '', codigo: 'PRODUCTO_AGOTADO' }, 'Este producto está agotado.'],
+    [{ status: 409, detail: '', codigo: 'CARRITO_LLENO' }, 'Su carrito ya tiene 50 productos distintos.'],
+    [{ status: 404, detail: '', codigo: 'PRODUCTO_NO_ENCONTRADO' }, 'Este producto ya no está disponible.'],
+    [
+      { status: 400, detail: '', codigo: 'DATOS_INVALIDOS', errores: [{ campo: 'cantidad', mensaje: 'admite hasta 999' }] },
+      'La cantidad admite hasta 999.',
+    ],
+  ])('muestra el error de la API (%o)', async (rechazo, mensaje) => {
+    await abrir('/producto/7', 'CLIENTE');
+    carrito.agregar.mockReturnValueOnce(Promise.reject(rechazo));
+
+    await agregar('1');
+
+    expect(texto()).toContain(mensaje);
+    expect(texto()).not.toContain('Se agregó al carrito');
+  });
+
+  // HU-11, caso límite: otro producto desde «Más de…» empieza de cero
+  it('al pasar a otro producto la cantidad vuelve a 1 y se va el aviso', async () => {
+    await abrir('/producto/7', 'CLIENTE');
+    await agregar('3');
+    expect(texto()).toContain('Se agregó al carrito');
+
+    pantalla().querySelector<HTMLAnchorElement>('app-tarjeta-producto a')?.click();
+    await harness.fixture.whenStable();
+    catalogo.responder();
+    await harness.fixture.whenStable();
+
+    expect(campoCantidad()?.value).toBe('1');
+    expect(texto()).not.toContain('Se agregó al carrito');
   });
 });

@@ -188,6 +188,7 @@ nav ul {
 
 // El módulo actual se distingue por la raya de abajo, no solo por el color
 nav a,
+.carrito,
 .perfil {
 	display: inline-flex;
 	align-items: center;
@@ -206,11 +207,13 @@ nav a,
 }
 
 nav a:hover,
+.carrito:hover,
 .perfil:hover {
 	color: var(--app-texto);
 }
 
 nav a.actual,
+.carrito.actual,
 .perfil.actual {
 	border-bottom-color: var(--app-acento-texto);
 	color: var(--app-texto);
@@ -226,6 +229,25 @@ nav a.actual,
 
 .perfil {
 	min-width: 0;
+}
+
+.carrito {
+	gap: var(--app-espacio-1);
+}
+
+// Cuántos productos hay: ámbar, como la acción principal; el número completo va
+// en el nombre accesible del enlace
+.cuenta {
+	min-width: 22px;
+	padding: 0 var(--app-espacio-1);
+	background: var(--app-ambar);
+	color: var(--app-sobre-ambar);
+	font-family: var(--app-familia-titulos);
+	font-size: 14px;
+	font-weight: 800;
+	line-height: 22px;
+	text-align: center;
+	font-variant-numeric: tabular-nums;
 }
 
 // Un nombre largo se recorta; el completo queda en el title y en el nombre

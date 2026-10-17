@@ -11,8 +11,9 @@ import {
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { filter, map } from 'rxjs';
-import { LucideHouse, LucideMoon, LucideSearch, LucideSun, LucideUser } from '@lucide/angular';
+import { LucideHouse, LucideMoon, LucideSearch, LucideShoppingCart, LucideSun, LucideUser } from '@lucide/angular';
 
+import { CarritoService } from './core/api/carrito.service';
 import { MARCA } from './core/marca';
 import { nombreCompleto, Rol } from './core/modelos/usuario';
 import { SesionService } from './core/sesion/sesion.service';
@@ -30,7 +31,17 @@ const MODULOS: readonly { ruta: string; nombre: string; roles: readonly Rol[] }[
 
 @Component({
   selector: 'app-root',
-  imports: [RouterLink, RouterLinkActive, RouterOutlet, LucideHouse, LucideMoon, LucideSearch, LucideSun, LucideUser],
+  imports: [
+    RouterLink,
+    RouterLinkActive,
+    RouterOutlet,
+    LucideHouse,
+    LucideMoon,
+    LucideSearch,
+    LucideShoppingCart,
+    LucideSun,
+    LucideUser,
+  ],
   templateUrl: './app.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './app.component.scss',
@@ -49,6 +60,15 @@ export class AppComponent {
   protected readonly nombre = computed(() => {
     const usuario = this.sesion.usuario();
     return usuario === null ? '' : nombreCompleto(usuario);
+  });
+
+  // El carrito, solo para el Cliente (HU-11 RF-7), con cuántos productos tiene
+  private readonly carrito = inject(CarritoService);
+  protected readonly esCliente = computed(() => this.sesion.rol() === 'CLIENTE');
+  protected readonly lineasEnElCarrito = this.carrito.cantidadLineas;
+  protected readonly etiquetaDelCarrito = computed(() => {
+    const lineas = this.lineasEnElCarrito();
+    return lineas === 0 ? 'Carrito, sin productos' : `Carrito, ${lineas} ${lineas === 1 ? 'producto' : 'productos'}`;
   });
 
   // El botón ofrece el otro modo: con el oscuro activo, el sol lleva al claro
