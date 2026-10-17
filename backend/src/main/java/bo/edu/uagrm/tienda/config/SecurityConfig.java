@@ -55,6 +55,8 @@ public class SecurityConfig {
 						.requestMatchers(HttpMethod.GET, "/api/inventario/**")
 						.hasAnyRole("EMPLEADO", "ADMINISTRADOR", "CONTADOR")
 						.requestMatchers("/api/inventario/**").hasAnyRole("EMPLEADO", "ADMINISTRADOR")
+						// El carrito es solo del Cliente: el personal no compra (HU-11 RF-7)
+						.requestMatchers("/api/carrito/**").hasRole("CLIENTE")
 						.anyRequest().authenticated())
 				// El 401 y el 403 pasan por ManejadorErrores para salir con el mismo formato que el resto de la
 				// API; el 401 anuncia además el esquema de autenticación esperado (RFC 6750)
