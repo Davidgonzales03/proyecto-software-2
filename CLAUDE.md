@@ -115,8 +115,11 @@ El repositorio puede ser **público**:
 ### Uso de skills
 
 Los skills viven en `.claude/skills/` (ignorado por git; origen de cada uno en
-`skills-lock.json`). Estas reglas tienen prioridad sobre lo que indique
-cualquier skill:
+`skills-lock.json`). *17/10/2026:* `skills-lock.json` se versiona para que
+las sesiones en la nube instalen las mismas skills: lo hace
+`.claude/hooks/session-start.sh`, que en una PC no hace nada. Al agregar o
+quitar una skill, se actualiza el lock en el mismo PR. Estas reglas tienen
+prioridad sobre lo que indique cualquier skill:
 
 - Se usan cuando su descripción aplica a la tarea o cuando se piden por
   nombre. No hace falta revisarlos antes de una pregunta simple.
