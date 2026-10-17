@@ -1,0 +1,281 @@
+package bo.edu.uagrm.tienda.service;
+
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.ApplicationArguments;
+import org.springframework.boot.ApplicationRunner;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.support.TransactionTemplate;
+import org.springframework.util.unit.DataSize;
+
+import bo.edu.uagrm.tienda.config.AdministradorInicialProperties;
+import bo.edu.uagrm.tienda.config.CatalogoDemoProperties;
+import bo.edu.uagrm.tienda.dto.CategoriaRequest;
+import bo.edu.uagrm.tienda.dto.EntradaRequest;
+import bo.edu.uagrm.tienda.dto.ProductoRequest;
+import bo.edu.uagrm.tienda.entity.Categoria;
+import bo.edu.uagrm.tienda.entity.UnidadVenta;
+import bo.edu.uagrm.tienda.entity.Usuario;
+import bo.edu.uagrm.tienda.repository.CategoriaRepository;
+import bo.edu.uagrm.tienda.repository.ProductoRepository;
+import bo.edu.uagrm.tienda.repository.UsuarioRepository;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validator;
+import lombok.extern.slf4j.Slf4j;
+
+// Carga el catálogo de demostración (issue #25) al arrancar, solo con TIENDA_DEMO_DIRECTORIO y solo si todavía no
+// hay productos. catalogo.csv lleva una fila por producto, con estas columnas:
+//   categoria,nombre,descripcion,precio_bs,stock_inicial,imagenes,modelo_3d
+// El lector es simple: separa por comas, sin comillas, así que ningún campo puede llevar una coma. El precio y el
+// stock van con punto decimal; imagenes, los archivos de la carpeta separados por '|'; modelo_3d se ignora (spike
+// #14). Todo pasa por los servicios y las validaciones de la gestión. Si una fila tiene errores, se informan todas
+// con su número (la 1 es el encabezado) y no se carga nada: una carga a medias ya no se podría completar, porque
+// con productos en la base no se vuelve a cargar
+@Slf4j
+@Service
+@Order(Ordered.LOWEST_PRECEDENCE)
+@EnableConfigurationProperties(CatalogoDemoProperties.class)
+public class CatalogoDemo implements ApplicationRunner {
+
+	static final String ENCABEZADO = "categoria,nombre,descripcion,precio_bs,stock_inicial,imagenes,modelo_3d";
+	private static final int COLUMNAS = 7;
+	// Provisional, hasta que el CSV traiga la unidad de venta (pregunta abierta en el PR de #25)
+	private static final UnidadVenta UNIDAD = UnidadVenta.UNIDAD;
+	private static final String NOTA_STOCK = "Catálogo de demostración";
+	// La categoría todavía no existe al validar la fila; @NotNull solo necesita un valor
+	private static final Long CATEGORIA_POR_RESOLVER = 0L;
+	private static final Pattern NUMERO = Pattern.compile("\\d{1,9}(\\.\\d{1,9})?");
+
+	private final CatalogoDemoProperties propiedades;
+	private final AdministradorInicialProperties administrador;
+	private final CategoriaService categoriaService;
+	private final ProductoService productoService;
+	private final InventarioService inventarioService;
+	private final ProductoRepository productoRepository;
+	private final CategoriaRepository categoriaRepository;
+	private final UsuarioRepository usuarioRepository;
+	private final Validator validator;
+	private final TransactionTemplate transaccion;
+	// El mismo límite que una imagen subida desde la gestión (decisiones.md → Imágenes subidas)
+	private final DataSize maximoImagen;
+
+	public CatalogoDemo(CatalogoDemoProperties propiedades, AdministradorInicialProperties administrador,
+			CategoriaService categoriaService, ProductoService productoService, InventarioService inventarioService,
+			ProductoRepository productoRepository, CategoriaRepository categoriaRepository,
+			UsuarioRepository usuarioRepository, Validator validator, TransactionTemplate transaccion,
+			@Value("${spring.servlet.multipart.max-file-size}") DataSize maximoImagen) {
+		this.propiedades = propiedades;
+		this.administrador = administrador;
+		this.categoriaService = categoriaService;
+		this.productoService = productoService;
+		this.inventarioService = inventarioService;
+		this.productoRepository = productoRepository;
+		this.categoriaRepository = categoriaRepository;
+		this.usuarioRepository = usuarioRepository;
+		this.validator = validator;
+		this.transaccion = transaccion;
+		this.maximoImagen = maximoImagen;
+	}
+
+	@Override
+	public void run(ApplicationArguments argumentos) {
+		if (!propiedades.activa()) {
+			return;
+		}
+		if (productoRepository.count() > 0) {
+			log.info("Catálogo de demostración: ya hay productos en la base, no se carga nada.");
+			return;
+		}
+		Set<ConstraintViolation<CatalogoDemoProperties>> errores = validator.validate(propiedades);
+		if (!errores.isEmpty()) {
+			throw new IllegalStateException("No se puede cargar el catálogo de demostración: "
+					+ errores.stream().map(ConstraintViolation::getMessage).sorted().collect(Collectors.joining("; ")));
+		}
+		Path carpeta = propiedades.directorio().toAbsolutePath().normalize();
+		List<String> problemas = new ArrayList<>();
+		List<Fila> filas = leer(carpeta, problemas);
+		Optional<Usuario> admin = usuarioRepository.findByCorreo(administrador.correo());
+		if (admin.isEmpty() && filas.stream().anyMatch(fila -> fila.stock().signum() > 0)) {
+			problemas.add("el stock inicial se registra a nombre de TIENDA_ADMIN_CORREO, y esa cuenta no existe");
+		}
+		if (!problemas.isEmpty()) {
+			problemas.forEach(problema -> log.warn("Catálogo de demostración: {}", problema));
+			log.error("No se cargó el catálogo de demostración: {} errores en {}. Corríjalos y vuelva a arrancar.",
+					problemas.size(), carpeta.resolve(CatalogoDemoProperties.CATALOGO));
+			return;
+		}
+		if (filas.isEmpty()) {
+			log.info("Catálogo de demostración: {} no tiene productos.", CatalogoDemoProperties.CATALOGO);
+			return;
+		}
+		// Todo o nada: si algo falla, la transacción se revierte y ArchivosAlTerminar borra las imágenes guardadas
+		int[] categoriasNuevas = { 0 };
+		transaccion.executeWithoutResult(estado -> categoriasNuevas[0] = cargar(filas, admin.orElse(null)));
+		log.info("Catálogo de demostración cargado: {} productos y {} categorías nuevas.", filas.size(),
+				categoriasNuevas[0]);
+	}
+
+	private int cargar(List<Fila> filas, Usuario admin) {
+		Map<String, Long> categorias = new HashMap<>();
+		categoriaRepository.findAll().forEach(c -> categorias.put(c.getNombreClave(), c.getIdCategoria()));
+		int nuevas = 0;
+		for (Fila fila : filas) {
+			String clave = Categoria.clave(fila.categoria());
+			Long idCategoria = categorias.get(clave);
+			if (idCategoria == null) {
+				idCategoria = categoriaService.crear(new CategoriaRequest(fila.categoria(), null)).getIdCategoria();
+				categorias.put(clave, idCategoria);
+				nuevas++;
+			}
+			Long idProducto = productoService.crear(fila.producto(idCategoria)).idProducto();
+			for (Path imagen : fila.imagenes()) {
+				productoService.agregarImagen(idProducto, leerImagen(imagen));
+			}
+			if (fila.stock().signum() > 0) {
+				inventarioService.registrarEntrada(idProducto, admin.getIdUsuario(),
+						new EntradaRequest(fila.stock(), NOTA_STOCK));
+			}
+		}
+		return nuevas;
+	}
+
+	private List<Fila> leer(Path carpeta, List<String> problemas) {
+		List<String> lineas;
+		try {
+			lineas = Files.readAllLines(carpeta.resolve(CatalogoDemoProperties.CATALOGO), StandardCharsets.UTF_8);
+		} catch (IOException e) {
+			problemas.add(CatalogoDemoProperties.CATALOGO + " no se pudo leer como texto UTF-8 (" + e + ")");
+			return List.of();
+		}
+		// Un BOM al principio lo agregan algunos editores de Windows
+		if (lineas.isEmpty() || !lineas.getFirst().replace("﻿", "").strip().equals(ENCABEZADO)) {
+			problemas.add("Fila 1: el encabezado tiene que ser " + ENCABEZADO);
+			return List.of();
+		}
+		List<Fila> filas = new ArrayList<>();
+		for (int i = 1; i < lineas.size(); i++) {
+			if (!lineas.get(i).isBlank()) {
+				leerFila(carpeta, i + 1, lineas.get(i), problemas).ifPresent(filas::add);
+			}
+		}
+		return filas;
+	}
+
+	private Optional<Fila> leerFila(Path carpeta, int numero, String linea, List<String> problemas) {
+		String[] campos = linea.split(",", -1);
+		if (campos.length != COLUMNAS) {
+			problemas.add("Fila " + numero + ": tiene " + campos.length + " columnas y se esperan " + COLUMNAS
+					+ " (ningún campo puede llevar comas)");
+			return Optional.empty();
+		}
+		List<String> errores = new ArrayList<>();
+		String categoria = campos[0].strip();
+		errores(validator.validate(new CategoriaRequest(categoria, null)), Map.of("nombre", "categoria"), errores);
+		BigDecimal precio = numero(campos[3], "precio_bs", errores);
+		BigDecimal stock = numero(campos[4], "stock_inicial", errores);
+		Fila fila = new Fila(categoria, campos[1].strip(), campos[2].strip(), precio, stock,
+				imagenes(carpeta, campos[5].strip(), errores));
+		if (precio != null) {
+			errores(validator.validate(fila.producto(CATEGORIA_POR_RESOLVER)), Map.of("precio", "precio_bs"),
+					errores);
+		}
+		if (stock != null && stock.signum() > 0) {
+			errores(validator.validate(new EntradaRequest(stock, NOTA_STOCK)), Map.of("cantidad", "stock_inicial"),
+					errores);
+			if (!InventarioService.admiteDecimales(UNIDAD, stock)) {
+				errores.add("stock_inicial: tiene que ser un número entero");
+			}
+		}
+		errores.forEach(error -> problemas.add("Fila " + numero + ": " + error));
+		return errores.isEmpty() ? Optional.of(fila) : Optional.empty();
+	}
+
+	private static BigDecimal numero(String campo, String columna, List<String> errores) {
+		String texto = campo.strip();
+		if (!NUMERO.matcher(texto).matches()) {
+			errores.add(columna + ": «" + texto + "» no es un número (los decimales van con punto)");
+			return null;
+		}
+		return new BigDecimal(texto);
+	}
+
+	// Solo nombres de archivo de la misma carpeta: ninguna ruta sale de ella
+	private List<Path> imagenes(Path carpeta, String campo, List<String> errores) {
+		if (campo.isEmpty()) {
+			return List.of();
+		}
+		String[] nombres = campo.split("\\|", -1);
+		if (nombres.length > ProductoService.MAXIMO_IMAGENES) {
+			errores.add("imagenes: admite hasta " + ProductoService.MAXIMO_IMAGENES);
+			return List.of();
+		}
+		List<Path> imagenes = new ArrayList<>();
+		for (String sinRecortar : nombres) {
+			String nombre = sinRecortar.strip();
+			Path archivo = carpeta.resolve(nombre).normalize();
+			if (nombre.isEmpty() || !carpeta.equals(archivo.getParent())) {
+				errores.add("imagenes: " + nombre + " no es un nombre de archivo de la carpeta");
+			} else if (!Files.isRegularFile(archivo)) {
+				errores.add("imagenes: " + nombre + " no existe en la carpeta");
+			} else {
+				validarImagen(nombre, archivo, errores);
+				imagenes.add(archivo);
+			}
+		}
+		return imagenes;
+	}
+
+	private void validarImagen(String nombre, Path archivo, List<String> errores) {
+		try {
+			if (Files.size(archivo) > maximoImagen.toBytes()) {
+				errores.add("imagenes: " + nombre + " pasa de " + maximoImagen.toMegabytes() + " MB");
+			} else if (FormatoImagen.detectar(Files.readAllBytes(archivo)).isEmpty()) {
+				errores.add("imagenes: " + nombre + " no es JPG, PNG ni WebP");
+			}
+		} catch (IOException e) {
+			errores.add("imagenes: " + nombre + " no se pudo leer");
+		}
+	}
+
+	private static byte[] leerImagen(Path archivo) {
+		try {
+			return Files.readAllBytes(archivo);
+		} catch (IOException e) {
+			throw new UncheckedIOException("No se pudo leer la imagen " + archivo, e);
+		}
+	}
+
+	private static <T> void errores(Set<ConstraintViolation<T>> violaciones, Map<String, String> columnas,
+			List<String> errores) {
+		violaciones.stream().map(v -> {
+			String campo = v.getPropertyPath().toString();
+			return columnas.getOrDefault(campo, campo) + ": " + v.getMessage();
+		}).sorted().forEach(errores::add);
+	}
+
+	// Una fila válida del CSV. Las imágenes se vuelven a leer al cargar, para no tener todas en memoria
+	private record Fila(String categoria, String nombre, String descripcion, BigDecimal precio, BigDecimal stock,
+			List<Path> imagenes) {
+
+		ProductoRequest producto(Long idCategoria) {
+			return new ProductoRequest(nombre, null, descripcion, idCategoria, UNIDAD, precio, null, null);
+		}
+	}
+}
