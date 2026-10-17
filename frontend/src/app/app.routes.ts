@@ -54,6 +54,14 @@ export const routes: Routes = [
     title: MARCA.nombre,
     loadComponent: () => import('./features/detalle/detalle.page').then((m) => m.DetallePage),
   },
+  // El carrito es del Cliente (HU-11 RF-7): sin sesión, a iniciarla; el personal, a su panel
+  {
+    path: 'carrito',
+    title: `Carrito · ${MARCA.nombre}`,
+    canActivate: [rolGuard],
+    data: { rol: 'CLIENTE' },
+    loadComponent: () => import('./features/carrito/carrito.page').then((m) => m.CarritoPage),
+  },
   {
     path: 'panel',
     title: `Panel · ${MARCA.nombre}`,

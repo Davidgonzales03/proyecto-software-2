@@ -127,6 +127,14 @@ describe('rutas', () => {
     expect(await navegarComo('CLIENTE', '/producto/7')).toBe('/producto/7');
   });
 
+  // HU-11 RF-7
+  it('el carrito es solo del cliente', async () => {
+    expect(await navegarComo('CLIENTE', '/carrito')).toBe('/carrito');
+    expect(await navegarComo(null, '/carrito')).toBe('/inicio-sesion?destino=%2Fcarrito');
+    expect(await navegarComo('EMPLEADO', '/carrito')).toBe('/panel');
+    expect(await navegarComo('ADMINISTRADOR', '/carrito')).toBe('/panel');
+  });
+
   it('mis datos pide sesión', async () => {
     expect(await navegarComo(null, '/mis-datos')).toBe('/inicio-sesion?destino=%2Fmis-datos');
     expect(await navegarComo('CLIENTE', '/mis-datos')).toBe('/mis-datos');

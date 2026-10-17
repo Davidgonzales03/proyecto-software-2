@@ -1,0 +1,86 @@
+<h1>Carrito</h1>
+
+@if (errorDeCarga()) {
+  <div class="tarjeta-error">
+    <p class="aviso" role="alert">{{ errorDeCarga() }}</p>
+    <button type="button" class="secundario" (click)="recurso.reload()">Reintentar</button>
+  </div>
+} @else if (carrito(); as carrito) {
+  <div role="alert">
+    @if (aviso()) {
+      <p class="aviso">{{ aviso() }}</p>
+    }
+  </div>
+
+  @if (carrito.lineas.length === 0) {
+    <section class="vacio">
+      <svg lucideShoppingCart aria-hidden="true"></svg>
+      <p>Su carrito está vacío.</p>
+      <a class="principal" routerLink="/catalogo"><span>Ver el catálogo</span></a>
+    </section>
+  } @else {
+    <ul class="lineas">
+      @for (linea of carrito.lineas; track linea.idProducto) {
+        @let error = errores()[linea.idProducto];
+        <li class="linea" [class.apagada]="linea.estado !== 'DISPONIBLE'">
+          <a class="foto" [routerLink]="['/producto', linea.idProducto]" tabindex="-1" aria-hidden="true">
+            @if (foto(linea); as foto) {
+              <img [src]="foto" alt="" loading="lazy" />
+            } @else {
+              <svg lucideWrench aria-hidden="true"></svg>
+            }
+          </a>
+
+          <div class="datos">
+            <a class="nombre" [routerLink]="['/producto', linea.idProducto]">{{ linea.nombre }}</a>
+            <p class="precio">
+              {{ precio(linea.precio) }}
+              @if (unidad(linea); as unidad) {
+                <span class="unidad">/ {{ unidad }}</span>
+              }
+            </p>
+            @if (linea.estado !== 'DISPONIBLE') {
+              <p class="estado">{{ avisos[linea.estado] }}</p>
+            }
+          </div>
+
+          <div class="cantidad">
+            @if (linea.estado === 'DISPONIBLE' || linea.estado === 'CANTIDAD_INVALIDA') {
+              <label class="solo-lectores" [for]="'cantidad-' + linea.idProducto">Cantidad de {{ linea.nombre }}</label>
+              <input
+                [id]="'cantidad-' + linea.idProducto"
+                type="text"
+                inputmode="decimal"
+                autocomplete="off"
+                [value]="cantidad(linea.cantidad)"
+                [attr.aria-invalid]="error ? 'true' : null"
+                [attr.aria-describedby]="error ? 'error-' + linea.idProducto : null"
+                (change)="cambiar(linea, $event)"
+              />
+            } @else {
+              <span class="fija">{{ cantidad(linea.cantidad) }}</span>
+            }
+            @if (error) {
+              <p class="error" [id]="'error-' + linea.idProducto">{{ error }}</p>
+            }
+          </div>
+
+          <p class="subtotal">{{ linea.subtotal === null ? '' : precio(linea.subtotal) }}</p>
+
+          <button type="button" class="quitar" [attr.aria-label]="'Quitar ' + linea.nombre" (click)="quitar(linea)">
+            <svg lucideTrash2 aria-hidden="true"></svg><span>Quitar</span>
+          </button>
+        </li>
+      }
+    </ul>
+
+    <div class="pie">
+      <button type="button" class="secundario" (click)="vaciar()">Vaciar carrito</button>
+      <p class="total">Total <strong>{{ precio(carrito.total) }}</strong></p>
+    </div>
+  }
+} @else {
+  <p class="cargando" role="status">Cargando el carrito…</p>
+}
+
+<app-dialogo-confirmacion />
