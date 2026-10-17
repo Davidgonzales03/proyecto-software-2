@@ -133,7 +133,11 @@ cualquier skill:
   `using-superpowers`, `using-git-worktrees`,
   `finishing-a-development-branch`, `requesting-code-review`,
   `spring-security-jwt`, `frontend-design` y `ui-ux-pro-max` (los dos últimos
-  los reemplaza `impeccable`).
+  los reemplaza `impeccable`). *16/10/2026:* también `executing-plans`,
+  `subagent-driven-development`, `dispatching-parallel-agents`,
+  `writing-skills`, `find-skills`, `animation-vocabulary` y `apple-design`,
+  sin uso en el proyecto, y el plugin `commit` (escribe en inglés, sin
+  atribución y hace push).
 - **Diseño del frontend con `impeccable`** (pbakaus) y las skills de Emil
   Kowalski (`emil-design-eng`, `animate`, `mobile-native`, `break-ui`,
   `review-animations`…). `impeccable` va sin sus hooks. *16/10/2026:* es la
