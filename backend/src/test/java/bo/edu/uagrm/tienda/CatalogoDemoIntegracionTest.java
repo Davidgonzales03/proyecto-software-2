@@ -19,6 +19,7 @@ import java.util.stream.Stream;
 import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -240,6 +241,7 @@ class CatalogoDemoIntegracionTest {
 				Herramientas manuales,Lima,Bueno.,60,3,../catalogo.csv,
 				Herramientas manuales,Escuadra,Con, una coma.,60,3,,
 				Herramientas manuales,Pinza,Bueno.,0,3,,
+				Herramientas manuales,Pala,Bueno.,60,3,pala.png|pala.png,
 				""");
 
 		cargar(carpeta);
@@ -255,6 +257,7 @@ class CatalogoDemoIntegracionTest {
 				.contains("Fila 8: imagenes: ../catalogo.csv no es un archivo de la carpeta")
 				.contains("Fila 9: tiene 8 columnas")
 				.contains("Fila 10: precio_bs")
+				.contains("Fila 11: imagenes: pala.png está repetida")
 				.doesNotContain("Fila 2:")
 				.contains("No se cargó el catálogo de demostración");
 	}
@@ -300,7 +303,8 @@ class CatalogoDemoIntegracionTest {
 		assertThat(productoRepository.count()).isZero();
 		assertThat(categoriaRepository.count()).isZero();
 		assertThat(imagenesGuardadas()).isEqualTo(antes);
-		assertThat(salida.getOut()).contains("No se cargó el catálogo de demostración").contains("falla de prueba");
+		assertThat(salida.getOut()).contains("No se cargó el catálogo de demostración")
+				.contains("Fila 2: falla de prueba");
 	}
 
 	@Test
@@ -346,12 +350,38 @@ class CatalogoDemoIntegracionTest {
 	void unEnlaceSimbolicoHaciaAfueraDeLaCarpetaSeRechaza(CapturedOutput salida, @TempDir Path afuera)
 			throws IOException {
 		Path foto = Files.copy(carpeta.resolve("pala.png"), afuera.resolve("privada.png"));
-		Files.createSymbolicLink(carpeta.resolve("enlace.png"), foto);
+		try {
+			Files.createSymbolicLink(carpeta.resolve("enlace.png"), foto);
+		} catch (IOException | UnsupportedOperationException e) {
+			// Windows no deja crear enlaces sin el modo de desarrollador: ahí la prueba no aplica
+			Assumptions.abort("El sistema no permite crear enlaces simbólicos: " + e.getMessage());
+		}
 		escribirCatalogo("Herramientas manuales,Martillo,Bueno.,85.50,12,enlace.png,\n");
 
 		cargar(carpeta);
 
 		assertThat(productoRepository.count()).isZero();
 		assertThat(salida.getOut()).contains("Fila 2: imagenes: enlace.png no es un archivo de la carpeta");
+	}
+
+	@Test
+	void conProductosYaCargadosUnaCarpetaMalConfiguradaIgualNoArranca() {
+		cargar(carpeta);
+
+		assertThatThrownBy(() -> cargar(carpeta.resolve("no-existe")))
+				.isInstanceOf(IllegalStateException.class)
+				.hasMessageContaining("TIENDA_DEMO_DIRECTORIO");
+	}
+
+	@Test
+	void unaCategoriaOcultaNoRecibeProductos(CapturedOutput salida) {
+		Categoria jardin = Categoria.crear("Jardín", null);
+		jardin.ocultar();
+		categoriaRepository.save(jardin);
+
+		cargar(carpeta);
+
+		assertThat(productoRepository.count()).isZero();
+		assertThat(salida.getOut()).contains("Fila 3: categoria: «jardin» es una categoría oculta");
 	}
 }

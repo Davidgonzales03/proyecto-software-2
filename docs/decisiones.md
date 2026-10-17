@@ -586,12 +586,14 @@ lectura) con `catalogo.csv` y sus imágenes. Lo hace `CatalogoDemo`.
   stock con punto decimal; `imagenes`, archivos de la carpeta separados por
   `|`; `modelo_3d` se ignora hasta el spike #14.
 - **Las reglas de siempre:** categorías, productos, imágenes (2 MB, JPG, PNG o
-  WebP, hasta cinco) y stock pasan por los mismos servicios y validaciones
-  que la gestión. Las categorías que faltan se crean.
+  WebP, hasta cinco, sin repetir) y stock pasan por los mismos servicios y
+  validaciones que la gestión. Las categorías que faltan se crean; una fila
+  de una categoría oculta es inválida, porque no se vería.
 - **Todo o nada:** una fila inválida se informa en el registro con su número y
   el motivo, y no se carga nada; un fallo durante la carga la revierte entera.
   La aplicación arranca igual, con el catálogo vacío. Una variable que no
-  apunta a una carpeta con `catalogo.csv` impide arrancar.
+  apunta a una carpeta con `catalogo.csv` impide arrancar, aunque ya haya
+  productos.
 - **Unidad de venta `UNIDAD` para todos,** por eso el stock inicial es entero.
   Marca, ficha y destacado quedan vacíos.
 - **El stock inicial es una entrada** a nombre de la cuenta de

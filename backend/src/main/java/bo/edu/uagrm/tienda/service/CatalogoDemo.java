@@ -9,6 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -20,8 +21,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.core.Ordered;
-import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.util.unit.DataSize;
@@ -54,7 +53,6 @@ import lombok.extern.slf4j.Slf4j;
 // aplicación arranca igual, con el catálogo vacío (decisiones.md → Catálogo de demostración)
 @Slf4j
 @Service
-@Order(Ordered.LOWEST_PRECEDENCE)
 @EnableConfigurationProperties(CatalogoDemoProperties.class)
 public class CatalogoDemo implements ApplicationRunner {
 
@@ -107,18 +105,22 @@ public class CatalogoDemo implements ApplicationRunner {
 		if (!propiedades.activa()) {
 			return;
 		}
-		if (productoRepository.count() > 0) {
-			log.info("Catálogo de demostración: ya hay productos en la base, no se carga nada.");
-			return;
-		}
+		// Aunque ya haya productos: una variable mal configurada se ve en el primer arranque, no al vaciar la base
 		Set<ConstraintViolation<CatalogoDemoProperties>> errores = validator.validate(propiedades);
 		if (!errores.isEmpty()) {
 			throw new IllegalStateException("No se puede cargar el catálogo de demostración: "
 					+ errores.stream().map(ConstraintViolation::getMessage).sorted().collect(Collectors.joining("; ")));
 		}
+		if (productoRepository.count() > 0) {
+			log.info("Catálogo de demostración: ya hay productos en la base, no se carga nada.");
+			return;
+		}
 		Path carpeta = carpetaReal();
 		List<String> problemas = new ArrayList<>();
-		List<Fila> filas = leer(carpeta, problemas);
+		// Una categoría oculta no muestra sus productos: cargarlos ahí dejaría el catálogo vacío sin aviso
+		Set<String> ocultas = categoriaRepository.findAll().stream().filter(c -> !c.isVisible())
+				.map(Categoria::getNombreClave).collect(Collectors.toSet());
+		List<Fila> filas = leer(carpeta, ocultas, problemas);
 		Optional<Usuario> admin = administradorActivo();
 		if (admin.isEmpty() && filas.stream().anyMatch(fila -> fila.stock().signum() > 0)) {
 			problemas.add("el stock inicial se registra a nombre de un administrador activo, y no hay ninguno");
@@ -134,15 +136,16 @@ public class CatalogoDemo implements ApplicationRunner {
 			return;
 		}
 		// Todo o nada: si algo falla, la transacción se revierte y ArchivosAlTerminar borra las imágenes guardadas
-		int[] categoriasNuevas = { 0 };
+		Integer categoriasNuevas;
 		try {
-			transaccion.executeWithoutResult(estado -> categoriasNuevas[0] = cargar(filas, admin.orElse(null)));
+			categoriasNuevas = transaccion.execute(estado -> cargar(filas, admin.orElse(null)));
 		} catch (RuntimeException e) {
-			log.error("No se cargó el catálogo de demostración: falló la carga y se revirtió entera.", e);
+			log.error("No se cargó el catálogo de demostración: falló la carga y se revirtió entera. {}",
+					e.getMessage(), e);
 			return;
 		}
 		log.info("Catálogo de demostración cargado: {} productos y {} categorías nuevas.", filas.size(),
-				categoriasNuevas[0]);
+				categoriasNuevas);
 	}
 
 	// Ya validada: es una carpeta con el catálogo. Con su camino real se reconocen los enlaces que salen de ella
@@ -168,26 +171,31 @@ public class CatalogoDemo implements ApplicationRunner {
 		categoriaRepository.findAll().forEach(c -> categorias.put(c.getNombreClave(), c.getIdCategoria()));
 		int nuevas = 0;
 		for (Fila fila : filas) {
-			String clave = Categoria.clave(fila.categoria());
-			Long idCategoria = categorias.get(clave);
-			if (idCategoria == null) {
-				idCategoria = categoriaService.crear(new CategoriaRequest(fila.categoria(), null)).getIdCategoria();
-				categorias.put(clave, idCategoria);
-				nuevas++;
-			}
-			Long idProducto = productoService.crear(fila.producto(idCategoria)).idProducto();
-			for (Path imagen : fila.imagenes()) {
-				productoService.agregarImagen(idProducto, leerImagen(imagen));
-			}
-			if (fila.stock().signum() > 0) {
-				inventarioService.registrarEntrada(idProducto, admin.getIdUsuario(),
-						new EntradaRequest(fila.stock(), NOTA_STOCK));
+			// Lo que solo rechaza un servicio también dice en qué fila está
+			try {
+				String clave = Categoria.clave(fila.categoria());
+				Long idCategoria = categorias.get(clave);
+				if (idCategoria == null) {
+					idCategoria = categoriaService.crear(new CategoriaRequest(fila.categoria(), null)).getIdCategoria();
+					categorias.put(clave, idCategoria);
+					nuevas++;
+				}
+				Long idProducto = productoService.crear(fila.producto(idCategoria)).idProducto();
+				for (Path imagen : fila.imagenes()) {
+					productoService.agregarImagen(idProducto, leerImagen(imagen));
+				}
+				if (fila.stock().signum() > 0) {
+					inventarioService.registrarEntrada(idProducto, admin.getIdUsuario(),
+							new EntradaRequest(fila.stock(), NOTA_STOCK));
+				}
+			} catch (RuntimeException e) {
+				throw new IllegalStateException("Fila " + fila.numero() + ": " + e.getMessage(), e);
 			}
 		}
 		return nuevas;
 	}
 
-	private List<Fila> leer(Path carpeta, List<String> problemas) {
+	private List<Fila> leer(Path carpeta, Set<String> ocultas, List<String> problemas) {
 		List<String> lineas;
 		try {
 			lineas = Files.readAllLines(carpeta.resolve(CatalogoDemoProperties.CATALOGO), StandardCharsets.UTF_8);
@@ -203,13 +211,14 @@ public class CatalogoDemo implements ApplicationRunner {
 		List<Fila> filas = new ArrayList<>();
 		for (int i = 1; i < lineas.size(); i++) {
 			if (!lineas.get(i).isBlank()) {
-				leerFila(carpeta, i + 1, lineas.get(i), problemas).ifPresent(filas::add);
+				leerFila(carpeta, ocultas, i + 1, lineas.get(i), problemas).ifPresent(filas::add);
 			}
 		}
 		return filas;
 	}
 
-	private Optional<Fila> leerFila(Path carpeta, int numero, String linea, List<String> problemas) {
+	private Optional<Fila> leerFila(Path carpeta, Set<String> ocultas, int numero, String linea,
+			List<String> problemas) {
 		String[] campos = linea.split(",", -1);
 		if (campos.length != COLUMNAS) {
 			problemas.add("Fila " + numero + ": tiene " + campos.length + " columnas y se esperan " + COLUMNAS
@@ -219,12 +228,15 @@ public class CatalogoDemo implements ApplicationRunner {
 		List<String> errores = new ArrayList<>();
 		String categoria = campos[0].strip();
 		errores(validator.validate(new CategoriaRequest(categoria, null)), Map.of("nombre", "categoria"), errores);
+		if (ocultas.contains(Categoria.clave(categoria))) {
+			errores.add("categoria: «" + categoria + "» es una categoría oculta; muéstrela antes de cargar");
+		}
 		BigDecimal precio = numero(campos[3], "precio_bs", errores);
 		BigDecimal stock = numero(campos[4], "stock_inicial", errores);
-		Fila fila = new Fila(categoria, campos[1].strip(), campos[2].strip(), precio, stock,
+		Fila fila = new Fila(numero, categoria, campos[1].strip(), campos[2].strip(), precio, stock,
 				imagenes(carpeta, campos[5].strip(), errores));
-		errores(validator.validate(fila.producto(CATEGORIA_POR_RESOLVER, precio != null ? precio : PRECIO_POR_RESOLVER)),
-				Map.of("precio", "precio_bs"), errores);
+		ProductoRequest producto = fila.producto(CATEGORIA_POR_RESOLVER, precio != null ? precio : PRECIO_POR_RESOLVER);
+		errores(validator.validate(producto), Map.of("precio", "precio_bs"), errores);
 		if (stock != null && stock.signum() > 0) {
 			errores(validator.validate(new EntradaRequest(stock, NOTA_STOCK)), Map.of("cantidad", "stock_inicial"),
 					errores);
@@ -256,10 +268,13 @@ public class CatalogoDemo implements ApplicationRunner {
 			return List.of();
 		}
 		List<Path> imagenes = new ArrayList<>();
+		Set<String> vistas = new HashSet<>();
 		for (String sinRecortar : nombres) {
 			String nombre = sinRecortar.strip();
 			Path archivo = carpeta.resolve(nombre).normalize();
-			if (nombre.isEmpty() || !carpeta.equals(archivo.getParent())) {
+			if (!vistas.add(nombre)) {
+				errores.add("imagenes: " + nombre + " está repetida");
+			} else if (nombre.isEmpty() || !carpeta.equals(archivo.getParent())) {
 				errores.add("imagenes: " + nombre + " no es un archivo de la carpeta");
 			} else if (!Files.isRegularFile(archivo)) {
 				errores.add("imagenes: " + nombre + " no existe en la carpeta");
@@ -310,8 +325,8 @@ public class CatalogoDemo implements ApplicationRunner {
 	}
 
 	// Una fila válida del CSV. Las imágenes se vuelven a leer al cargar, para no tener todas en memoria
-	private record Fila(String categoria, String nombre, String descripcion, BigDecimal precio, BigDecimal stock,
-			List<Path> imagenes) {
+	private record Fila(int numero, String categoria, String nombre, String descripcion, BigDecimal precio,
+			BigDecimal stock, List<Path> imagenes) {
 
 		ProductoRequest producto(Long idCategoria) {
 			return producto(idCategoria, precio);
