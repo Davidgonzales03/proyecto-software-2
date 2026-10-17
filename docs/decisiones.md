@@ -17,7 +17,7 @@ solo las secciones que tocan la tarea. Al agregar una decisión, sumarla al
 - **[Seguridad](#seguridad)**: [`Usuario` es una sola clase con `rol` enumerado](#usuario-es-una-sola-clase-con-rol-enumerado) · [Autenticación por JWT stateless](#autenticación-por-jwt-stateless) · [Contraseñas con BCrypt](#contraseñas-con-bcrypt) · [Administrador inicial al arrancar](#administrador-inicial-al-arrancar) · [Registro](#registro) · [Inicio de sesión](#inicio-de-sesión) · [Recuperación de contraseña](#recuperación-de-contraseña) · [Datos personales](#datos-personales) · [Gestión de usuarios](#gestión-de-usuarios)
 - **[Notificaciones](#notificaciones)**: [Envío de correo detrás de `NotificadorCorreo`](#envío-de-correo-detrás-de-notificadorcorreo) · [Gmail por SMTP, sin servidor de correo propio](#gmail-por-smtp-sin-servidor-de-correo-propio)
 - **[Sistema de diseño (frontend)](#sistema-de-diseño-frontend)**: [La aplicación es un producto, no un trabajo académico](#la-aplicación-es-un-producto-no-un-trabajo-académico) · [Lo visual vive en `DESIGN.md`](#lo-visual-vive-en-designmd) · [Decisiones técnicas del frontend](#decisiones-técnicas-del-frontend)
-- **[Decisiones del proyecto](#decisiones-del-proyecto)**: [Tienda propia, no marketplace](#tienda-propia-no-marketplace) · [Roles de la tienda](#roles-de-la-tienda) · [Pago con Libélula, sin facturación SIAT](#pago-con-libélula-sin-facturación-siat) · [Rediseño del frontend dentro del flujo](#rediseño-del-frontend-dentro-del-flujo) · [Rubro: ferretería, con vista 3D](#rubro-ferretería-con-vista-3d) · [Visor 3D y modelos](#visor-3d-y-modelos) · [Categorías del catálogo](#categorías-del-catálogo) · [Productos](#productos) · [Inventario](#inventario) · [Catálogo público](#catálogo-público) · [Detalle del producto](#detalle-del-producto) · [Catálogo de demostración](#catálogo-de-demostración)
+- **[Decisiones del proyecto](#decisiones-del-proyecto)**: [Tienda propia, no marketplace](#tienda-propia-no-marketplace) · [Roles de la tienda](#roles-de-la-tienda) · [Pago con Libélula, sin facturación SIAT](#pago-con-libélula-sin-facturación-siat) · [Rediseño del frontend dentro del flujo](#rediseño-del-frontend-dentro-del-flujo) · [Rubro: ferretería, con vista 3D](#rubro-ferretería-con-vista-3d) · [Visor 3D y modelos](#visor-3d-y-modelos) · [Categorías del catálogo](#categorías-del-catálogo) · [Productos](#productos) · [Inventario](#inventario) · [Catálogo público](#catálogo-público) · [Detalle del producto](#detalle-del-producto) · [Carrito](#carrito) · [Catálogo de demostración](#catálogo-de-demostración)
 
 ---
 
@@ -621,6 +621,30 @@ pública en `/producto/:id`, con o sin sesión.
 **Motivo:** el código ayuda a pedir por teléfono o en el local; un 404 igual
 para los tres casos no revela qué productos existen; un botón que todavía no
 anda promete algo que la tienda no cumple.
+
+### Carrito
+
+*17/10/2026 (HU-11).* El carrito es del Cliente, con sesión, y se guarda en
+el servidor: uno por cliente, sin vencimiento, igual en cualquier
+dispositivo.
+
+- **Solo el Cliente:** el personal no tiene carrito (403). Sin sesión,
+  «Agregar al carrito» lleva a iniciar sesión y vuelve al producto, sin
+  agregarlo.
+- **Una línea por producto, hasta 50 líneas.** Agregar uno que ya está suma
+  la cantidad.
+- **Cantidad:** mayor que 0 y hasta 999 por línea; los decimales, como el
+  inventario (dos en metro, kilo y litro; ninguno en el resto).
+- **Stock:** un producto agotado no se agrega; la cantidad no se compara con
+  el stock en el carrito, y lo que no alcance lo rechaza el pedido (HU-12).
+- **Precio de hoy:** el carrito no guarda precios. Lo que se agota o deja de
+  venderse queda marcado «Agotado» o «No disponible», fuera del total, hasta
+  que el cliente lo quita.
+
+**Motivo:** el carrito en el servidor se ve igual en la computadora y en el
+celular, y evita juntar un carrito del navegador con otro de la cuenta;
+comparar la cantidad con el stock en el carrito revelaría cuánto hay, y el
+stock recién se reserva al confirmar.
 
 ### Catálogo de demostración
 
