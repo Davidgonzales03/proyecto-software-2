@@ -55,6 +55,7 @@ class CarritoFalso {
   readonly carrito = {
     value: signal<Carrito | undefined>(undefined),
     error: signal<unknown>(undefined),
+    isLoading: signal(false),
     reload: vi.fn(() => true),
     hasValue(): boolean {
       return this.value() !== undefined;
@@ -79,6 +80,9 @@ describe('ConfirmacionPage', () => {
   let harness: RouterTestingHarness;
   let carrito: CarritoFalso;
   let pedidos: PedidosFalso;
+  let sesionUsuario: Usuario = ANA;
+
+  beforeEach(() => (sesionUsuario = ANA));
 
   async function abrir(contenido: Carrito = CON_DOS, retiro: Retiro = { direccion: null, horario: null }): Promise<void> {
     TestBed.resetTestingModule();
@@ -95,7 +99,7 @@ describe('ConfirmacionPage', () => {
         ]),
         { provide: CarritoService, useValue: carrito },
         { provide: PedidosService, useValue: pedidos },
-        { provide: SesionService, useValue: { usuario: signal(ANA), rol: () => 'CLIENTE' } },
+        { provide: SesionService, useValue: { usuario: signal(sesionUsuario), rol: () => 'CLIENTE' } },
       ],
     });
     harness = await RouterTestingHarness.create();
@@ -185,6 +189,18 @@ describe('ConfirmacionPage', () => {
     expect(texto(aviso)).toContain('Corríjalos en el carrito');
     expect(aviso?.querySelector('a')?.getAttribute('href')).toBe('/carrito');
     expect(TestBed.inject(Router).url).toBe('/confirmar-pedido');
+    // Revisión de HU-12 (interfaz): el foco va al aviso, que lleva al enlace para seguir
+    expect(document.activeElement).toBe(aviso);
+  });
+
+  // Revisión de HU-12 (interfaz): nombre y apellido de 80 cada uno no pasan del límite de 160
+  it('el nombre de la cuenta se precarga dentro del límite', async () => {
+    sesionUsuario = { ...ANA, nombre: 'n'.repeat(80), apellido: 'a'.repeat(80) };
+    await abrir();
+
+    expect(campo('nombreRetira').value.length).toBe(160);
+    await confirmar();
+    expect(pedidos.confirmar).toHaveBeenCalled();
   });
 
   // HU-12 RF-6
@@ -214,9 +230,25 @@ describe('ConfirmacionPage', () => {
 
     await confirmar();
 
-    expect(texto(pantalla().querySelector('[role="alert"]'))).toContain('Bs 210,00');
+    const aviso = texto(pantalla().querySelector('[role="alert"]'));
+    expect(aviso).toContain('Bs 210,00');
+    // Revisión de HU-12 (/code-review): no siempre es un precio; también pudo volver un pedido vencido
+    expect(aviso).toContain('El total cambió');
+    expect(aviso).not.toContain('precio');
     expect(carrito.carrito.reload).toHaveBeenCalled();
     expect(TestBed.inject(Router).url).toBe('/confirmar-pedido');
+  });
+
+  // Revisión de HU-12 (/code-review): mientras el carrito recarga, el total que se ve puede ser el viejo
+  it('no confirma mientras el carrito recarga', async () => {
+    await abrir();
+    carrito.carrito.isLoading.set(true);
+
+    await confirmar();
+
+    expect(pedidos.confirmar).not.toHaveBeenCalled();
+    // Y lo dice: el toque no queda sin respuesta
+    expect(texto(pantalla().querySelector('button[type="submit"]'))).toContain('Actualizando…');
   });
 
   // HU-12 RF-5

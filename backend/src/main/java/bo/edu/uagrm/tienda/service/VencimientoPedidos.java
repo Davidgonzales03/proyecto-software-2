@@ -3,6 +3,7 @@ package bo.edu.uagrm.tienda.service;
 import java.time.Clock;
 import java.time.LocalDateTime;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -23,7 +24,17 @@ public class VencimientoPedidos {
 	private final PedidoService pedidoService;
 	private final Clock clock;
 
+	// En las pruebas va apagada: cada prueba vence cuando lo pide, con su reloj
+	@Value("${tienda.pedidos.vencimiento-programado:true}")
+	private boolean programado;
+
 	@Scheduled(fixedDelayString = "PT1M")
+	void cadaMinuto() {
+		if (programado) {
+			vencer();
+		}
+	}
+
 	public void vencer() {
 		for (PedidoAVencer pedido : pedidoRepository.findByEstadoAndVenceLessThanEqual(EstadoPedido.PENDIENTE_PAGO,
 				LocalDateTime.now(clock))) {

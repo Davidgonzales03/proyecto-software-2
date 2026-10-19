@@ -734,6 +734,35 @@ class PedidoIntegracionTest {
 				.hasSize(1);
 	}
 
+	// Revisión de HU-12 (/code-review): una entrada pudo dejar el stock en el máximo mientras el pedido esperaba; al
+	// devolver, queda en el máximo y el pedido igual se cancela (antes fallaba al guardar y quedaba pendiente)
+	@Test
+	void devolverNoPasaDelStockMaximo() throws Exception {
+		agregar(ana, martillo, "2");
+		Integer idPedido = confirmado(ana, "171");
+		// Por unidad: el máximo sin decimales
+		ajustarStock(martillo, "9999999");
+
+		MvcTestResult cancelado = cancelar(ana, idPedido);
+
+		assertThat(cancelado).hasStatus(HttpStatus.OK);
+		assertThat(stock(martillo)).isEqualTo(9_999_999.0);
+		assertThat(estado(idPedido)).isEqualTo(EstadoPedido.CANCELADO);
+		assertThat(get(CARRITO, ana)).bodyJson().extractingPath("$.lineas[0].cantidad").isEqualTo(2.0);
+	}
+
+	// Revisión de HU-12 (/code-review): las escrituras del carrito no vencen; uno vencido no se informa como pendiente
+	@Test
+	void elCarritoNoDicePendienteUnPedidoQueYaVencio() throws Exception {
+		agregar(ana, martillo, "1");
+		confirmado(ana, "85.5");
+		reloj.avanzar(Duration.ofMinutes(31));
+
+		MvcTestResult agregado = post(CARRITO + "/lineas", ana, "{\"idProducto\":%d,\"cantidad\":1}".formatted(cable));
+
+		assertThat(agregado).bodyJson().extractingPath("$.idPedidoPendiente").isNull();
+	}
+
 	// Caso límite: datos basura en la dirección
 	@Test
 	void idDePedidoBasuraDa404() {

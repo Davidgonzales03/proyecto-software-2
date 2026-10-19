@@ -1,4 +1,17 @@
-import { ChangeDetectionStrategy, Component, computed, DestroyRef, effect, inject, linkedSignal, signal, viewChild } from '@angular/core';
+import {
+	afterNextRender,
+	ChangeDetectionStrategy,
+	Component,
+	computed,
+	DestroyRef,
+	effect,
+	ElementRef,
+	inject,
+	Injector,
+	linkedSignal,
+	signal,
+	viewChild,
+} from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { LucideClock, LucideMapPin, LucideStore } from '@lucide/angular';
@@ -26,6 +39,8 @@ import { idDeLaUrl } from '../../shared/navegacion/id-de-la-url';
 export class PedidoPage {
 	private readonly pedidos = inject(PedidosService);
 	private readonly dialogo = viewChild.required(DialogoConfirmacion);
+	private readonly elemento = inject<ElementRef<HTMLElement>>(ElementRef);
+	private readonly injector = inject(Injector);
 
 	private readonly parametros = toSignal(inject(ActivatedRoute).paramMap, { requireSync: true });
 	// Lo que no es un número de pedido no llega a la API (RF-13)
@@ -68,8 +83,9 @@ export class PedidoPage {
 	// --- Cancelar (RF-9, RF-16) ---
 
 	protected readonly cancelando = signal(false);
-	protected readonly aviso = signal('');
-	protected readonly noVolvieron = signal(0);
+	// Se reinician con otro pedido en la misma pantalla
+	protected readonly aviso = linkedSignal({ source: this.idPedido, computation: () => '' });
+	protected readonly noVolvieron = linkedSignal({ source: this.idPedido, computation: () => 0 });
 
 	protected readonly nombresDeEstado = NOMBRES_DE_ESTADO;
 	protected readonly precio = precio;
@@ -116,18 +132,35 @@ export class PedidoPage {
 		this.cancelando.set(true);
 		try {
 			const cancelacion = await this.pedidos.cancelar(pedido.idPedido);
+			// Mientras tanto se abrió otro pedido: la respuesta ya no es de esta pantalla
+			if (this.idPedido() !== pedido.idPedido) {
+				return;
+			}
 			this.recurso.value.set(cancelacion.pedido);
 			this.noVolvieron.set(cancelacion.lineasQueNoVolvieron);
+			// El botón ya no está: el foco va al resultado, también si quedó fuera de la vista
+			this.enfocar('.cerrado');
 		} catch (rechazo: unknown) {
 			const error = comoError(rechazo);
+			if (this.idPedido() !== pedido.idPedido) {
+				return;
+			}
 			this.aviso.set(mensajeDeError(error));
 			// Se canceló o venció en otra pestaña: se muestra como está ahora (RF-12)
 			if (error.codigo === 'PEDIDO_NO_PENDIENTE') {
 				this.recurso.reload();
 			}
+			this.enfocar('.aviso');
 		} finally {
 			this.cancelando.set(false);
 		}
+	}
+
+	// Después de dibujar el cambio
+	private enfocar(selector: string): void {
+		afterNextRender(() => this.elemento.nativeElement.querySelector<HTMLElement>(selector)?.focus(), {
+			injector: this.injector,
+		});
 	}
 }
 

@@ -127,8 +127,8 @@
             }
           </div>
 
-          <button type="submit" class="principal" [attr.aria-disabled]="confirmando() ? 'true' : null">
-            <span>{{ confirmando() ? 'Confirmando…' : 'Confirmar pedido' }}</span>
+          <button type="submit" class="principal" [attr.aria-disabled]="confirmando() || recurso.isLoading() ? 'true' : null">
+            <span>{{ confirmando() ? 'Confirmando…' : recurso.isLoading() ? 'Actualizando…' : 'Confirmar pedido' }}</span>
           </button>
           <p class="plazo">Al confirmar, reservamos los productos por 30 minutos para que pague el pedido.</p>
         </form>

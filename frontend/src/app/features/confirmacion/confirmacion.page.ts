@@ -1,4 +1,14 @@
-import { ChangeDetectionStrategy, Component, computed, ElementRef, inject, signal, viewChild } from '@angular/core';
+import {
+	afterNextRender,
+	ChangeDetectionStrategy,
+	Component,
+	computed,
+	ElementRef,
+	inject,
+	Injector,
+	signal,
+	viewChild,
+} from '@angular/core';
 import { form, FormField, schema, submit, validate } from '@angular/forms/signals';
 import { Router, RouterLink } from '@angular/router';
 import { LucideArrowLeft, LucideCircleSlash, LucideClock, LucideMapPin, LucideStore } from '@lucide/angular';
@@ -60,6 +70,7 @@ export class ConfirmacionPage {
 	private readonly pedidos = inject(PedidosService);
 	private readonly router = inject(Router);
 	private readonly elemento = inject(ElementRef<HTMLElement>);
+	private readonly injector = inject(Injector);
 	private readonly avisoDeRechazo = viewChild<ElementRef<HTMLElement>>('rechazo');
 
 	protected readonly recurso = this.servicioCarrito.carrito;
@@ -106,9 +117,10 @@ export class ConfirmacionPage {
 		if (rechazo === null) {
 			return '';
 		}
-		// El total nuevo ya está en pantalla: el carrito se pidió otra vez (RF-15)
+		// El total nuevo ya está en pantalla: el carrito se pidió otra vez (RF-15). No siempre es un precio: también
+		// pudieron volver las líneas de un pedido que venció
 		if (rechazo.codigo === 'TOTAL_CAMBIADO' && rechazo.total !== undefined) {
-			return `Cambió el precio de algún producto: el total ahora es ${precio(rechazo.total)}. Revíselo y confirme otra vez.`;
+			return `El total cambió: ahora es ${precio(rechazo.total)}. Revise el pedido y confirme otra vez.`;
 		}
 		return mensajeDelRechazo(rechazo);
 	});
@@ -136,7 +148,8 @@ export class ConfirmacionPage {
 	protected async confirmar(evento: Event): Promise<void> {
 		evento.preventDefault();
 		const carrito = this.carrito();
-		if (this.confirmando() || carrito === undefined) {
+		// Mientras el carrito recarga, el total que se ve puede ser el viejo (RF-15)
+		if (this.confirmando() || this.recurso.isLoading() || carrito === undefined) {
 			return;
 		}
 		this.rechazo.set(null);
@@ -174,8 +187,8 @@ export class ConfirmacionPage {
 		if (campo !== null) {
 			enfocarCampo(this.elemento.nativeElement, campo);
 		} else {
-			// El aviso se dibuja después de este cambio
-			queueMicrotask(() => this.avisoDeRechazo()?.nativeElement.focus());
+			// El aviso se dibuja después de este cambio; con el foco, lleva al enlace para seguir
+			afterNextRender(() => this.avisoDeRechazo()?.nativeElement.focus(), { injector: this.injector });
 		}
 	}
 }
@@ -183,7 +196,15 @@ export class ConfirmacionPage {
 function datosDeLaCuenta(sesion: SesionService): DatosDeRetiro {
 	const usuario = sesion.usuario();
 	return {
-		nombreRetira: usuario === null ? '' : `${usuario.nombre} ${usuario.apellido}`,
+		// Nombre y apellido admiten 80 cada uno: juntos pueden pasar de los 160 del pedido
+		// (sin partir un emoji al cortar)
+		nombreRetira:
+			usuario === null
+				? ''
+				: `${usuario.nombre} ${usuario.apellido}`
+						.slice(0, 160)
+						.replace(/[\uD800-\uDBFF]$/, '')
+						.trim(),
 		telefonoRetira: usuario?.telefono ?? '',
 		nota: '',
 	};

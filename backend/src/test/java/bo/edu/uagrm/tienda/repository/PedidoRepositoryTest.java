@@ -108,10 +108,10 @@ class PedidoRepositoryTest {
 		assertThat(pedidoRepository.findByIdPedidoAndUsuario_IdUsuario(id, ana.getIdUsuario())).isPresent();
 		assertThat(pedidoRepository.findByIdPedidoAndUsuario_IdUsuario(id, beto.getIdUsuario())).isEmpty();
 		assertThat(pedidoRepository.findConBloqueoByIdPedidoAndUsuario_IdUsuario(id, beto.getIdUsuario())).isEmpty();
-		assertThat(pedidoRepository.findFirstByUsuario_IdUsuarioAndEstado(ana.getIdUsuario(),
-				EstadoPedido.PENDIENTE_PAGO)).isPresent();
-		assertThat(pedidoRepository.findFirstByUsuario_IdUsuarioAndEstado(beto.getIdUsuario(),
-				EstadoPedido.PENDIENTE_PAGO)).isEmpty();
+		assertThat(pedidoRepository.findFirstByUsuario_IdUsuarioAndEstadoAndVenceAfter(ana.getIdUsuario(),
+				EstadoPedido.PENDIENTE_PAGO, AHORA)).isPresent();
+		assertThat(pedidoRepository.findFirstByUsuario_IdUsuarioAndEstadoAndVenceAfter(beto.getIdUsuario(),
+				EstadoPedido.PENDIENTE_PAGO, AHORA)).isEmpty();
 	}
 
 	// HU-12 RF-10: solo los pendientes con la hora cumplida

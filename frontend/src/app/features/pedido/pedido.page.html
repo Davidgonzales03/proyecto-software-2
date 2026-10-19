@@ -1,6 +1,7 @@
 @if (noEncontrado()) {
   <h1>Pedido</h1>
   <p class="nada">No encontramos ese pedido.</p>
+  <a class="salida" routerLink="/carrito">Ir al carrito</a>
 } @else if (errorDeCarga()) {
   <h1>Pedido</h1>
   <div class="tarjeta-error">
@@ -15,7 +16,7 @@
 
   <div role="alert">
     @if (aviso()) {
-      <p class="aviso">{{ aviso() }}</p>
+      <p class="aviso" tabindex="-1">{{ aviso() }}</p>
     }
   </div>
 
@@ -28,14 +29,18 @@
       </p>
     </section>
   } @else {
-    <section class="cerrado" role="status">
+    <section class="cerrado" role="status" tabindex="-1">
       <p>
         @if (pedido.estado === 'VENCIDO') {
           Pasaron los 30 minutos sin pagar.
         } @else {
           Canceló el pedido.
         }
-        Los productos volvieron a su carrito.
+        @if (noVolvieron() === 0) {
+          Los productos volvieron a su carrito.
+        } @else if (noVolvieron() < pedido.lineas.length) {
+          Los demás productos volvieron a su carrito.
+        }
         <a routerLink="/carrito">Ir al carrito</a>
       </p>
       @if (noVolvieron() > 0) {
@@ -68,7 +73,11 @@
         <dl>
           <div>
             <dt>Retira</dt>
-            <dd>{{ pedido.nombreRetira }} · {{ pedido.telefonoRetira }}</dd>
+            <dd>{{ pedido.nombreRetira }}</dd>
+          </div>
+          <div>
+            <dt>Teléfono</dt>
+            <dd>{{ pedido.telefonoRetira }}</dd>
           </div>
           @if (pedido.nota) {
             <div>

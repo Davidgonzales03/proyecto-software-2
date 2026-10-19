@@ -108,7 +108,12 @@ h2 svg {
 	margin: 0;
 }
 
-.cerrado a {
+.cerrado a,
+.salida {
+	display: inline-flex;
+	align-items: center;
+	min-height: var(--app-area-tocable);
+	align-self: flex-start;
 	color: var(--app-acento-texto);
 	font-weight: 600;
 	text-underline-offset: 3px;
@@ -268,6 +273,7 @@ h2 svg {
 	border: 1px solid var(--app-error);
 	background: var(--app-error-fondo);
 	color: var(--app-error);
+	animation: app-aparecer var(--app-duracion-media) var(--app-curva-salida);
 }
 
 .nada {

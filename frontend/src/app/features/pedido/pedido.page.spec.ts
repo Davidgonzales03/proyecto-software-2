@@ -98,6 +98,9 @@ describe('PedidoPage', () => {
     // La respuesta del diálogo y la del servicio son dos promesas seguidas
     await harness.fixture.whenStable();
     await harness.fixture.whenStable();
+    // El foco llega después de dibujar el resultado
+    await new Promise((listo) => setTimeout(listo));
+    await harness.fixture.whenStable();
   }
 
   // HU-12 RF-8, RF-17
@@ -139,10 +142,34 @@ describe('PedidoPage', () => {
     expect(texto()).toContain('Los productos volvieron a su carrito.');
     expect(pantalla().querySelector('a[href="/carrito"]')).not.toBeNull();
     expect(botonCancelar()).toBeUndefined();
+    // Revisión de HU-12 (interfaz): el botón ya no está; el foco va al resultado
+    expect(document.activeElement).toBe(pantalla().querySelector('.cerrado'));
   });
 
   // HU-12 RF-16
   it('avisa cuántas líneas no volvieron al carrito', async () => {
+    await abrir();
+    pedidos.cancelar.mockResolvedValueOnce({
+      pedido: { ...PENDIENTE, estado: 'CANCELADO', segundosParaPagar: 0 },
+      lineasQueNoVolvieron: 1,
+    });
+
+    await cancelarConfirmando();
+
+    expect(texto()).toContain('Los demás productos volvieron a su carrito.');
+    expect(texto()).toContain('1 producto no volvió porque su carrito ya tiene 50.');
+
+    // Revisión de HU-12 (/code-review): otro pedido en la misma pantalla no hereda el aviso
+    pedidos.recurso.value.set({ ...PENDIENTE, idPedido: 5, estado: 'VENCIDO', segundosParaPagar: 0 });
+    await harness.navigateByUrl('/mis-pedidos/5');
+    await harness.fixture.whenStable();
+    expect(texto()).toContain('Pedido N.º 5');
+    expect(texto()).not.toContain('no volvió');
+    expect(texto()).toContain('Los productos volvieron a su carrito.');
+  });
+
+  // Revisión de HU-12 (/code-review): si no volvió ninguno, no dice «los demás»
+  it('si no volvió ningún producto, no dice que volvieron', async () => {
     await abrir();
     pedidos.cancelar.mockResolvedValueOnce({
       pedido: { ...PENDIENTE, estado: 'CANCELADO', segundosParaPagar: 0 },
@@ -151,7 +178,29 @@ describe('PedidoPage', () => {
 
     await cancelarConfirmando();
 
+    expect(texto()).not.toContain('volvieron a su carrito');
     expect(texto()).toContain('2 productos no volvieron porque su carrito ya tiene 50.');
+  });
+
+  // Revisión de HU-12 (/code-review): la respuesta de una cancelación vieja no pisa otro pedido
+  it('si ya se abrió otro pedido, la respuesta de la cancelación no lo pisa', async () => {
+    await abrir();
+    let responder!: (cancelacion: Cancelacion) => void;
+    pedidos.cancelar.mockReturnValueOnce(new Promise((listo) => (responder = listo)));
+    botonCancelar()!.click();
+    await harness.fixture.whenStable();
+    (dialogo().querySelector('button.principal') as HTMLButtonElement).click();
+    await harness.fixture.whenStable();
+
+    pedidos.recurso.value.set({ ...PENDIENTE, idPedido: 5 });
+    await harness.navigateByUrl('/mis-pedidos/5');
+    responder({ pedido: { ...PENDIENTE, estado: 'CANCELADO', segundosParaPagar: 0 }, lineasQueNoVolvieron: 1 });
+    await harness.fixture.whenStable();
+    await harness.fixture.whenStable();
+
+    expect(texto()).toContain('Pedido N.º 5');
+    expect(texto()).toContain('Pendiente de pago');
+    expect(texto()).not.toContain('no volvió');
   });
 
   // HU-12 RF-12: se canceló o venció en otra pestaña
@@ -163,6 +212,7 @@ describe('PedidoPage', () => {
 
     expect(texto()).toContain('Este pedido ya no espera el pago.');
     expect(pedidos.recurso.reload).toHaveBeenCalled();
+    expect(document.activeElement).toBe(pantalla().querySelector('.aviso'));
   });
 
   // HU-12 RF-10
@@ -205,6 +255,8 @@ describe('PedidoPage', () => {
     });
 
     expect(texto()).toContain('No encontramos ese pedido.');
+    // Revisión de HU-12 (interfaz): con un camino para seguir
+    expect(pantalla().querySelector('a[href="/carrito"]')).not.toBeNull();
   });
 
   // HU-12 RF-13 (caso límite: datos basura)

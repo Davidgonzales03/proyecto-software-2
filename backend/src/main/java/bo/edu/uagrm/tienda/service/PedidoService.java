@@ -1,11 +1,14 @@
 package bo.edu.uagrm.tienda.service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -70,9 +73,12 @@ public class PedidoService {
 	public PedidoResponse confirmar(Long idUsuario, ConfirmacionRequest solicitud) {
 		Usuario cliente = bloquearCliente(idUsuario);
 		LocalDateTime ahora = LocalDateTime.now(clock);
-		// Uno vencido no bloquea (RF-5): vence acá mismo y sus líneas vuelven al carrito antes de leerlo
+		// Uno vencido no bloquea (RF-5): vence acá mismo y sus líneas vuelven al carrito antes de leerlo. Se leen sin
+		// bloquearlos: todo lo que cambia un pedido bloquea antes al cliente, y en MySQL un SELECT … FOR UPDATE sin
+		// filas bloquea el hueco del índice y traba las confirmaciones de dos clientes a la vez
 		List<Pedido> vencidos = new ArrayList<>();
-		for (Pedido pendiente : pendientesBloqueados(idUsuario)) {
+		for (Pedido pendiente : pedidoRepository.findByUsuario_IdUsuarioAndEstadoOrderByIdPedido(idUsuario,
+				EstadoPedido.PENDIENTE_PAGO)) {
 			if (pendiente.getVence().isAfter(ahora)) {
 				throw new PedidoPendienteException(pendiente.getIdPedido());
 			}
@@ -156,10 +162,11 @@ public class PedidoService {
 		}
 	}
 
+	// Uno que ya pasó la hora no cuenta, aunque todavía no se haya vencido: las escrituras del carrito no vencen
 	@Transactional(readOnly = true)
 	public Optional<Long> idDelPendiente(Long idUsuario) {
-		return pedidoRepository.findFirstByUsuario_IdUsuarioAndEstado(idUsuario, EstadoPedido.PENDIENTE_PAGO)
-				.map(Pedido::getIdPedido);
+		return pedidoRepository.findFirstByUsuario_IdUsuarioAndEstadoAndVenceAfter(idUsuario,
+				EstadoPedido.PENDIENTE_PAGO, LocalDateTime.now(clock)).map(Pedido::getIdPedido);
 	}
 
 	// Con el cliente ya bloqueado. Cada pedido libera sus productos por id ascendente
@@ -193,14 +200,20 @@ public class PedidoService {
 	}
 
 	// Devuelve el stock con los productos bloqueados por id ascendente, cierra el pedido y devuelve las líneas al
-	// carrito (RF-9, RF-10, RF-11). Devolver lo reservado no tiene el tope de las entradas: el stock vuelve a lo que
-	// era. Cuenta las líneas que no volvieron (RF-16)
+	// carrito (RF-9, RF-10, RF-11). Si las entradas de mientras tanto dejaron el stock cerca del máximo, queda en el
+	// máximo: pasarlo haría fallar el guardado y el pedido no se cerraría nunca. Cuenta las líneas que no volvieron
+	// (RF-16)
 	private int liberar(Pedido pedido, EstadoPedido estadoFinal, LocalDateTime ahora) {
 		for (LineaPedido linea : pedido.lineasPorProducto()) {
 			Producto producto = bloquearProducto(linea.getIdProducto());
-			BigDecimal nuevo = producto.getStock().add(linea.getCantidad());
-			producto.aplicarMovimiento(nuevo);
-			movimientoRepository.save(MovimientoStock.liberacion(producto, linea.getCantidad(), nuevo, pedido, ahora));
+			// El máximo con los decimales que admite la unidad: por unidad, 9 999 999
+			BigDecimal tope = InventarioService.STOCK_MAXIMO.setScale(producto.getUnidad().decimales(), RoundingMode.FLOOR);
+			BigDecimal nuevo = producto.getStock().add(linea.getCantidad()).min(tope);
+			BigDecimal devuelto = nuevo.subtract(producto.getStock());
+			if (devuelto.signum() > 0) {
+				producto.aplicarMovimiento(nuevo);
+				movimientoRepository.save(MovimientoStock.liberacion(producto, devuelto, nuevo, pedido, ahora));
+			}
 		}
 		if (estadoFinal == EstadoPedido.CANCELADO) {
 			pedido.cancelar(ahora);
@@ -213,17 +226,19 @@ public class PedidoService {
 	// Se suman a las que ya estén, con los límites del carrito: la línea queda en 999 como mucho y, con 50 líneas,
 	// las que faltan no vuelven (RF-11, RF-16). Un producto que ya no se vende vuelve igual y el carrito lo marca
 	private int devolverAlCarrito(Pedido pedido, LocalDateTime ahora) {
-		Long idUsuario = pedido.getUsuario().getIdUsuario();
+		// El carrito se lee una vez: con el cliente bloqueado, nadie más lo cambia
+		Map<Long, LineaCarrito> carrito = new HashMap<>();
+		lineaCarritoRepository.findByUsuario_IdUsuarioOrderByFechaAgregadaAscIdLineaAsc(
+				pedido.getUsuario().getIdUsuario())
+				.forEach(linea -> carrito.put(linea.getProducto().getIdProducto(), linea));
 		int noVolvieron = 0;
 		for (LineaPedido linea : pedido.getLineas()) {
-			Optional<LineaCarrito> existente = lineaCarritoRepository
-					.findByUsuario_IdUsuarioAndProducto_IdProducto(idUsuario, linea.getIdProducto());
-			if (existente.isPresent()) {
-				existente.get().cambiar(existente.get().getCantidad().add(linea.getCantidad())
-						.min(CarritoService.MAXIMO_CANTIDAD));
-			} else if (lineaCarritoRepository.countByUsuario_IdUsuario(idUsuario) < CarritoService.MAXIMO_LINEAS) {
-				lineaCarritoRepository.save(LineaCarrito.crear(pedido.getUsuario(), linea.getProducto(),
-						linea.getCantidad(), ahora));
+			LineaCarrito existente = carrito.get(linea.getIdProducto());
+			if (existente != null) {
+				existente.cambiar(existente.getCantidad().add(linea.getCantidad()).min(CarritoService.MAXIMO_CANTIDAD));
+			} else if (carrito.size() < CarritoService.MAXIMO_LINEAS) {
+				carrito.put(linea.getIdProducto(), lineaCarritoRepository.save(
+						LineaCarrito.crear(pedido.getUsuario(), linea.getProducto(), linea.getCantidad(), ahora)));
 			} else {
 				noVolvieron++;
 			}

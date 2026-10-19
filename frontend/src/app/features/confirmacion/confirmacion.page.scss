@@ -298,8 +298,10 @@ textarea {
 		transform var(--app-duracion-rapida) var(--app-curva-salida);
 }
 
+// Las puntas del sesgo no se salen del formulario
 form .principal {
-	width: 100%;
+	width: calc(100% - var(--app-espacio-3));
+	align-self: center;
 	min-height: 52px;
 	font-size: 22px;
 }
@@ -345,6 +347,9 @@ form .principal {
 }
 
 .aviso a {
+	display: inline-flex;
+	align-items: center;
+	min-height: var(--app-area-tocable);
 	color: inherit;
 	font-weight: 700;
 	text-underline-offset: 3px;
@@ -363,7 +368,6 @@ form .principal {
 	margin: 0;
 	color: var(--app-texto-suave);
 	font-size: 18px;
-	max-width: 60ch;
 }
 
 .secundario {

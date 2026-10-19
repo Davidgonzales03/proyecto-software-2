@@ -274,6 +274,7 @@ input[aria-invalid='true'] {
 
 	.siguiente .principal {
 		flex: 1;
+		margin-inline: var(--app-espacio-2);
 		justify-content: center;
 	}
 
