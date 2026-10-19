@@ -17,7 +17,7 @@ solo las secciones que tocan la tarea. Al agregar una decisión, sumarla al
 - **[Seguridad](#seguridad)**: [`Usuario` es una sola clase con `rol` enumerado](#usuario-es-una-sola-clase-con-rol-enumerado) · [Autenticación por JWT stateless](#autenticación-por-jwt-stateless) · [Contraseñas con BCrypt](#contraseñas-con-bcrypt) · [Administrador inicial al arrancar](#administrador-inicial-al-arrancar) · [Registro](#registro) · [Inicio de sesión](#inicio-de-sesión) · [Recuperación de contraseña](#recuperación-de-contraseña) · [Datos personales](#datos-personales) · [Gestión de usuarios](#gestión-de-usuarios)
 - **[Notificaciones](#notificaciones)**: [Envío de correo detrás de `NotificadorCorreo`](#envío-de-correo-detrás-de-notificadorcorreo) · [Gmail por SMTP, sin servidor de correo propio](#gmail-por-smtp-sin-servidor-de-correo-propio)
 - **[Sistema de diseño (frontend)](#sistema-de-diseño-frontend)**: [La aplicación es un producto, no un trabajo académico](#la-aplicación-es-un-producto-no-un-trabajo-académico) · [Lo visual vive en `DESIGN.md`](#lo-visual-vive-en-designmd) · [Decisiones técnicas del frontend](#decisiones-técnicas-del-frontend)
-- **[Decisiones del proyecto](#decisiones-del-proyecto)**: [Tienda propia, no marketplace](#tienda-propia-no-marketplace) · [Roles de la tienda](#roles-de-la-tienda) · [Pago con Libélula, sin facturación SIAT](#pago-con-libélula-sin-facturación-siat) · [Rediseño del frontend dentro del flujo](#rediseño-del-frontend-dentro-del-flujo) · [Rubro: ferretería, con vista 3D](#rubro-ferretería-con-vista-3d) · [Visor 3D y modelos](#visor-3d-y-modelos) · [Categorías del catálogo](#categorías-del-catálogo) · [Productos](#productos) · [Inventario](#inventario) · [Catálogo público](#catálogo-público) · [Detalle del producto](#detalle-del-producto) · [Carrito](#carrito) · [Catálogo de demostración](#catálogo-de-demostración)
+- **[Decisiones del proyecto](#decisiones-del-proyecto)**: [Tienda propia, no marketplace](#tienda-propia-no-marketplace) · [Roles de la tienda](#roles-de-la-tienda) · [Pago con Libélula, sin facturación SIAT](#pago-con-libélula-sin-facturación-siat) · [Rediseño del frontend dentro del flujo](#rediseño-del-frontend-dentro-del-flujo) · [Rubro: ferretería, con vista 3D](#rubro-ferretería-con-vista-3d) · [Visor 3D y modelos](#visor-3d-y-modelos) · [Categorías del catálogo](#categorías-del-catálogo) · [Productos](#productos) · [Inventario](#inventario) · [Catálogo público](#catálogo-público) · [Detalle del producto](#detalle-del-producto) · [Carrito](#carrito) · [Pedidos](#pedidos) · [Catálogo de demostración](#catálogo-de-demostración)
 
 ---
 
@@ -568,6 +568,11 @@ movimientos registrados.
   caracteres y es obligatoria con el motivo «otro». Un producto no puede
   pasar a una unidad sin decimales si su stock o su mínimo los tienen.
 
+*19/10/2026 (HU-12).* **Dos movimientos más, sin cargarlos a mano:**
+«Reserva por pedido» resta al confirmar un pedido y «Liberación por pedido»
+suma al cancelarlo o al vencer, los dos con el número de pedido y a nombre
+del cliente. El stock sigue sin quedar negativo.
+
 **Motivo:** el ajuste por cantidad contada es lo que hace quien cuenta un
 estante; el historial inmutable deja rastro de cada cambio; costos y
 proveedores quedan fuera porque los reportes son de ventas e ingresos.
@@ -645,6 +650,40 @@ dispositivo.
 celular, y evita juntar un carrito del navegador con otro de la cuenta;
 comparar la cantidad con el stock en el carrito revelaría cuánto hay, y el
 stock recién se reserva al confirmar.
+
+### Pedidos
+
+*19/10/2026 (HU-12).* El Cliente convierte su carrito en un pedido que se
+retira en la tienda.
+
+- **Reserva con vencimiento:** al confirmar, el stock se resta («Reserva por
+  pedido»). El pedido queda «Pendiente de pago» y, si no se paga en **30
+  minutos**, pasa a «Vencido» y el stock vuelve. El vencimiento lo controla
+  el sistema.
+- **Solo retiro en la tienda:** sin envío ni costo de envío. Se piden el
+  nombre y el teléfono de quien retira (llenos con los de la cuenta,
+  editables) y una nota opcional; el pedido guarda una copia.
+- **Todo o nada:** si para alguna línea no alcanza el stock, no se confirma
+  nada y el carrito marca la línea, sin revelar cuánto hay. El rechazo dice
+  si alcanza, nunca cuánto; probando cantidades se podría deducir el stock,
+  como en cualquier tienda que rechaza por falta de stock, y se acepta: no
+  hay límite de intentos.
+- **Un solo pedido pendiente de pago por cliente,** que el cliente puede
+  cancelar. Al cancelar o vencer, el stock vuelve y las líneas regresan al
+  carrito.
+- **El pedido guarda el precio de cada línea al confirmar:** desde ahí, un
+  cambio de precio no lo toca.
+- **No se confirma un total distinto del que vio el cliente:** si cambió un
+  precio, la confirmación muestra el total nuevo.
+- **Al volver al carrito,** una línea que pasaría de 999 queda en 999 y las
+  que no entran en las 50 líneas no vuelven, con un aviso.
+- **Dirección y horario de retiro** en `TIENDA_RETIRO_DIRECCION` y
+  `TIENDA_RETIRO_HORARIO` (`.env`); sin configurar, no se muestran.
+
+**Motivo:** el pago por QR es inmediato, así que 30 minutos alcanzan y un
+pedido abandonado no bloquea el stock; retirar en la tienda evita calcular
+envíos en una tienda de un solo local; todo o nada evita cobrar un pedido
+distinto del que el cliente armó.
 
 ### Catálogo de demostración
 
