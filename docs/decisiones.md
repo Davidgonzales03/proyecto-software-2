@@ -679,6 +679,19 @@ retira en la tienda.
   que no entran en las 50 líneas no vuelven, con un aviso.
 - **Dirección y horario de retiro** en `TIENDA_RETIRO_DIRECCION` y
   `TIENDA_RETIRO_HORARIO` (`.env`); sin configurar, no se muestran.
+- *19/10/2026 (revisión de HU-12).* **Lo devuelto no pasa del stock
+  máximo:** si mientras el pedido esperaba el stock llegó al máximo
+  (9 999 999,99, o 9 999 999 en una unidad entera), al cancelar o vencer
+  queda en el máximo y la «Liberación por pedido» registra solo lo que
+  volvió. Sin esto, el guardado fallaba y el pedido quedaba pendiente para
+  siempre, bloqueando otro pedido del cliente. Es un caso de laboratorio: el
+  máximo está muy por encima de cualquier stock real.
+- *19/10/2026 (revisión de HU-12).* **Todo lo que cambia un pedido bloquea
+  antes la fila de su cliente** (después, el pedido y los productos por id
+  ascendente). Por eso la confirmación lee los pedidos pendientes sin
+  bloquearlos: en MySQL, un `SELECT … FOR UPDATE` que no encuentra filas
+  bloquea el hueco del índice y traba a dos clientes que confirman a la vez.
+  El pago (HU-13) y el despacho (HU-17) siguen la misma regla.
 
 **Motivo:** el pago por QR es inmediato, así que 30 minutos alcanzan y un
 pedido abandonado no bloquea el stock; retirar en la tienda evita calcular
