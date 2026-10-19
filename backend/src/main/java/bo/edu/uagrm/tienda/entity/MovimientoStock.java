@@ -65,6 +65,11 @@ public class MovimientoStock {
 	@Column(length = 200)
 	private String nota;
 
+	// Solo en la reserva y la liberación de un pedido (HU-12 RF-14)
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "id_pedido")
+	private Pedido pedido;
+
 	public static MovimientoStock entrada(Producto producto, BigDecimal cantidad, BigDecimal stockResultante,
 			Usuario usuario, LocalDateTime fecha, String nota) {
 		return new MovimientoStock(producto, TipoMovimiento.ENTRADA, null, cantidad, stockResultante, usuario, fecha,
@@ -75,6 +80,24 @@ public class MovimientoStock {
 			MotivoAjuste motivo, Usuario usuario, LocalDateTime fecha, String nota) {
 		return new MovimientoStock(producto, TipoMovimiento.AJUSTE, Objects.requireNonNull(motivo), diferencia,
 				stockResultante, usuario, fecha, nota);
+	}
+
+	// Resta lo que el pedido reserva, a nombre del cliente (HU-12 RF-2)
+	public static MovimientoStock reserva(Producto producto, BigDecimal cantidad, BigDecimal stockResultante,
+			Pedido pedido, LocalDateTime fecha) {
+		MovimientoStock movimiento = new MovimientoStock(producto, TipoMovimiento.RESERVA, null, cantidad.negate(),
+				stockResultante, pedido.getUsuario(), fecha, null);
+		movimiento.pedido = pedido;
+		return movimiento;
+	}
+
+	// Devuelve lo reservado al cancelar o vencer el pedido (HU-12 RF-9, RF-10)
+	public static MovimientoStock liberacion(Producto producto, BigDecimal cantidad, BigDecimal stockResultante,
+			Pedido pedido, LocalDateTime fecha) {
+		MovimientoStock movimiento = new MovimientoStock(producto, TipoMovimiento.LIBERACION, null, cantidad,
+				stockResultante, pedido.getUsuario(), fecha, null);
+		movimiento.pedido = pedido;
+		return movimiento;
 	}
 
 	private MovimientoStock(Producto producto, TipoMovimiento tipo, MotivoAjuste motivo, BigDecimal cantidad,
