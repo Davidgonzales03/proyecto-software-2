@@ -96,6 +96,20 @@
       <button type="button" class="secundario" (click)="vaciar()">Vaciar carrito</button>
       <p class="total">Total <strong>{{ precio(carrito.total) }}</strong></p>
     </div>
+
+    <div class="siguiente">
+      @if (carrito.idPedidoPendiente !== null) {
+        <p class="pendiente">
+          <svg lucideClock aria-hidden="true"></svg>
+          <span>Tiene un pedido esperando el pago.</span>
+          <a [routerLink]="['/mis-pedidos', carrito.idPedidoPendiente]">Ver el pedido</a>
+        </p>
+      } @else if (todoComprable()) {
+        <a class="principal" routerLink="/confirmar-pedido"><span>Confirmar pedido</span></a>
+      } @else {
+        <p class="nota">Quite o corrija los productos marcados para confirmar el pedido.</p>
+      }
+    </div>
   }
 } @else {
   <p class="cargando" role="status">Cargando el carrito…</p>

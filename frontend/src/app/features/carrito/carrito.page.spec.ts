@@ -149,6 +149,31 @@ describe('CarritoPage', () => {
     expect(textoDe(pantalla().querySelector('.total'))).toContain('Bs 201,00');
   });
 
+  // HU-12 RF-1
+  it('con todo disponible ofrece confirmar el pedido', async () => {
+    await abrir();
+
+    const confirmar = pantalla().querySelector('a[href="/confirmar-pedido"]');
+    expect(textoDe(confirmar)).toContain('Confirmar pedido');
+  });
+
+  // HU-12 RF-3, RF-4: confirmar se rechazaría; el carrito dice qué corregir
+  it('con alguna línea que no se puede comprar no ofrece confirmar', async () => {
+    await abrir({ ...CON_DOS, lineas: [linea({ estado: 'AGOTADO', subtotal: null }), CON_DOS.lineas[1]], total: 30 });
+
+    expect(pantalla().querySelector('a[href="/confirmar-pedido"]')).toBeNull();
+    expect(texto()).toContain('Quite o corrija los productos marcados para confirmar el pedido.');
+  });
+
+  // HU-12 RF-5
+  it('con un pedido pendiente lo avisa y enlaza a él', async () => {
+    await abrir({ ...CON_DOS, idPedidoPendiente: 5 });
+
+    expect(texto()).toContain('Tiene un pedido esperando el pago.');
+    expect(pantalla().querySelector('a[href="/mis-pedidos/5"]')).not.toBeNull();
+    expect(pantalla().querySelector('a[href="/confirmar-pedido"]')).toBeNull();
+  });
+
   // HU-11 RF-9
   it('las líneas agotadas o no disponibles van marcadas y fuera del total', async () => {
     await abrir({
