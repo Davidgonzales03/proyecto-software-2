@@ -1,0 +1,324 @@
+// El carrito en el mundo «Letrero de ruta» (DESIGN.md): una lista de placas,
+// una por producto, con la foto sobre blanco, el precio en condensada y la
+// cantidad a mano; abajo, el total grande
+:host {
+	display: flex;
+	flex-direction: column;
+	gap: var(--app-espacio-6);
+}
+
+h1 {
+	margin: 0;
+	outline: none;
+	padding-bottom: var(--app-espacio-3);
+	border-bottom: 3px solid var(--app-ambar);
+	color: var(--app-titulo);
+	font-size: clamp(34px, 5vw, 56px);
+	font-weight: 800;
+	line-height: 1;
+	text-transform: uppercase;
+}
+
+.lineas {
+	display: flex;
+	flex-direction: column;
+	gap: var(--app-espacio-3);
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+// Foto | datos | cantidad | subtotal | quitar, con columnas fijas para que las
+// cifras queden alineadas entre líneas; en el celular, la cantidad y el
+// subtotal bajan a una segunda fila. El subtotal crece si no entra en 12ch. Sobre la lona clara, el acento y el error
+// van oscuros: los del modo oscuro no se leen
+.linea {
+	--app-acento-texto: var(--app-sobre-lona);
+	--app-error: var(--app-error-sobre-lona);
+	display: grid;
+	grid-template-columns: 88px minmax(0, 1fr) max-content minmax(12ch, max-content) var(--app-area-tocable);
+	grid-template-areas: 'foto datos cantidad subtotal quitar';
+	align-items: center;
+	gap: var(--app-espacio-4);
+	padding: var(--app-espacio-3);
+	border-radius: var(--app-radio);
+	background: var(--app-lona) var(--app-textura-cruda);
+	background-blend-mode: soft-light;
+	color: var(--app-sobre-lona);
+	outline: 1px dashed color-mix(in srgb, var(--app-sobre-lona) 12%, transparent);
+	outline-offset: -5px;
+}
+
+@media (max-width: 640px) {
+	.linea {
+		grid-template-columns: 72px minmax(0, 1fr) max-content var(--app-area-tocable);
+		// La cantidad con − y + no entra junto al subtotal en un celular angosto: cada uno en su fila
+		grid-template-areas:
+			'foto datos datos quitar'
+			'cantidad cantidad cantidad cantidad'
+			'subtotal subtotal subtotal subtotal';
+		align-items: start;
+	}
+}
+
+.foto {
+	grid-area: foto;
+	display: grid;
+	place-items: center;
+	aspect-ratio: 4 / 3;
+	background: var(--app-foto);
+	color: var(--app-sobre-lona);
+}
+
+.foto img {
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
+}
+
+.foto svg {
+	width: 32px;
+	height: 32px;
+	opacity: 0.5;
+}
+
+.datos {
+	grid-area: datos;
+	display: flex;
+	flex-direction: column;
+	gap: var(--app-espacio-1);
+	min-width: 0;
+}
+
+.nombre {
+	color: inherit;
+	font-weight: 700;
+	text-decoration: none;
+	overflow-wrap: anywhere;
+}
+
+.nombre:hover {
+	text-decoration: underline;
+}
+
+.precio,
+.subtotal {
+	margin: 0;
+	font-family: var(--app-familia-titulos);
+	font-size: 20px;
+	font-weight: 700;
+	font-variant-numeric: tabular-nums;
+}
+
+.unidad {
+	font-size: 16px;
+	font-weight: 600;
+}
+
+.subtotal {
+	grid-area: subtotal;
+	justify-self: end;
+	text-align: right;
+}
+
+// Lo que no se puede comprar: la foto se apaga y el estado va cosido en
+// paralelogramo con su ícono, como «Agotado» en la tarjeta y el detalle
+.apagada .foto {
+	opacity: 0.55;
+}
+
+.estado {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--app-espacio-1);
+	align-self: flex-start;
+	margin: 0;
+	padding: var(--app-espacio-1) var(--app-espacio-4);
+	outline: 1px dashed currentColor;
+	outline-offset: -4px;
+	clip-path: polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%);
+	font-family: var(--app-familia-titulos);
+	font-size: 15px;
+	font-weight: 700;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+}
+
+.estado svg {
+	width: 16px;
+	height: 16px;
+}
+
+.cantidad {
+	grid-area: cantidad;
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--app-espacio-1);
+}
+
+// Entra 999,99 entero
+input {
+	width: 5rem;
+	text-align: center;
+	min-height: var(--app-area-tocable);
+	padding: var(--app-espacio-2) var(--app-espacio-1);
+	border: 1px solid var(--app-borde-control);
+	border-radius: var(--app-radio-control);
+	background: var(--app-fondo);
+	color: var(--app-texto);
+	font: inherit;
+	font-variant-numeric: tabular-nums;
+}
+
+input[aria-invalid='true'] {
+	border: 2px solid var(--app-error);
+}
+
+.fija {
+	font-variant-numeric: tabular-nums;
+}
+
+.error {
+	margin: 0;
+	color: var(--app-error);
+	font-size: 12.5px;
+	font-weight: 600;
+}
+
+.quitar {
+	grid-area: quitar;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--app-espacio-2);
+	min-width: var(--app-area-tocable);
+	min-height: var(--app-area-tocable);
+	padding: 0;
+	border: 0;
+	background: transparent;
+	color: inherit;
+	font: inherit;
+	font-weight: 600;
+	cursor: pointer;
+}
+
+.quitar svg {
+	width: var(--app-icono);
+	height: var(--app-icono);
+}
+
+@media (hover: hover) and (pointer: fine) {
+	.quitar:hover {
+		text-decoration: underline;
+	}
+}
+
+.pie {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--app-espacio-4);
+}
+
+.total {
+	display: flex;
+	align-items: baseline;
+	gap: var(--app-espacio-3);
+	margin: 0;
+	color: var(--app-texto-suave);
+	font-weight: 600;
+	text-transform: uppercase;
+}
+
+.total strong {
+	color: var(--app-titulo);
+	text-transform: none;
+	font-family: var(--app-familia-titulos);
+	font-size: clamp(28px, 4vw, 40px);
+	font-weight: 800;
+	font-variant-numeric: tabular-nums;
+}
+
+.vacio {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: var(--app-espacio-4);
+}
+
+.vacio svg {
+	width: 48px;
+	height: 48px;
+	color: var(--app-texto-suave);
+}
+
+.vacio p,
+.cargando {
+	margin: 0;
+	color: var(--app-texto-suave);
+	font-size: 18px;
+}
+
+// La acción principal de la tienda: amarilla, en sesgo, con el texto derecho
+.principal {
+	display: inline-flex;
+	align-items: center;
+	min-height: var(--app-area-tocable);
+	padding: 0 var(--app-espacio-6);
+	background: var(--app-ambar);
+	color: var(--app-sobre-ambar);
+	font-family: var(--app-familia-titulos);
+	font-size: 20px;
+	font-weight: 800;
+	text-decoration: none;
+	text-transform: uppercase;
+	transform: skewX(var(--app-sesgo));
+}
+
+.principal span {
+	transform: skewX(calc(var(--app-sesgo) * -1));
+}
+
+.secundario {
+	min-height: var(--app-area-tocable);
+	padding: 0 var(--app-espacio-4);
+	border: 2px solid currentColor;
+	background: transparent;
+	color: var(--app-texto);
+	font: inherit;
+	font-weight: 600;
+	cursor: pointer;
+}
+
+.tarjeta-error {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: var(--app-espacio-3);
+}
+
+.aviso {
+	margin: 0;
+	padding: var(--app-espacio-3);
+	border: 1px solid var(--app-error);
+	background: var(--app-error-fondo);
+	color: var(--app-error);
+}
+
+.solo-lectores {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	clip-path: inset(50%);
+	white-space: nowrap;
+}
+
+// En el celular, el total primero y después la acción de vaciar
+@media (max-width: 640px) {
+	.total {
+		order: -1;
+	}
+}

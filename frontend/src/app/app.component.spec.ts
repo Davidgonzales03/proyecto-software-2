@@ -1,8 +1,9 @@
-import { Component } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 
 import { AppComponent } from './app.component';
+import { CarritoService } from './core/api/carrito.service';
 import { MARCA } from './core/marca';
 import { Rol } from './core/modelos/usuario';
 import { Sesion } from './core/modelos/sesion';
@@ -30,7 +31,10 @@ function sesionVigente(rol: Rol = 'CLIENTE'): Sesion {
 }
 
 describe('AppComponent', () => {
+  const lineasEnElCarrito = signal<number | null>(0);
+
   beforeEach(async () => {
+    lineasEnElCarrito.set(0);
     localStorage.clear();
     TestBed.resetTestingModule();
     await TestBed.configureTestingModule({
@@ -44,7 +48,9 @@ describe('AppComponent', () => {
           { path: 'usuarios', component: PantallaVacia },
           { path: 'catalogo', component: PantallaVacia },
           { path: 'panel', component: PantallaVacia },
+          { path: 'carrito', component: PantallaVacia },
         ]),
+        { provide: CarritoService, useValue: { cantidadLineas: lineasEnElCarrito } },
       ],
     }).compileComponents();
   });
@@ -269,5 +275,55 @@ describe('AppComponent', () => {
 
       expect(fijo.nativeElement.querySelector('a.perfil').getAttribute('aria-current')).toBe('page');
     });
+  });
+
+  // --- HU-11: el ícono del carrito ---
+
+  function enlaceAlCarrito(fijo: ReturnType<typeof crear>): HTMLAnchorElement | null {
+    return fijo.nativeElement.querySelector('header a[href="/carrito"]');
+  }
+
+  // HU-11 RF-1
+  it('el encabezado muestra cuántos productos tiene el carrito', () => {
+    TestBed.inject(SesionService).iniciar(sesionVigente('CLIENTE'));
+    lineasEnElCarrito.set(3);
+    const fijo = crear();
+
+    const enlace = enlaceAlCarrito(fijo);
+    expect(enlace?.getAttribute('aria-label')).toBe('Carrito, 3 productos');
+    expect(enlace?.textContent?.trim()).toBe('3');
+
+    lineasEnElCarrito.set(1);
+    fijo.detectChanges();
+    expect(enlace?.getAttribute('aria-label')).toBe('Carrito, 1 producto');
+  });
+
+  // HU-11 RF-11
+  it('sin productos el ícono no muestra número', () => {
+    TestBed.inject(SesionService).iniciar(sesionVigente('CLIENTE'));
+    const fijo = crear();
+
+    const enlace = enlaceAlCarrito(fijo);
+    expect(enlace?.getAttribute('aria-label')).toBe('Carrito, sin productos');
+    expect(enlace?.textContent?.trim()).toBe('');
+  });
+
+  // HU-11 RF-7
+  it('el ícono del carrito es solo para el cliente', () => {
+    expect(enlaceAlCarrito(crear())).toBeNull();
+
+    TestBed.inject(SesionService).iniciar(sesionVigente('ADMINISTRADOR'));
+    expect(enlaceAlCarrito(crear())).toBeNull();
+  });
+
+  // Revisión de HU-11 (/code-review): si el carrito no cargó, no dice que está vacío
+  it('sin el carrito cargado el ícono no afirma cuántos hay', () => {
+    TestBed.inject(SesionService).iniciar(sesionVigente('CLIENTE'));
+    lineasEnElCarrito.set(null);
+    const fijo = crear();
+
+    const enlace = enlaceAlCarrito(fijo);
+    expect(enlace?.getAttribute('aria-label')).toBe('Carrito');
+    expect(enlace?.textContent?.trim()).toBe('');
   });
 });

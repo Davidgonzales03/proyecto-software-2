@@ -6,6 +6,7 @@ import { provideRouter, Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { vi } from 'vitest';
 
+import { CarritoService } from '../../core/api/carrito.service';
 import { CatalogoService } from '../../core/api/catalogo.service';
 import { ProductoEnDetalle, ProductoEnTienda } from '../../core/modelos/catalogo';
 import { Rol } from '../../core/modelos/usuario';
@@ -89,18 +90,23 @@ class CatalogoFalso {
 describe('DetallePage', () => {
   let harness: RouterTestingHarness;
   let catalogo: CatalogoFalso;
+  let carrito: { agregar: ReturnType<typeof vi.fn> };
 
   async function abrir(url = '/producto/7', rol: Rol | null = null, responder = true) {
     TestBed.resetTestingModule();
     catalogo = new CatalogoFalso();
+    carrito = { agregar: vi.fn(() => Promise.resolve({ lineas: [], total: 0, cantidadLineas: 1 })) };
     TestBed.configureTestingModule({
       providers: [
         provideRouter([
           { path: 'producto/:id', component: DetallePage },
           { path: 'catalogo', children: [] },
           { path: 'productos/:id', children: [] },
+          { path: 'inicio-sesion', children: [] },
+          { path: 'carrito', children: [] },
         ]),
         { provide: CatalogoService, useValue: catalogo },
+        { provide: CarritoService, useValue: carrito },
         { provide: SesionService, useValue: { rol: signal(rol) } },
       ],
     });
@@ -289,5 +295,250 @@ describe('DetallePage', () => {
     expect(titulo?.textContent?.trim()).toBe('Martillo');
     expect(document.activeElement).toBe(titulo);
     expect(pantalla().querySelector('app-galeria .miniaturas')).toBeNull();
+  });
+
+  // --- HU-11: agregar al carrito ---
+
+  function campoCantidad(): HTMLInputElement | null {
+    return pantalla().querySelector<HTMLInputElement>('#cantidad');
+  }
+
+  function botonAgregar(): HTMLButtonElement | undefined {
+    return Array.from(pantalla().querySelectorAll('button')).find((cada) =>
+      cada.textContent?.includes('Agregar al carrito'),
+    );
+  }
+
+  async function agregar(cantidad?: string): Promise<void> {
+    const campo = campoCantidad();
+    if (campo !== null && cantidad !== undefined) {
+      campo.value = cantidad;
+      campo.dispatchEvent(new Event('input'));
+    }
+    botonAgregar()?.click();
+    await harness.fixture.whenStable();
+  }
+
+  // HU-11 RF-1
+  it('el cliente agrega con la cantidad elegida', async () => {
+    await abrir('/producto/7', 'CLIENTE');
+    expect(campoCantidad()?.value).toBe('1');
+
+    await agregar('2');
+
+    expect(carrito.agregar).toHaveBeenCalledWith(7, 2);
+    expect(texto()).toContain('Se agregó al carrito');
+    expect(enlace('Ver carrito')?.getAttribute('href')).toBe('/carrito');
+  });
+
+  // HU-11 RF-3
+  it('valida la cantidad según la unidad', async () => {
+    await abrir('/producto/7', 'CLIENTE');
+    await agregar('1,5');
+    expect(texto()).toContain('Este producto se cuenta en números enteros.');
+    await agregar('1000');
+    expect(texto()).toContain('La cantidad admite hasta 999.');
+    await agregar('0');
+    expect(texto()).toContain('La cantidad tiene que ser mayor que 0.');
+    expect(carrito.agregar).not.toHaveBeenCalled();
+
+    catalogo.recurso.value.set({ ...TALADRO, unidad: 'METRO' });
+    await harness.fixture.whenStable();
+    await agregar('2,5');
+    expect(carrito.agregar).toHaveBeenCalledWith(7, 2.5);
+  });
+
+  // HU-11 RF-4
+  it('un producto agotado no se puede agregar', async () => {
+    await abrir('/producto/7', 'CLIENTE', false);
+    catalogo.recurso.value.set({ ...TALADRO, disponible: false });
+    await harness.fixture.whenStable();
+
+    expect(botonAgregar()?.disabled).toBe(true);
+    expect(campoCantidad()).toBeNull();
+  });
+
+  // HU-11 RF-6
+  it('sin sesión lleva a iniciar sesión y vuelve al producto', async () => {
+    await abrir('/producto/7', null);
+    expect(campoCantidad()).toBeNull();
+
+    await agregar();
+
+    expect(carrito.agregar).not.toHaveBeenCalled();
+    expect(TestBed.inject(Router).url).toBe('/inicio-sesion?destino=%2Fproducto%2F7');
+  });
+
+  // HU-11 RF-7
+  it('el personal no ve el botón', async () => {
+    for (const rol of ['ADMINISTRADOR', 'EMPLEADO', 'CONTADOR'] as const) {
+      await abrir('/producto/7', rol);
+      expect(botonAgregar()).toBeUndefined();
+      expect(campoCantidad()).toBeNull();
+    }
+  });
+
+  // HU-11 RF-3, RF-4, RF-5
+  it.each([
+    [{ status: 409, detail: '', codigo: 'PRODUCTO_AGOTADO' }, 'Este producto está agotado.'],
+    [{ status: 409, detail: '', codigo: 'CARRITO_LLENO' }, 'Su carrito ya tiene 50 productos distintos.'],
+    [{ status: 404, detail: '', codigo: 'PRODUCTO_NO_ENCONTRADO' }, 'Este producto ya no está disponible.'],
+  ])('muestra el error de la API (%o)', async (rechazo, mensaje) => {
+    await abrir('/producto/7', 'CLIENTE');
+    carrito.agregar.mockReturnValueOnce(Promise.reject(rechazo));
+
+    await agregar('1');
+
+    expect(texto()).toContain(mensaje);
+    expect(texto()).not.toContain('Se agregó al carrito');
+  });
+
+  // HU-11, caso límite: otro producto desde «Más de…» empieza de cero
+  it('al pasar a otro producto la cantidad vuelve a 1 y se va el aviso', async () => {
+    await abrir('/producto/7', 'CLIENTE');
+    await agregar('3');
+    expect(texto()).toContain('Se agregó al carrito');
+
+    pantalla().querySelector<HTMLAnchorElement>('app-tarjeta-producto a')?.click();
+    await harness.fixture.whenStable();
+    catalogo.responder();
+    await harness.fixture.whenStable();
+
+    expect(campoCantidad()?.value).toBe('1');
+    expect(texto()).not.toContain('Se agregó al carrito');
+  });
+
+  // Revisión de HU-11 (interfaz): solo espacios no es una cantidad
+  it('una cantidad en blanco no se manda', async () => {
+    await abrir('/producto/7', 'CLIENTE');
+
+    await agregar('   ');
+
+    expect(carrito.agregar).not.toHaveBeenCalled();
+    expect(campoCantidad()?.getAttribute('aria-invalid')).toBe('true');
+    expect(texto()).toContain('Escriba la cantidad.');
+  });
+
+  // Revisión de HU-11 (interfaz): el rechazo de la suma va junto al campo y dice por qué
+  it('si la suma pasa de 999, lo dice junto al campo', async () => {
+    await abrir('/producto/7', 'CLIENTE');
+    carrito.agregar.mockReturnValueOnce(
+      Promise.reject({
+        status: 400,
+        detail: '',
+        codigo: 'DATOS_INVALIDOS',
+        errores: [{ campo: 'cantidad', mensaje: 'sumada a la del carrito pasaría de 999' }],
+      }),
+    );
+
+    await agregar('998');
+
+    expect(campoCantidad()?.getAttribute('aria-invalid')).toBe('true');
+    expect(pantalla().querySelector('.campo')?.textContent).toContain('La cantidad sumada a la del carrito pasaría de 999.');
+    expect(pantalla().querySelector('.resultado .aviso')).toBeNull();
+    // Al cambiar la cantidad, el motivo se va
+    await agregar('1');
+    expect(campoCantidad()?.getAttribute('aria-invalid')).toBeNull();
+  });
+
+  // Revisión de HU-11 (interfaz): mientras agrega, el botón no se deshabilita y no pierde el foco
+  it('mientras agrega, el botón sigue con el foco', async () => {
+    await abrir('/producto/7', 'CLIENTE');
+    carrito.agregar.mockReturnValueOnce(new Promise(() => undefined));
+    botonAgregar()?.focus();
+
+    botonAgregar()?.click();
+    await harness.fixture.whenStable();
+
+    expect(botonAgregar()?.disabled).toBe(false);
+    expect(botonAgregar()?.getAttribute('aria-disabled')).toBe('true');
+    expect(document.activeElement).toBe(botonAgregar());
+  });
+
+  function botonPaso(etiqueta: 'Restar uno' | 'Sumar uno'): HTMLButtonElement {
+    return pantalla().querySelector<HTMLButtonElement>(`button[aria-label="${etiqueta}"]`)!;
+  }
+
+  async function tocar(etiqueta: 'Restar uno' | 'Sumar uno'): Promise<void> {
+    botonPaso(etiqueta).click();
+    await harness.fixture.whenStable();
+  }
+
+  // HU-11 RF-15
+  it('− y + cambian la cantidad de a uno', async () => {
+    await abrir('/producto/7', 'CLIENTE');
+    expect(botonPaso('Restar uno').getAttribute('aria-disabled')).toBe('true');
+
+    await tocar('Sumar uno');
+    await tocar('Sumar uno');
+    expect(campoCantidad()?.value).toBe('3');
+    await tocar('Restar uno');
+    expect(campoCantidad()?.value).toBe('2');
+
+    await agregar();
+    expect(carrito.agregar).toHaveBeenCalledWith(7, 2);
+  });
+
+  // HU-11 RF-15: sin bajar de 1 ni pasar de 999; con decimales, los conserva
+  it('− no baja de 1 y + no pasa de 999', async () => {
+    await abrir('/producto/7', 'CLIENTE');
+
+    await tocar('Restar uno');
+    expect(campoCantidad()?.value).toBe('1');
+
+    await agregar('999');
+    expect(botonPaso('Sumar uno').getAttribute('aria-disabled')).toBe('true');
+    await tocar('Sumar uno');
+    expect(campoCantidad()?.value).toBe('999');
+
+    catalogo.recurso.value.set({ ...TALADRO, unidad: 'METRO' });
+    await harness.fixture.whenStable();
+    await agregar('2,5');
+    await tocar('Sumar uno');
+    expect(campoCantidad()?.value).toBe('3,5');
+  });
+
+  // Revisión de HU-11 (/code-review): lo que no es un número no tiene desde dónde sumar
+  it('con algo que no es un número, + no hace nada', async () => {
+    await abrir('/producto/7', 'CLIENTE');
+    const campo = campoCantidad()!;
+    campo.value = 'abc';
+    campo.dispatchEvent(new Event('input'));
+    await harness.fixture.whenStable();
+
+    expect(botonPaso('Sumar uno').getAttribute('aria-disabled')).toBe('true');
+    await tocar('Sumar uno');
+
+    expect(campoCantidad()?.value).toBe('abc');
+  });
+
+  // Revisión de HU-11 (/code-review): el aviso de lo agregado no queda junto a otra cantidad
+  it('tocar − o + después de agregar quita el aviso', async () => {
+    await abrir('/producto/7', 'CLIENTE');
+    await agregar('2');
+    expect(texto()).toContain('Se agregó al carrito');
+
+    await tocar('Sumar uno');
+
+    expect(texto()).not.toContain('Se agregó al carrito');
+  });
+
+  // Revisión de HU-11 (/code-review): por encima de 999, − la vuelve a 999
+  it('con más de 999, − la deja en 999', async () => {
+    await abrir('/producto/7', 'CLIENTE');
+    await agregar('5000');
+
+    await tocar('Restar uno');
+
+    expect(campoCantidad()?.value).toBe('999');
+  });
+
+  // Revisión de HU-11 (/code-review): el lector de pantalla oye la cantidad nueva
+  it('− y + anuncian la cantidad', async () => {
+    await abrir('/producto/7', 'CLIENTE');
+
+    await tocar('Sumar uno');
+
+    expect(pantalla().querySelector('app-agregar-al-carrito [role="status"]')?.textContent).toContain('Cantidad: 2');
   });
 });

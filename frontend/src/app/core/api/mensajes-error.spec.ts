@@ -6,6 +6,15 @@ function error(codigo: string | undefined, detail = 'detalle técnico del backen
 }
 
 describe('mensajeDeError', () => {
+  // HU-11 RF-4, RF-5, RF-14: el carrito explica por qué no agregó, sin decir cuánto stock hay
+  it.each([
+    ['PRODUCTO_AGOTADO', 'agotado'],
+    ['CARRITO_LLENO', '50 productos'],
+  ])('traduce %s', (codigo, motivo) => {
+    expect(mensajeDeError(error(codigo))).toContain(motivo);
+    expect(mensajeDeError(error(codigo))).not.toMatch(/stock/i);
+  });
+
   // Gestión de usuarios: cada operación rechazada explica su motivo, no el mensaje genérico
   it.each([
     ['ROL_PROPIO_NO_MODIFICABLE', 'propio rol'],

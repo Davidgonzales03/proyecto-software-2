@@ -24,14 +24,16 @@ import { Carrusel } from '../../shared/carrusel/carrusel';
 import { precio } from '../../shared/formato/precios';
 import { Galeria } from '../../shared/galeria/galeria';
 import { TarjetaProducto } from '../../shared/tarjeta-producto/tarjeta-producto';
+import { AgregarAlCarrito } from './agregar-al-carrito';
 
 // El detalle de un producto en la tienda (HU-10), con o sin sesión: fotos,
 // datos, disponibilidad sin la cantidad, descripción, ficha técnica y «Más de»
 // su categoría. Un producto que no se puede listar se ve igual que uno que no
-// existe (RF-8)
+// existe (RF-8). La compra la hace AgregarAlCarrito (HU-11)
 @Component({
 	selector: 'app-detalle',
 	imports: [
+		AgregarAlCarrito,
 		RouterLink,
 		Carrusel,
 		Galeria,

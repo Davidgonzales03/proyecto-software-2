@@ -1,0 +1,169 @@
+// La cantidad y el botón principal de la tienda en una fila, bajo la
+// disponibilidad (DESIGN.md → Buttons, Inputs)
+:host {
+	display: flex;
+	flex-direction: column;
+	gap: var(--app-espacio-2);
+	margin-top: var(--app-espacio-4);
+}
+
+// Etiqueta arriba, el campo y el botón en la misma fila, el error debajo del
+// campo: el botón no se mueve cuando aparece un mensaje
+form {
+	display: grid;
+	grid-template-columns: auto minmax(0, max-content);
+	align-items: center;
+	column-gap: var(--app-espacio-4);
+	row-gap: var(--app-espacio-1);
+}
+
+.campo {
+	display: contents;
+}
+
+// Con fila y columna fijas: un elemento con solo la fila se ubica antes que
+// los demás y le quitaría la primera columna al campo
+app-paso-de-cantidad {
+	grid-area: 2 / 1;
+}
+
+.principal {
+	grid-area: 2 / 2;
+}
+
+// En el celular angosto el botón baja a su propia fila
+@media (max-width: 400px) {
+	form {
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	app-paso-de-cantidad,
+	.principal {
+		grid-area: auto;
+	}
+
+	.principal {
+		justify-self: start;
+	}
+}
+
+label {
+	grid-column: 1 / -1;
+	color: var(--app-texto-suave);
+	font-size: 12px;
+	font-weight: 600;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+}
+
+.unidad {
+	text-transform: none;
+}
+
+// Entra 999,99 entero
+input {
+	width: 5rem;
+	text-align: center;
+	min-height: var(--app-area-tocable);
+	padding: var(--app-espacio-2) var(--app-espacio-1);
+	border: 1px solid var(--app-borde-control);
+	border-radius: var(--app-radio-control);
+	background: var(--app-fondo);
+	color: var(--app-texto);
+	font: inherit;
+	font-variant-numeric: tabular-nums;
+}
+
+input[aria-invalid='true'] {
+	border: 2px solid var(--app-error);
+}
+
+// La acción principal de la tienda: amarilla, en sesgo, con el texto derecho
+.principal {
+	min-height: var(--app-area-tocable);
+	padding: 0 var(--app-espacio-6);
+	border: 0;
+	border-radius: var(--app-radio-control);
+	background: var(--app-ambar);
+	color: var(--app-sobre-ambar);
+	font-family: var(--app-familia-titulos);
+	font-size: 20px;
+	font-weight: 800;
+	text-transform: uppercase;
+	cursor: pointer;
+	transform: skewX(var(--app-sesgo));
+	transition:
+		background-color var(--app-transicion),
+		transform var(--app-duracion-rapida) var(--app-curva-salida);
+}
+
+.principal span {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--app-espacio-2);
+	transform: skewX(calc(var(--app-sesgo) * -1));
+}
+
+.principal svg {
+	width: var(--app-icono);
+	height: var(--app-icono);
+}
+
+@media (hover: hover) and (pointer: fine) {
+	.principal:hover:not([disabled]) {
+		background: var(--app-ambar-fuerte);
+	}
+}
+
+.principal:active:not([disabled]) {
+	transform: skewX(var(--app-sesgo)) scale(0.96);
+}
+
+// Desactivado (agotado o agregando): costura punteada y opacidad, sin cambiar de color
+.principal[aria-disabled='true'] {
+	opacity: 0.7;
+	cursor: progress;
+}
+
+.principal[disabled] {
+	outline: 2px dashed var(--app-sobre-ambar);
+	outline-offset: -5px;
+	opacity: 0.4;
+	cursor: not-allowed;
+}
+
+.error {
+	grid-column: 1 / -1;
+	margin: 0;
+	color: var(--app-error);
+	font-size: 12.5px;
+	font-weight: 500;
+}
+
+.aviso {
+	margin: 0;
+	padding: var(--app-espacio-3);
+	border: 1px solid var(--app-error);
+	background: var(--app-error-fondo);
+	color: var(--app-error);
+}
+
+.aviso.exito {
+	border-color: var(--app-exito);
+	background: var(--app-exito-fondo);
+	color: var(--app-texto);
+}
+
+.exito a {
+	color: var(--app-acento-texto);
+	font-weight: 600;
+}
+
+.solo-lectores {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	clip-path: inset(50%);
+	white-space: nowrap;
+}

@@ -38,6 +38,8 @@
         <p class="disponibilidad agotado"><svg lucideCircleSlash aria-hidden="true"></svg>Agotado</p>
       }
 
+      <app-agregar-al-carrito [producto]="producto" />
+
       @if (esAdministrador()) {
         <a class="editar" [routerLink]="['/productos', producto.idProducto]">
           <svg lucidePencil aria-hidden="true"></svg>Editar producto
