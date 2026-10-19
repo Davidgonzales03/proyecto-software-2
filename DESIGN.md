@@ -403,6 +403,9 @@ adentro, siempre derechos.
 - **Style:** fondo `fondo` (o `superficie` en los filtros), borde de 1 px
   `borde-control`, esquina recta, 44 px. La búsqueda de la tienda va en lona
   clara sin borde, unida a su botón amarillo en sesgo.
+- **Cantidad con − y +:** el campo de 5 rem centrado entre dos botones de
+  44 px con borde de 2 px del color del texto; en el límite, borde punteado y
+  opacidad 0.4 (`shared/paso-de-cantidad`).
 - **Focus:** el contorno global de 3 px.
 - **Error:** borde `error` de 2 px (o costura interior en el catálogo) y el
   mensaje en `error` junto al campo; además, resumen al principio del

@@ -1,3 +1,5 @@
+import { cantidadConPaso } from '../../shared/formato/cantidades';
+import { DECIMALES_DE_UNIDAD } from './inventario';
 import { UnidadVenta } from './producto';
 
 // Espejo de CarritoResponse y LineaCarritoResponse del backend (HU-11). Sin stock: la tienda nunca lo muestra
@@ -32,3 +34,8 @@ export interface Carrito {
 
 // La cantidad por línea (HU-11 RF-3); los decimales dependen de la unidad
 export const CANTIDAD_MAXIMA_EN_CARRITO = 999;
+
+// Lo que dejan − y + en el detalle y en el carrito (RF-15). null si el botón no hace nada
+export function cantidadConPasoEnCarrito(actual: number, paso: 1 | -1, unidad: UnidadVenta): number | null {
+	return cantidadConPaso(actual, paso, DECIMALES_DE_UNIDAD[unidad], CANTIDAD_MAXIMA_EN_CARRITO);
+}

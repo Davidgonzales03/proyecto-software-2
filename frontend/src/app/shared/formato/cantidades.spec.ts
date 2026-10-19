@@ -1,4 +1,4 @@
-import { leerCantidad, problemaDeCantidad } from './cantidades';
+import { cantidadConPaso, leerCantidad, problemaDeCantidad } from './cantidades';
 
 const POR_UNIDAD = { decimales: 0, maximo: 99_999.99, positiva: true };
 const POR_METRO = { decimales: 2, maximo: 99_999.99, positiva: true };
@@ -39,5 +39,36 @@ describe('problemaDeCantidad', () => {
     expect(problemaDeCantidad('100000', POR_UNIDAD)).toBe('La cantidad admite hasta 99.999,99.');
     expect(problemaDeCantidad('0', POR_UNIDAD)).toBe('La cantidad tiene que ser mayor que 0.');
     expect(problemaDeCantidad('-3', CONTADA)).toBe('Escriba la cantidad con números, por ejemplo 12,5.');
+  });
+});
+
+// HU-11 RF-15: los botones − y + de la cantidad
+describe('cantidadConPaso', () => {
+  it('suma o resta 1, con los decimales de la unidad', () => {
+    expect(cantidadConPaso(2, 1, 0, 999)).toBe(3);
+    expect(cantidadConPaso(2, -1, 0, 999)).toBe(1);
+    expect(cantidadConPaso(2.5, 1, 2, 999)).toBe(3.5);
+    expect(cantidadConPaso(1.1, 1, 2, 999)).toBe(2.1);
+    expect(cantidadConPaso(1.5, -1, 2, 999)).toBe(0.5);
+  });
+
+  it('null si quedaría en 0 o menos, o pasaría del máximo', () => {
+    expect(cantidadConPaso(1, -1, 0, 999)).toBeNull();
+    expect(cantidadConPaso(0.5, -1, 2, 999)).toBeNull();
+    expect(cantidadConPaso(999, 1, 0, 999)).toBeNull();
+    expect(cantidadConPaso(998.5, 1, 2, 999)).toBeNull();
+  });
+
+  // Revisión de HU-11 (/code-review): con decimales que la unidad no admite, va a la vecina válida
+  it('con más decimales de los que admite la unidad, va a la cantidad válida de al lado', () => {
+    expect(cantidadConPaso(2.5, 1, 0, 999)).toBe(3);
+    expect(cantidadConPaso(2.5, -1, 0, 999)).toBe(2);
+    expect(cantidadConPaso(2.3, 1, 2, 999)).toBe(3.3);
+  });
+
+  // Revisión de HU-11 (/code-review): por encima del máximo, − vuelve al máximo
+  it('por encima del máximo, − lo deja en el máximo', () => {
+    expect(cantidadConPaso(5000, -1, 0, 999)).toBe(999);
+    expect(cantidadConPaso(5000, 1, 0, 999)).toBeNull();
   });
 });

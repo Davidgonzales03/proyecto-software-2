@@ -454,4 +454,91 @@ describe('DetallePage', () => {
     expect(botonAgregar()?.getAttribute('aria-disabled')).toBe('true');
     expect(document.activeElement).toBe(botonAgregar());
   });
+
+  function botonPaso(etiqueta: 'Restar uno' | 'Sumar uno'): HTMLButtonElement {
+    return pantalla().querySelector<HTMLButtonElement>(`button[aria-label="${etiqueta}"]`)!;
+  }
+
+  async function tocar(etiqueta: 'Restar uno' | 'Sumar uno'): Promise<void> {
+    botonPaso(etiqueta).click();
+    await harness.fixture.whenStable();
+  }
+
+  // HU-11 RF-15
+  it('− y + cambian la cantidad de a uno', async () => {
+    await abrir('/producto/7', 'CLIENTE');
+    expect(botonPaso('Restar uno').getAttribute('aria-disabled')).toBe('true');
+
+    await tocar('Sumar uno');
+    await tocar('Sumar uno');
+    expect(campoCantidad()?.value).toBe('3');
+    await tocar('Restar uno');
+    expect(campoCantidad()?.value).toBe('2');
+
+    await agregar();
+    expect(carrito.agregar).toHaveBeenCalledWith(7, 2);
+  });
+
+  // HU-11 RF-15: sin bajar de 1 ni pasar de 999; con decimales, los conserva
+  it('− no baja de 1 y + no pasa de 999', async () => {
+    await abrir('/producto/7', 'CLIENTE');
+
+    await tocar('Restar uno');
+    expect(campoCantidad()?.value).toBe('1');
+
+    await agregar('999');
+    expect(botonPaso('Sumar uno').getAttribute('aria-disabled')).toBe('true');
+    await tocar('Sumar uno');
+    expect(campoCantidad()?.value).toBe('999');
+
+    catalogo.recurso.value.set({ ...TALADRO, unidad: 'METRO' });
+    await harness.fixture.whenStable();
+    await agregar('2,5');
+    await tocar('Sumar uno');
+    expect(campoCantidad()?.value).toBe('3,5');
+  });
+
+  // Revisión de HU-11 (/code-review): lo que no es un número no tiene desde dónde sumar
+  it('con algo que no es un número, + no hace nada', async () => {
+    await abrir('/producto/7', 'CLIENTE');
+    const campo = campoCantidad()!;
+    campo.value = 'abc';
+    campo.dispatchEvent(new Event('input'));
+    await harness.fixture.whenStable();
+
+    expect(botonPaso('Sumar uno').getAttribute('aria-disabled')).toBe('true');
+    await tocar('Sumar uno');
+
+    expect(campoCantidad()?.value).toBe('abc');
+  });
+
+  // Revisión de HU-11 (/code-review): el aviso de lo agregado no queda junto a otra cantidad
+  it('tocar − o + después de agregar quita el aviso', async () => {
+    await abrir('/producto/7', 'CLIENTE');
+    await agregar('2');
+    expect(texto()).toContain('Se agregó al carrito');
+
+    await tocar('Sumar uno');
+
+    expect(texto()).not.toContain('Se agregó al carrito');
+  });
+
+  // Revisión de HU-11 (/code-review): por encima de 999, − la vuelve a 999
+  it('con más de 999, − la deja en 999', async () => {
+    await abrir('/producto/7', 'CLIENTE');
+    await agregar('5000');
+
+    await tocar('Restar uno');
+
+    expect(campoCantidad()?.value).toBe('999');
+  });
+
+  // Revisión de HU-11 (/code-review): el lector de pantalla oye la cantidad nueva
+  it('− y + anuncian la cantidad', async () => {
+    await abrir('/producto/7', 'CLIENTE');
+
+    await tocar('Sumar uno');
+
+    expect(pantalla().querySelector('app-agregar-al-carrito [role="status"]')?.textContent).toContain('Cantidad: 2');
+  });
 });

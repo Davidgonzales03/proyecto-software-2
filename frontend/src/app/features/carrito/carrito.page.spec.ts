@@ -332,4 +332,120 @@ describe('CarritoPage', () => {
 
     expect(carrito.carrito.reload).toHaveBeenCalled();
   });
+
+  // HU-11 RF-15
+  it('− y + guardan la cantidad de a uno', async () => {
+    await abrir();
+
+    boton('Sumar uno a Martillo').click();
+    await harness.fixture.whenStable();
+    expect(carrito.cambiarCantidad).toHaveBeenLastCalledWith(7, 3);
+    expect(textoDe(fila('Martillo'))).toContain('Bs 256,50');
+
+    boton('Restar uno a Cable').click();
+    await harness.fixture.whenStable();
+    expect(carrito.cambiarCantidad).toHaveBeenLastCalledWith(9, 1.5);
+  });
+
+  // HU-11 RF-15
+  it('− en 1 no hace nada', async () => {
+    await abrir({ lineas: [linea({ cantidad: 1, subtotal: 85.5 })], total: 85.5, cantidadLineas: 1 });
+
+    const restar = boton('Restar uno a Martillo');
+    expect(restar.getAttribute('aria-disabled')).toBe('true');
+    restar.click();
+    await harness.fixture.whenStable();
+
+    expect(carrito.cambiarCantidad).not.toHaveBeenCalled();
+  });
+
+  // HU-11 RF-15: un toque no espera la respuesta del anterior y ninguno se pierde
+  it('dos toques seguidos suman dos', async () => {
+    await abrir();
+    carrito.cambiarCantidad.mockReturnValueOnce(new Promise(() => undefined));
+
+    boton('Sumar uno a Martillo').click();
+    await harness.fixture.whenStable();
+    boton('Sumar uno a Martillo').click();
+    await harness.fixture.whenStable();
+
+    expect(carrito.cambiarCantidad).toHaveBeenNthCalledWith(1, 7, 3);
+    expect(carrito.cambiarCantidad).toHaveBeenNthCalledWith(2, 7, 4);
+    expect(fila('Martillo').querySelector('input')?.value).toBe('4');
+  });
+
+  // HU-11 RF-15: si la API rechaza, la cantidad vuelve a la guardada
+  it('un + rechazado vuelve a la cantidad anterior', async () => {
+    await abrir();
+    carrito.cambiarCantidad.mockReturnValueOnce(
+      Promise.reject({ status: 400, detail: '', codigo: 'DATOS_INVALIDOS', errores: [{ campo: 'cantidad', mensaje: 'admite hasta 999' }] }),
+    );
+
+    boton('Sumar uno a Martillo').click();
+    await harness.fixture.whenStable();
+
+    expect(fila('Martillo').querySelector('input')?.value).toBe('2');
+    expect(textoDe(fila('Martillo'))).toContain('La cantidad admite hasta 999.');
+  });
+
+  // Revisión de HU-11 (/code-review): + parte de lo recién escrito, aunque todavía no se guardó
+  it('escribir y tocar + enseguida suma a lo escrito', async () => {
+    await abrir();
+    carrito.cambiarCantidad.mockReturnValueOnce(new Promise(() => undefined));
+
+    await escribirCantidad('Martillo', '5');
+    boton('Sumar uno a Martillo').click();
+    await harness.fixture.whenStable();
+
+    expect(carrito.cambiarCantidad).toHaveBeenLastCalledWith(7, 6);
+  });
+
+  // Revisión de HU-11 (/code-review): si un toque falla y el siguiente se guarda, el error se va
+  it('un toque rechazado y otro guardado después no dejan el error', async () => {
+    await abrir();
+    let rechazar!: (error: unknown) => void;
+    let guardar!: () => void;
+    const real = carrito.cambiarCantidad.getMockImplementation()!;
+    carrito.cambiarCantidad
+      .mockImplementationOnce(() => new Promise((_, falla) => (rechazar = falla)))
+      .mockImplementationOnce((id: number, valor: number) => new Promise((listo) => (guardar = () => listo(real(id, valor)))));
+
+    boton('Sumar uno a Martillo').click();
+    await harness.fixture.whenStable();
+    boton('Sumar uno a Martillo').click();
+    await harness.fixture.whenStable();
+    rechazar({ status: 400, detail: '', codigo: 'DATOS_INVALIDOS', errores: [{ campo: 'cantidad', mensaje: 'admite hasta 999' }] });
+    await harness.fixture.whenStable();
+    // Mientras la última está en camino, el rechazo de una anterior no se muestra
+    expect(textoDe(fila('Martillo'))).not.toContain('La cantidad admite hasta 999.');
+    guardar();
+    await harness.fixture.whenStable();
+
+    expect(fila('Martillo').querySelector('input')?.value).toBe('4');
+    expect(textoDe(fila('Martillo'))).not.toContain('La cantidad admite hasta 999.');
+  });
+
+  // Revisión de HU-11 (/code-review): el lector de pantalla oye la cantidad guardada
+  it('− y + anuncian la cantidad', async () => {
+    await abrir();
+
+    boton('Sumar uno a Martillo').click();
+    await harness.fixture.whenStable();
+
+    expect(textoDe(pantalla().querySelector('[role="status"]'))).toContain('Cantidad de Martillo: 3');
+  });
+
+  // Revisión de HU-11 (/code-review): un aviso viejo de quitar o vaciar se va al cambiar la cantidad
+  it('cambiar con − o + borra el aviso anterior', async () => {
+    await abrir();
+    carrito.quitar.mockReturnValueOnce(Promise.reject({ status: 0, detail: '', codigo: 'SIN_CONEXION' }));
+    boton('Quitar Cable').click();
+    await harness.fixture.whenStable();
+    expect(pantalla().querySelector('.aviso')).not.toBeNull();
+
+    boton('Sumar uno a Martillo').click();
+    await harness.fixture.whenStable();
+
+    expect(pantalla().querySelector('.aviso')).toBeNull();
+  });
 });

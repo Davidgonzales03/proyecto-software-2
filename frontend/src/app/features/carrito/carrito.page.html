@@ -55,18 +55,26 @@
           <div class="cantidad">
             @if (linea.estado === 'DISPONIBLE' || linea.estado === 'CANTIDAD_INVALIDA') {
               <label class="solo-lectores" [for]="'cantidad-' + linea.idProducto">Cantidad de {{ linea.nombre }}</label>
-              <input
-                [id]="'cantidad-' + linea.idProducto"
-                type="text"
-                inputmode="decimal"
-                autocomplete="off"
-                [value]="cantidad(linea.cantidad)"
-                [attr.aria-invalid]="error || linea.estado === 'CANTIDAD_INVALIDA' ? 'true' : null"
-                [attr.aria-describedby]="
-                  error ? 'error-' + linea.idProducto : linea.estado === 'CANTIDAD_INVALIDA' ? 'estado-' + linea.idProducto : null
-                "
-                (change)="cambiar(linea, $event)"
-              />
+              <app-paso-de-cantidad
+                [de]="linea.nombre"
+                [puedeRestar]="conPaso(linea, -1) !== null"
+                [puedeSumar]="conPaso(linea, 1) !== null"
+                (restar)="pasar(linea, -1)"
+                (sumar)="pasar(linea, 1)"
+              >
+                <input
+                  [id]="'cantidad-' + linea.idProducto"
+                  type="text"
+                  inputmode="decimal"
+                  autocomplete="off"
+                  [value]="cantidad(mostrada(linea))"
+                  [attr.aria-invalid]="error || linea.estado === 'CANTIDAD_INVALIDA' ? 'true' : null"
+                  [attr.aria-describedby]="
+                    error ? 'error-' + linea.idProducto : linea.estado === 'CANTIDAD_INVALIDA' ? 'estado-' + linea.idProducto : null
+                  "
+                  (change)="cambiar(linea, $event)"
+                />
+              </app-paso-de-cantidad>
             } @else {
               <span class="fija">{{ cantidad(linea.cantidad) }}</span>
             }

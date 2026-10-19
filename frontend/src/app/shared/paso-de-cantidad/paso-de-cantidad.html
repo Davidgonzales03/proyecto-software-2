@@ -1,0 +1,17 @@
+<button
+  type="button"
+  [attr.aria-label]="etiqueta('Restar uno')"
+  [attr.aria-disabled]="puedeRestar() ? null : 'true'"
+  (click)="tocarRestar()"
+>
+  <svg lucideMinus aria-hidden="true"></svg>
+</button>
+<ng-content />
+<button
+  type="button"
+  [attr.aria-label]="etiqueta('Sumar uno')"
+  [attr.aria-disabled]="puedeSumar() ? null : 'true'"
+  (click)="tocarSumar()"
+>
+  <svg lucidePlus aria-hidden="true"></svg>
+</button>

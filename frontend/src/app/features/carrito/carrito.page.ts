@@ -5,13 +5,19 @@ import { LucideCircleSlash, LucideShoppingCart, LucideTrash2, LucideTriangleAler
 import { comoErrorApi } from '../../core/api/autenticacion.service';
 import { CarritoService } from '../../core/api/carrito.service';
 import { mensajeDeError, mensajeDelRechazo } from '../../core/api/mensajes-error';
-import { AVISOS_DE_LINEA, CANTIDAD_MAXIMA_EN_CARRITO, LineaDeCarrito } from '../../core/modelos/carrito';
+import {
+	AVISOS_DE_LINEA,
+	CANTIDAD_MAXIMA_EN_CARRITO,
+	cantidadConPasoEnCarrito,
+	LineaDeCarrito,
+} from '../../core/modelos/carrito';
 import { urlDeImagen } from '../../core/modelos/catalogo';
 import { ErrorApi } from '../../core/modelos/error-api';
 import { DECIMALES_DE_UNIDAD } from '../../core/modelos/inventario';
 import { DialogoConfirmacion } from '../../shared/dialogo-confirmacion/dialogo-confirmacion';
 import { leerCantidad, problemaDeCantidad } from '../../shared/formato/cantidades';
 import { cantidad, precio } from '../../shared/formato/precios';
+import { PasoDeCantidad } from '../../shared/paso-de-cantidad/paso-de-cantidad';
 
 // El carrito del Cliente (HU-11): cada línea con su foto, el precio de hoy, la
 // cantidad que se cambia en el lugar y el subtotal; lo que ya no se puede
@@ -22,6 +28,7 @@ import { cantidad, precio } from '../../shared/formato/precios';
 	imports: [
 		RouterLink,
 		DialogoConfirmacion,
+		PasoDeCantidad,
 		LucideCircleSlash,
 		LucideShoppingCart,
 		LucideTrash2,
@@ -49,6 +56,10 @@ export class CarritoPage {
 	protected readonly aviso = signal('');
 	// Lo que se quitó o se vació, para los lectores de pantalla
 	protected readonly anuncio = signal('');
+
+	// La última cantidad pedida por línea que todavía no volvió de la API, con su turno
+	private readonly pendientes = signal<Readonly<Record<number, { cantidad: number; turno: number }>>>({});
+	private turnos = 0;
 
 	protected readonly avisos = AVISOS_DE_LINEA;
 	protected readonly precio = precio;
@@ -87,21 +98,64 @@ export class CarritoPage {
 			return;
 		}
 		const nueva = leerCantidad(texto) ?? 0;
-		this.ponerError(linea.idProducto, '');
-		if (nueva === linea.cantidad) {
+		if (nueva === this.mostrada(linea)) {
+			this.ponerError(linea.idProducto, '');
 			return;
 		}
+		// Si la API la rechaza, el campo vuelve a la guardada
+		if (!(await this.guardar(linea, nueva))) {
+			campo.value = cantidad(this.mostrada(linea));
+		}
+	}
+
+	protected mostrada(linea: LineaDeCarrito): number {
+		return this.pendientes()[linea.idProducto]?.cantidad ?? linea.cantidad;
+	}
+
+	protected conPaso(linea: LineaDeCarrito, paso: 1 | -1): number | null {
+		return cantidadConPasoEnCarrito(this.mostrada(linea), paso, linea.unidad);
+	}
+
+	// − y + guardan en el acto, sin esperar la respuesta del toque anterior (RF-15)
+	protected async pasar(linea: LineaDeCarrito, paso: 1 | -1): Promise<void> {
+		const nueva = this.conPaso(linea, paso);
+		// Se anuncia solo la última: las intermedias ya no son la cantidad
+		if (nueva !== null && (await this.guardar(linea, nueva)) && this.pendientes()[linea.idProducto] === undefined) {
+			this.anuncio.set(`Cantidad de ${linea.nombre}: ${cantidad(nueva)}`);
+		}
+	}
+
+	// Lo escrito y lo de − y + pasan por acá. El servicio manda las escrituras en
+	// orden; mientras alguna está en camino, la pantalla muestra la última pedida
+	// y desde ella sigue el próximo cambio. Solo cuenta la respuesta de la última:
+	// si se guardó, no queda error; si la rechazó, vuelve la cantidad guardada con
+	// el motivo
+	private async guardar(linea: LineaDeCarrito, nueva: number): Promise<boolean> {
+		const id = linea.idProducto;
+		const turno = ++this.turnos;
+		this.pendientes.update((actuales) => ({ ...actuales, [id]: { cantidad: nueva, turno } }));
+		this.ponerError(id, '');
+		this.aviso.set('');
+		const esLaUltima = (): boolean => this.pendientes()[id]?.turno === turno;
 		try {
-			await this.servicio.cambiarCantidad(linea.idProducto, nueva);
+			await this.servicio.cambiarCantidad(id, nueva);
+			if (esLaUltima()) {
+				this.ponerError(id, '');
+			}
+			return true;
 		} catch (rechazo: unknown) {
 			const error = rechazo as ErrorApi;
-			campo.value = cantidad(linea.cantidad);
 			// La línea ya no existe (se quitó en otro dispositivo): el carrito se pide de nuevo
 			if (error.status === 404) {
 				this.recurso.reload();
-				return;
+			} else if (esLaUltima()) {
+				this.ponerError(id, mensajeDelRechazo(error));
 			}
-			this.ponerError(linea.idProducto, mensajeDelRechazo(error));
+			return false;
+		} finally {
+			if (esLaUltima()) {
+				this.pendientes.update(({ [id]: _, ...resto }) => resto);
+			}
 		}
 	}
 

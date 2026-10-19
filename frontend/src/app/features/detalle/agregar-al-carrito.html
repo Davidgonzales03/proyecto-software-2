@@ -8,15 +8,22 @@
             <span class="unidad">({{ unidad }})</span>
           }
         </label>
-        <input
-          id="cantidad"
-          type="text"
-          inputmode="decimal"
-          autocomplete="off"
-          [formField]="compra.cantidad"
-          [attr.aria-invalid]="errorDeCantidad() ? 'true' : null"
-          [attr.aria-describedby]="errorDeCantidad() ? 'error-cantidad' : null"
-        />
+        <app-paso-de-cantidad
+          [puedeRestar]="menos() !== null"
+          [puedeSumar]="mas() !== null"
+          (restar)="pasar(menos())"
+          (sumar)="pasar(mas())"
+        >
+          <input
+            id="cantidad"
+            type="text"
+            inputmode="decimal"
+            autocomplete="off"
+            [formField]="compra.cantidad"
+            [attr.aria-invalid]="errorDeCantidad() ? 'true' : null"
+            [attr.aria-describedby]="errorDeCantidad() ? 'error-cantidad' : null"
+          />
+        </app-paso-de-cantidad>
         @if (errorDeCantidad()) {
           <p class="error" id="error-cantidad">{{ errorDeCantidad() }}</p>
         }
@@ -32,6 +39,7 @@
       <span><svg lucideShoppingCart aria-hidden="true"></svg>Agregar al carrito</span>
     </button>
   </form>
+  <p class="solo-lectores" role="status">{{ anuncio() }}</p>
   <div class="resultado" aria-live="polite">
     @if (agregado()) {
       <p class="aviso exito">Se agregó al carrito. <a routerLink="/carrito">Ver carrito</a></p>

@@ -45,3 +45,19 @@ export function problemaDeCantidad(texto: string, reglas: ReglasDeCantidad): str
 	}
 	return null;
 }
+
+// La cantidad que dejan los botones − y + (HU-11 RF-15): de a 1. Con más
+// decimales de los que admite la unidad, va a la válida de al lado (2,5 por
+// unidad: + da 3 y − da 2); por encima del máximo, − lo deja en el máximo. null
+// si quedaría en 0 o menos, o pasaría del máximo
+export function cantidadConPaso(actual: number, paso: 1 | -1, decimales: number, maximo: number): number | null {
+	const escala = 10 ** decimales;
+	// El margen absorbe el error de coma flotante: 2,3 × 100 da 229,99999999999997
+	const escalada = actual * escala;
+	const base = paso > 0 ? Math.floor(escalada + 1e-6) : Math.ceil(escalada - 1e-6);
+	const nueva = (base + paso * escala) / escala;
+	if (paso < 0 && nueva > maximo) {
+		return maximo;
+	}
+	return nueva <= 0 || nueva > maximo ? null : nueva;
+}

@@ -36,7 +36,7 @@ h1 {
 	--app-acento-texto: var(--app-sobre-lona);
 	--app-error: var(--app-error-sobre-lona);
 	display: grid;
-	grid-template-columns: 88px minmax(0, 1fr) 7.5rem minmax(12ch, max-content) var(--app-area-tocable);
+	grid-template-columns: 88px minmax(0, 1fr) max-content minmax(12ch, max-content) var(--app-area-tocable);
 	grid-template-areas: 'foto datos cantidad subtotal quitar';
 	align-items: center;
 	gap: var(--app-espacio-4);
@@ -52,9 +52,11 @@ h1 {
 @media (max-width: 640px) {
 	.linea {
 		grid-template-columns: 72px minmax(0, 1fr) max-content var(--app-area-tocable);
+		// La cantidad con − y + no entra junto al subtotal en un celular angosto: cada uno en su fila
 		grid-template-areas:
 			'foto datos datos quitar'
-			'cantidad cantidad subtotal subtotal';
+			'cantidad cantidad cantidad cantidad'
+			'subtotal subtotal subtotal subtotal';
 		align-items: start;
 	}
 }
@@ -155,11 +157,12 @@ h1 {
 	gap: var(--app-espacio-1);
 }
 
+// Entra 999,99 entero
 input {
-	width: 100%;
-	max-width: 7.5rem;
+	width: 5rem;
+	text-align: center;
 	min-height: var(--app-area-tocable);
-	padding: var(--app-espacio-2) var(--app-espacio-3);
+	padding: var(--app-espacio-2) var(--app-espacio-1);
 	border: 1px solid var(--app-borde-control);
 	border-radius: var(--app-radio-control);
 	background: var(--app-fondo);

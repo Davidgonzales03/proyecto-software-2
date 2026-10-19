@@ -5,12 +5,14 @@ import { LucideShoppingCart } from '@lucide/angular';
 
 import { CarritoService } from '../../core/api/carrito.service';
 import { mensajeDelCampo, mensajeDelRechazo } from '../../core/api/mensajes-error';
-import { CANTIDAD_MAXIMA_EN_CARRITO } from '../../core/modelos/carrito';
+import { CANTIDAD_MAXIMA_EN_CARRITO, cantidadConPasoEnCarrito } from '../../core/modelos/carrito';
 import { ProductoEnDetalle } from '../../core/modelos/catalogo';
 import { ErrorApi } from '../../core/modelos/error-api';
 import { DECIMALES_DE_UNIDAD } from '../../core/modelos/inventario';
 import { SesionService } from '../../core/sesion/sesion.service';
 import { leerCantidad, problemaDeCantidad } from '../../shared/formato/cantidades';
+import { cantidad } from '../../shared/formato/precios';
+import { PasoDeCantidad } from '../../shared/paso-de-cantidad/paso-de-cantidad';
 
 // La cantidad y «Agregar al carrito» del detalle del producto (HU-11). Compra
 // el Cliente; el visitante ve el botón, que lo lleva a iniciar sesión y lo
@@ -18,7 +20,7 @@ import { leerCantidad, problemaDeCantidad } from '../../shared/formato/cantidade
 // valida el backend)
 @Component({
 	selector: 'app-agregar-al-carrito',
-	imports: [FormField, RouterLink, LucideShoppingCart],
+	imports: [FormField, RouterLink, LucideShoppingCart, PasoDeCantidad],
 	templateUrl: './agregar-al-carrito.html',
 	styleUrl: './agregar-al-carrito.scss',
 	changeDetection: ChangeDetectionStrategy.OnPush,
@@ -62,11 +64,32 @@ export class AgregarAlCarrito {
 		const vigente = rechazo !== null && rechazo.texto === campo.value() ? rechazo.error : null;
 		return mensajeDelCampo(campo, 'cantidad', vigente);
 	});
+	// − y + parten de lo escrito; si no es un número, no hacen nada (RF-15)
+	private readonly escrita = computed(() => leerCantidad(this.datos().cantidad));
+	protected readonly menos = computed(() => this.conPaso(-1));
+	protected readonly mas = computed(() => this.conPaso(1));
+	// La cantidad que dejaron − o +, para los lectores de pantalla
+	protected readonly anuncio = signal('');
 	protected readonly agregando = signal(false);
 	protected readonly agregado = signal(false);
 	protected readonly error = signal('');
 	// Otro producto empieza de cero sin hacer nada: mientras carga, el detalle
 	// muestra «Cargando…» y este componente se vuelve a crear
+
+	protected pasar(nueva: number | null): void {
+		if (nueva !== null) {
+			this.datos.set({ cantidad: cantidad(nueva) });
+			// Lo agregado antes ya no corresponde a la cantidad que se ve
+			this.agregado.set(false);
+			this.error.set('');
+			this.anuncio.set(`Cantidad: ${cantidad(nueva)}`);
+		}
+	}
+
+	private conPaso(paso: 1 | -1): number | null {
+		const escrita = this.escrita();
+		return escrita === null ? null : cantidadConPasoEnCarrito(escrita, paso, this.producto().unidad);
+	}
 
 	protected async agregar(evento: Event): Promise<void> {
 		evento.preventDefault();

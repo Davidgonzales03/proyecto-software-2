@@ -23,7 +23,7 @@ form {
 
 // Con fila y columna fijas: un elemento con solo la fila se ubica antes que
 // los demás y le quitaría la primera columna al campo
-input {
+app-paso-de-cantidad {
 	grid-area: 2 / 1;
 }
 
@@ -37,7 +37,7 @@ input {
 		grid-template-columns: minmax(0, 1fr);
 	}
 
-	input,
+	app-paso-de-cantidad,
 	.principal {
 		grid-area: auto;
 	}
@@ -60,10 +60,12 @@ label {
 	text-transform: none;
 }
 
+// Entra 999,99 entero
 input {
-	width: 7.5rem;
+	width: 5rem;
+	text-align: center;
 	min-height: var(--app-area-tocable);
-	padding: var(--app-espacio-2) var(--app-espacio-3);
+	padding: var(--app-espacio-2) var(--app-espacio-1);
 	border: 1px solid var(--app-borde-control);
 	border-radius: var(--app-radio-control);
 	background: var(--app-fondo);
@@ -155,4 +157,13 @@ input[aria-invalid='true'] {
 .exito a {
 	color: var(--app-acento-texto);
 	font-weight: 600;
+}
+
+.solo-lectores {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	clip-path: inset(50%);
+	white-space: nowrap;
 }

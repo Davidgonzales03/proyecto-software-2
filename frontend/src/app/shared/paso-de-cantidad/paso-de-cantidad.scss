@@ -1,0 +1,44 @@
+// − campo +, en una fila. Los botones son secundarios de la tienda: sin
+// relleno, con borde de 2 px del color del texto (DESIGN.md → Buttons)
+:host {
+	display: inline-flex;
+	align-items: stretch;
+	gap: var(--app-espacio-1);
+}
+
+button {
+	display: inline-grid;
+	place-items: center;
+	flex: none;
+	width: var(--app-area-tocable);
+	min-height: var(--app-area-tocable);
+	padding: 0;
+	border: 2px solid currentColor;
+	border-radius: var(--app-radio-control);
+	background: transparent;
+	color: inherit;
+	cursor: pointer;
+	transition: transform var(--app-duracion-rapida) var(--app-curva-salida);
+}
+
+button svg {
+	width: var(--app-icono);
+	height: var(--app-icono);
+}
+
+@media (hover: hover) and (pointer: fine) {
+	button:hover:not([aria-disabled='true']) {
+		background: color-mix(in srgb, currentColor 12%, transparent);
+	}
+}
+
+button:active:not([aria-disabled='true']) {
+	transform: scale(0.96);
+}
+
+// En el límite: costura punteada y opacidad, sin cambiar de color
+button[aria-disabled='true'] {
+	border-style: dashed;
+	opacity: 0.4;
+	cursor: not-allowed;
+}
