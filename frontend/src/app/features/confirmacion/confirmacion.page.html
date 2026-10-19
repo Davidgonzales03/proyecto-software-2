@@ -1,0 +1,140 @@
+<h1>Confirmar pedido</h1>
+
+@if (errorDeCarga()) {
+  <div class="tarjeta-error">
+    <p class="aviso" role="alert">{{ errorDeCarga() }}</p>
+    <button type="button" class="secundario" (click)="recurso.reload()">Reintentar</button>
+  </div>
+} @else if (carrito(); as carrito) {
+  @if (carrito.idPedidoPendiente !== null) {
+    <section class="sin-confirmar">
+      <p>Tiene un pedido esperando el pago. Páguelo o cancélelo antes de confirmar otro.</p>
+      <a class="principal" [routerLink]="['/mis-pedidos', carrito.idPedidoPendiente]"><span>Ver el pedido</span></a>
+    </section>
+  } @else if (carrito.lineas.length === 0) {
+    <section class="sin-confirmar">
+      <p>Su carrito está vacío.</p>
+      <a class="principal" routerLink="/catalogo"><span>Ver el catálogo</span></a>
+    </section>
+  } @else if (!comprable()) {
+    <section class="sin-confirmar">
+      <p>Algunos productos del carrito ya no se pueden pedir así. Corríjalos antes de confirmar.</p>
+      <a class="principal" routerLink="/carrito"><span>Volver al carrito</span></a>
+    </section>
+  } @else {
+    <div class="columnas">
+      <section class="resumen" aria-labelledby="titulo-resumen">
+        <h2 id="titulo-resumen">Su pedido</h2>
+        <ul class="lineas">
+          @for (linea of carrito.lineas; track linea.idProducto) {
+            @let motivo = rechazadas()[linea.idProducto];
+            <li class="linea" [class.rechazada]="motivo !== undefined">
+              <span class="nombre">{{ linea.nombre }}</span>
+              <span class="detalle">{{ cantidad(linea.cantidad) }} × {{ precio(linea.precio) }}{{ unidad(linea) }}</span>
+              <span class="subtotal">{{ linea.subtotal === null ? '' : precio(linea.subtotal) }}</span>
+              @if (motivo !== undefined) {
+                <span class="estado"><svg lucideCircleSlash aria-hidden="true"></svg>{{ avisos[motivo] }}</span>
+              }
+            </li>
+          }
+        </ul>
+        <p class="total">Total <strong>{{ precio(carrito.total) }}</strong></p>
+        <a class="volver" routerLink="/carrito"><svg lucideArrowLeft aria-hidden="true"></svg>Cambiar el carrito</a>
+      </section>
+
+      <div class="retiro-y-datos">
+        <section class="retiro" aria-labelledby="titulo-retiro">
+          <h2 id="titulo-retiro"><svg lucideStore aria-hidden="true"></svg>Se retira en la tienda</h2>
+          @if (datosDeRetiro(); as retiro) {
+            @if (retiro.direccion || retiro.horario) {
+              <dl>
+                @if (retiro.direccion) {
+                  <div>
+                    <dt><svg lucideMapPin aria-hidden="true"></svg>Dirección</dt>
+                    <dd>{{ retiro.direccion }}</dd>
+                  </div>
+                }
+                @if (retiro.horario) {
+                  <div>
+                    <dt><svg lucideClock aria-hidden="true"></svg>Horario</dt>
+                    <dd>{{ retiro.horario }}</dd>
+                  </div>
+                }
+              </dl>
+            }
+          }
+        </section>
+
+        <form (submit)="confirmar($event)" novalidate aria-labelledby="titulo-quien">
+          <h2 id="titulo-quien">Quién lo retira</h2>
+
+          @if (mensajeDeRechazo(); as mensaje) {
+            <div class="aviso" role="alert" tabindex="-1" #rechazo>
+              <p>{{ mensaje }}</p>
+              @if (codigoDeRechazo() === 'STOCK_INSUFICIENTE') {
+                <a routerLink="/carrito">Ir al carrito</a>
+              } @else if (pedidoPendiente(); as idPedido) {
+                <a [routerLink]="['/mis-pedidos', idPedido]">Ver el pedido</a>
+              }
+            </div>
+          }
+
+          <div class="campo">
+            @let errorNombre = mensaje(formulario.nombreRetira(), 'nombreRetira');
+            <label for="nombreRetira">Nombre</label>
+            <input
+              id="nombreRetira"
+              type="text"
+              autocomplete="name"
+              [formField]="formulario.nombreRetira"
+              [attr.aria-invalid]="errorNombre ? 'true' : null"
+              [attr.aria-describedby]="errorNombre ? 'error-nombreRetira' : null"
+            />
+            @if (errorNombre) {
+              <p class="error" id="error-nombreRetira">{{ errorNombre }}</p>
+            }
+          </div>
+
+          <div class="campo">
+            @let errorTelefono = mensaje(formulario.telefonoRetira(), 'telefonoRetira');
+            <label for="telefonoRetira">Teléfono</label>
+            <input
+              id="telefonoRetira"
+              type="tel"
+              autocomplete="tel"
+              inputmode="tel"
+              [formField]="formulario.telefonoRetira"
+              [attr.aria-invalid]="errorTelefono ? 'true' : null"
+              [attr.aria-describedby]="errorTelefono ? 'error-telefonoRetira' : null"
+            />
+            @if (errorTelefono) {
+              <p class="error" id="error-telefonoRetira">{{ errorTelefono }}</p>
+            }
+          </div>
+
+          <div class="campo">
+            @let errorNota = mensaje(formulario.nota(), 'nota');
+            <label for="nota">Nota <span class="opcional">(opcional)</span></label>
+            <textarea
+              id="nota"
+              rows="2"
+              [formField]="formulario.nota"
+              [attr.aria-invalid]="errorNota ? 'true' : null"
+              [attr.aria-describedby]="errorNota ? 'error-nota' : null"
+            ></textarea>
+            @if (errorNota) {
+              <p class="error" id="error-nota">{{ errorNota }}</p>
+            }
+          </div>
+
+          <button type="submit" class="principal" [attr.aria-disabled]="confirmando() || recurso.isLoading() ? 'true' : null">
+            <span>{{ confirmando() ? 'Confirmando…' : recurso.isLoading() ? 'Actualizando…' : 'Confirmar pedido' }}</span>
+          </button>
+          <p class="plazo">Al confirmar, reservamos los productos por 30 minutos para que pague el pedido.</p>
+        </form>
+      </div>
+    </div>
+  }
+} @else {
+  <p class="cargando" role="status">Cargando el pedido…</p>
+}

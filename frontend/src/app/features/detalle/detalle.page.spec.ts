@@ -95,7 +95,7 @@ describe('DetallePage', () => {
   async function abrir(url = '/producto/7', rol: Rol | null = null, responder = true) {
     TestBed.resetTestingModule();
     catalogo = new CatalogoFalso();
-    carrito = { agregar: vi.fn(() => Promise.resolve({ lineas: [], total: 0, cantidadLineas: 1 })) };
+    carrito = { agregar: vi.fn(() => Promise.resolve({ lineas: [], total: 0, cantidadLineas: 1, idPedidoPendiente: null })) };
     TestBed.configureTestingModule({
       providers: [
         provideRouter([

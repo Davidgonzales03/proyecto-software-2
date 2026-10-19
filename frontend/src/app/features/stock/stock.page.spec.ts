@@ -38,6 +38,7 @@ const MOVIMIENTOS: Movimiento[] = [
     stockResultante: 3,
     usuario: 'Eva Paz',
     nota: null,
+    idPedido: null,
   },
   {
     idMovimiento: 1,
@@ -48,6 +49,7 @@ const MOVIMIENTOS: Movimiento[] = [
     stockResultante: 5,
     usuario: 'Eva Paz',
     nota: 'Factura 123',
+    idPedido: null,
   },
 ];
 
@@ -204,6 +206,26 @@ describe('StockPage', () => {
     expect(texto()).toContain('Eva Paz');
     expect(texto()).toContain('Factura 123');
     expect(texto()).toContain('15:30');
+  });
+
+  // HU-12 RF-14
+  it('el historial muestra los movimientos de pedido con su número', async () => {
+    await abrir('/inventario/7', 'EMPLEADO', (falso) =>
+      falso.movimientos.value.set({
+        contenido: [
+          { ...MOVIMIENTOS[1], idMovimiento: 4, tipo: 'LIBERACION', cantidad: 2, nota: null, idPedido: 12 },
+          { ...MOVIMIENTOS[1], idMovimiento: 3, tipo: 'RESERVA', cantidad: -2, nota: null, idPedido: 12 },
+        ],
+        pagina: 0,
+        tamano: 20,
+        totalElementos: 2,
+        totalPaginas: 1,
+      }),
+    );
+
+    expect(texto()).toContain('Liberación por pedido N.º 12');
+    expect(texto()).toContain('Reserva por pedido N.º 12');
+    expect(texto()).toContain('−2');
   });
 
   // HU-08 RF-3

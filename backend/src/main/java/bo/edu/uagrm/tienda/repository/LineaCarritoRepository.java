@@ -5,6 +5,8 @@ import java.util.Optional;
 
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import bo.edu.uagrm.tienda.entity.LineaCarrito;
 
@@ -14,6 +16,10 @@ public interface LineaCarritoRepository extends JpaRepository<LineaCarrito, Long
 	// en la misma consulta: la respuesta dice si cada uno se puede comprar
 	@EntityGraph(attributePaths = { "producto", "producto.categoria" })
 	List<LineaCarrito> findByUsuario_IdUsuarioOrderByFechaAgregadaAscIdLineaAsc(Long idUsuario);
+
+	// Solo los ids, por id ascendente: el orden en que la confirmación bloquea los productos (HU-12 RF-7)
+	@Query("select l.producto.idProducto from LineaCarrito l where l.usuario.idUsuario = :idUsuario order by l.producto.idProducto")
+	List<Long> idsDeProductos(@Param("idUsuario") Long idUsuario);
 
 	Optional<LineaCarrito> findByUsuario_IdUsuarioAndProducto_IdProducto(Long idUsuario, Long idProducto);
 

@@ -1,3 +1,5 @@
+import type { LineaRechazada } from './pedido';
+
 // El backend responde los errores como ProblemDetail (RFC 9457), desde
 // ManejadorErrores: {type, title, status, detail} más dos extensiones propias,
 // `codigo` y, en los datos inválidos, `errores`.
@@ -17,6 +19,11 @@ export interface ErrorApi {
 	edadMinima?: number;
 	limite?: number;
 	puedeAgregar?: number;
+	// los rechazos del pedido (HU-12): el pedido pendiente, las líneas que no se
+	// pueden confirmar y el total nuevo
+	idPedido?: number;
+	lineas?: LineaRechazada[];
+	total?: number;
 }
 
 export function esErrorApi(valor: unknown): valor is ErrorApi {

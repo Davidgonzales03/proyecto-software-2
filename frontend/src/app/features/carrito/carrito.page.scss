@@ -222,6 +222,69 @@ input[aria-invalid='true'] {
 	gap: var(--app-espacio-4);
 }
 
+// Lo que sigue: confirmar, el pedido que espera el pago o qué corregir (HU-12)
+.siguiente {
+	display: flex;
+	justify-content: flex-end;
+}
+
+.siguiente .principal {
+	min-height: 52px;
+	font-size: 22px;
+}
+
+.pendiente,
+.nota {
+	margin: 0;
+	color: var(--app-texto-suave);
+	text-align: right;
+}
+
+.pendiente {
+	display: inline-flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: flex-end;
+	gap: var(--app-espacio-2) var(--app-espacio-3);
+	padding: var(--app-espacio-3) var(--app-espacio-4);
+	border: 1px solid var(--app-aviso);
+	background: var(--app-aviso-fondo);
+	color: var(--app-aviso);
+	font-weight: 600;
+}
+
+.pendiente svg {
+	width: var(--app-icono);
+	height: var(--app-icono);
+}
+
+.pendiente a {
+	display: inline-flex;
+	align-items: center;
+	min-height: var(--app-area-tocable);
+	color: inherit;
+	font-weight: 700;
+	text-underline-offset: 3px;
+}
+
+@media (max-width: 640px) {
+	.siguiente {
+		justify-content: stretch;
+	}
+
+	.siguiente .principal {
+		flex: 1;
+		margin-inline: var(--app-espacio-2);
+		justify-content: center;
+	}
+
+	.pendiente,
+	.nota {
+		text-align: left;
+		justify-content: flex-start;
+	}
+}
+
 .total {
 	display: flex;
 	align-items: baseline;

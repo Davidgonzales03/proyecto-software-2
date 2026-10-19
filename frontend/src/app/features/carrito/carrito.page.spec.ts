@@ -31,9 +31,10 @@ const CON_DOS: Carrito = {
   ],
   total: 201,
   cantidadLineas: 2,
+  idPedidoPendiente: null,
 };
 
-const VACIO: Carrito = { lineas: [], total: 0, cantidadLineas: 0 };
+const VACIO: Carrito = { lineas: [], total: 0, cantidadLineas: 0, idPedidoPendiente: null };
 
 class CarritoFalso {
   readonly carrito = {
@@ -148,6 +149,31 @@ describe('CarritoPage', () => {
     expect(textoDe(pantalla().querySelector('.total'))).toContain('Bs 201,00');
   });
 
+  // HU-12 RF-1
+  it('con todo disponible ofrece confirmar el pedido', async () => {
+    await abrir();
+
+    const confirmar = pantalla().querySelector('a[href="/confirmar-pedido"]');
+    expect(textoDe(confirmar)).toContain('Confirmar pedido');
+  });
+
+  // HU-12 RF-3, RF-4: confirmar se rechazaría; el carrito dice qué corregir
+  it('con alguna línea que no se puede comprar no ofrece confirmar', async () => {
+    await abrir({ ...CON_DOS, lineas: [linea({ estado: 'AGOTADO', subtotal: null }), CON_DOS.lineas[1]], total: 30 });
+
+    expect(pantalla().querySelector('a[href="/confirmar-pedido"]')).toBeNull();
+    expect(texto()).toContain('Quite o corrija los productos marcados para confirmar el pedido.');
+  });
+
+  // HU-12 RF-5
+  it('con un pedido pendiente lo avisa y enlaza a él', async () => {
+    await abrir({ ...CON_DOS, idPedidoPendiente: 5 });
+
+    expect(texto()).toContain('Tiene un pedido esperando el pago.');
+    expect(pantalla().querySelector('a[href="/mis-pedidos/5"]')).not.toBeNull();
+    expect(pantalla().querySelector('a[href="/confirmar-pedido"]')).toBeNull();
+  });
+
   // HU-11 RF-9
   it('las líneas agotadas o no disponibles van marcadas y fuera del total', async () => {
     await abrir({
@@ -158,6 +184,7 @@ describe('CarritoPage', () => {
       ],
       total: 0,
       cantidadLineas: 3,
+      idPedidoPendiente: null,
     });
 
     expect(textoDe(fila('Martillo'))).toContain('Agotado');
@@ -305,6 +332,7 @@ describe('CarritoPage', () => {
       lineas: [linea({ estado: 'CANTIDAD_INVALIDA', subtotal: null, cantidad: 1.5 })],
       total: 0,
       cantidadLineas: 1,
+      idPedidoPendiente: null,
     });
 
     const campo = fila('Martillo').querySelector('input')!;
@@ -349,7 +377,7 @@ describe('CarritoPage', () => {
 
   // HU-11 RF-15
   it('− en 1 no hace nada', async () => {
-    await abrir({ lineas: [linea({ cantidad: 1, subtotal: 85.5 })], total: 85.5, cantidadLineas: 1 });
+    await abrir({ lineas: [linea({ cantidad: 1, subtotal: 85.5 })], total: 85.5, cantidadLineas: 1, idPedidoPendiente: null });
 
     const restar = boton('Restar uno a Martillo');
     expect(restar.getAttribute('aria-disabled')).toBe('true');

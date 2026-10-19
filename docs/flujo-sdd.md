@@ -74,7 +74,20 @@ proceso, sin inventar fechas.
    el plan, `CLAUDE.md` y `decisiones.md`. Con un hallazgo crítico no se
    empieza a programar.
 4. **TDD:** una tarea a la vez, la prueba primero. Cada prueba cita su RF
-   («HU-XX RF-N»).
+   («HU-XX RF-N»). Qué pruebas se corren (*19/10/2026*):
+   - mientras se programa, solo las de lo que se toca
+     (`./mvnw test -Dtest=Clase`, `npx ng test --watch=false --include=…`);
+   - al terminar una tarea, la suite completa solo si tocó código
+     compartido (entidades, DTO, `config/`, `core/`, `shared/`, rutas,
+     estilos globales); si no, sus pruebas y `npx ng build`;
+   - en `/sdd:cerrar` y en el CI, siempre las suites completas;
+   - backend y frontend nunca a la vez: cargan tanto la máquina que las
+     pruebas con límite de tiempo fallan sin motivo.
+
+   **Motivo:** en HU-12, un campo nuevo de `CarritoResponse` rompió pruebas
+   de cuatro archivos ajenos y el reloj de `ClockConfig` es de toda la
+   aplicación: lo compartido necesita la suite. Lo demás ya pasó y no
+   cambió; repetirlo en cada tarea solo cuesta tiempo.
 5. **`/sdd:cerrar HU-XX`:** la Definition of Done (abajo), con el «Resultado»
    anotado en el plan.
 6. **PR** con la plantilla de `.github/pull_request_template.md` y
@@ -180,6 +193,34 @@ Lo que revisa cada uno:
   `.claude/skills/review-animations/SKILL.md` leyéndolo.
 - `break-ui` sobre las pantallas nuevas que muestran datos (listas, tarjetas,
   fichas): con los peores datos realistas, antes de la prueba manual.
+
+### Las revisiones, sin gastar de más
+
+*19/10/2026 (cierre de HU-12).* Auditoría de los subagentes de HU-12: los
+cuatro encontraron cosas reales, pero parte del costo no aportaba. Se
+conserva cada revisión y se acota lo que lee:
+
+- **Interfaz:** se le pasa una lista fija (escritorio y celular, modo
+  oscuro y claro, y los estados de la historia), los simuladores que ya
+  existan y el servidor ya levantado; hasta unas 12 capturas, y un informe
+  corto (archivo:línea, qué pasa, corrección). En HU-12 gastó 146 mil
+  tokens en 65 llamadas, la mayoría capturas, para 4 problemas reales.
+- **`/security-review`:** solo los archivos que tocan el tema (controladores,
+  servicios, `SecurityConfig`, DTO y entidades del backend), sin
+  documentación ni pruebas. Un solo subagente que busca y descarta los
+  falsos positivos; la segunda fase de la skill (un subagente por hallazgo)
+  solo si hay hallazgos.
+- **`/code-review`:** la primera ronda sobre el diff de código, sin la
+  documentación (la historia y el plan se le nombran aparte); la segunda,
+  solo sobre las correcciones.
+- **`/code-review` y `/security-review` pueden ir en paralelo:** solo leen.
+  Mientras corre una revisión no se edita el código que revisa.
+
+**Motivo:** en HU-12 los cuatro subagentes gastaron unos 438 mil tokens. Las
+dos rondas de `/code-review` encontraron los errores más graves (un pedido
+que quedaba pendiente para siempre, un interbloqueo en MySQL, dos errores
+que entraron al corregir) y la de interfaz, los únicos de accesibilidad:
+ninguna sobra. Lo que sobraba era leer de más.
 
 ## Dónde va cada commit de una historia
 

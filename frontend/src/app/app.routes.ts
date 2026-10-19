@@ -62,6 +62,22 @@ export const routes: Routes = [
     data: { rol: 'CLIENTE' },
     loadComponent: () => import('./features/carrito/carrito.page').then((m) => m.CarritoPage),
   },
+  // La confirmación del pedido (HU-12), del Cliente como el carrito
+  {
+    path: 'confirmar-pedido',
+    title: `Confirmar pedido · ${MARCA.nombre}`,
+    canActivate: [rolGuard],
+    data: { rol: 'CLIENTE' },
+    loadComponent: () => import('./features/confirmacion/confirmacion.page').then((m) => m.ConfirmacionPage),
+  },
+  // La página del pedido (HU-12 RF-8): del Cliente; la lista de HU-14 irá en mis-pedidos
+  {
+    path: 'mis-pedidos/:id',
+    title: `Pedido · ${MARCA.nombre}`,
+    canActivate: [rolGuard],
+    data: { rol: 'CLIENTE' },
+    loadComponent: () => import('./features/pedido/pedido.page').then((m) => m.PedidoPage),
+  },
   {
     path: 'panel',
     title: `Panel · ${MARCA.nombre}`,

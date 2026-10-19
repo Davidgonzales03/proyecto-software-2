@@ -49,6 +49,9 @@ services:
       # Catálogo de demostración (issue #25): con la carpeta del .env, la API la ve en /datos/demo y la carga si
       # todavía no hay productos; sin ella, la variable queda vacía y no se carga nada
       TIENDA_DEMO_DIRECTORIO: ${TIENDA_DEMO_DIRECTORIO:+/datos/demo}
+      # Dónde y cuándo se retiran los pedidos (HU-12): vacías, no se muestran
+      TIENDA_RETIRO_DIRECCION: ${TIENDA_RETIRO_DIRECCION:-}
+      TIENDA_RETIRO_HORARIO: ${TIENDA_RETIRO_HORARIO:-}
     volumes:
       - imagenes:/datos/imagenes
       # Solo lectura. Sin TIENDA_DEMO_DIRECTORIO se monta una carpeta vacía del repositorio, que no se lee

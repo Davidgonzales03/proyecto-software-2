@@ -1,0 +1,382 @@
+// La confirmación en el mundo «Letrero de ruta» (DESIGN.md): a la izquierda la
+// placa de lona con lo que se compra y el total grande; a la derecha dónde se
+// retira y quién, con la acción principal amarilla al final. En el celular,
+// una columna en el mismo orden
+:host {
+	display: flex;
+	flex-direction: column;
+	gap: var(--app-espacio-6);
+}
+
+h1 {
+	margin: 0;
+	padding-bottom: var(--app-espacio-3);
+	border-bottom: 3px solid var(--app-ambar);
+	color: var(--app-titulo);
+	font-size: clamp(34px, 5vw, 56px);
+	font-weight: 800;
+	line-height: 1;
+	text-transform: uppercase;
+	text-wrap: balance;
+}
+
+h2 {
+	display: flex;
+	align-items: center;
+	gap: var(--app-espacio-2);
+	margin: 0;
+	font-family: var(--app-familia-titulos);
+	font-size: 24px;
+	font-weight: 800;
+	line-height: 1.1;
+	text-transform: uppercase;
+	text-wrap: balance;
+}
+
+h2 svg {
+	flex: none;
+	width: 22px;
+	height: 22px;
+}
+
+.columnas {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	gap: var(--app-espacio-6);
+	align-items: start;
+}
+
+@media (min-width: 900px) {
+	.columnas {
+		grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
+		gap: var(--app-espacio-8);
+	}
+}
+
+// --- Lo que se compra: una placa de lona, como las líneas del carrito ---
+
+.resumen {
+	--app-acento-texto: var(--app-sobre-lona);
+	--app-error: var(--app-error-sobre-lona);
+	display: flex;
+	flex-direction: column;
+	gap: var(--app-espacio-4);
+	padding: var(--app-espacio-6);
+	border-radius: var(--app-radio);
+	background: var(--app-lona) var(--app-textura-cruda);
+	background-blend-mode: soft-light;
+	color: var(--app-sobre-lona);
+	outline: 1px dashed color-mix(in srgb, var(--app-sobre-lona) 12%, transparent);
+	outline-offset: -5px;
+}
+
+.lineas {
+	display: flex;
+	flex-direction: column;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+// Nombre y subtotal en la primera fila, cantidad por precio debajo: las cifras
+// quedan alineadas a la derecha entre líneas
+.linea {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) max-content;
+	grid-template-areas:
+		'nombre subtotal'
+		'detalle detalle'
+		'estado estado';
+	column-gap: var(--app-espacio-4);
+	row-gap: var(--app-espacio-1);
+	padding-block: var(--app-espacio-3);
+	border-bottom: 1px dashed color-mix(in srgb, var(--app-sobre-lona) 25%, transparent);
+}
+
+.nombre {
+	grid-area: nombre;
+	font-weight: 600;
+	overflow-wrap: anywhere;
+}
+
+.detalle {
+	grid-area: detalle;
+	color: var(--app-sobre-lona-suave);
+	font-size: 14px;
+	font-variant-numeric: tabular-nums;
+}
+
+.subtotal {
+	grid-area: subtotal;
+	font-family: var(--app-familia-titulos);
+	font-size: 20px;
+	font-weight: 700;
+	font-variant-numeric: tabular-nums;
+	text-align: right;
+}
+
+// La línea que el backend no aceptó: cosida en paralelogramo con su motivo,
+// como «Agotado» en el carrito (RF-3)
+
+.estado {
+	grid-area: estado;
+	display: inline-flex;
+	align-items: center;
+	gap: var(--app-espacio-1);
+	justify-self: start;
+	margin-top: var(--app-espacio-1);
+	padding: var(--app-espacio-1) var(--app-espacio-4);
+	outline: 1px dashed currentColor;
+	outline-offset: -4px;
+	clip-path: polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%);
+	color: var(--app-error);
+	font-family: var(--app-familia-titulos);
+	font-size: 15px;
+	font-weight: 700;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+}
+
+
+.total {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: var(--app-espacio-3);
+	margin: 0;
+	color: var(--app-sobre-lona-suave);
+	font-weight: 600;
+	text-transform: uppercase;
+}
+
+.total strong {
+	color: var(--app-sobre-lona);
+	font-family: var(--app-familia-titulos);
+	font-size: clamp(32px, 4vw, 44px);
+	font-weight: 800;
+	font-variant-numeric: tabular-nums;
+	text-transform: none;
+}
+
+.volver {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--app-espacio-2);
+	align-self: flex-start;
+	min-height: var(--app-area-tocable);
+	color: var(--app-acento-texto);
+	font-weight: 600;
+	text-underline-offset: 3px;
+}
+
+.volver svg {
+	width: var(--app-icono);
+	height: var(--app-icono);
+}
+
+// --- Dónde y quién ---
+
+.retiro-y-datos {
+	display: flex;
+	flex-direction: column;
+	gap: var(--app-espacio-6);
+}
+
+.retiro {
+	display: flex;
+	flex-direction: column;
+	gap: var(--app-espacio-3);
+}
+
+.retiro dl {
+	display: grid;
+	gap: var(--app-espacio-3);
+	margin: 0;
+}
+
+.retiro dt {
+	display: flex;
+	align-items: center;
+	gap: var(--app-espacio-2);
+}
+
+.estado svg,
+.retiro dt svg {
+	width: 16px;
+	height: 16px;
+}
+
+.retiro dd {
+	margin: var(--app-espacio-1) 0 0;
+	overflow-wrap: anywhere;
+}
+
+form {
+	display: flex;
+	flex-direction: column;
+	gap: var(--app-espacio-4);
+	padding: var(--app-espacio-6);
+	border: 1px solid var(--app-borde);
+	border-radius: var(--app-radio);
+	background: var(--app-superficie);
+}
+
+.campo {
+	display: flex;
+	flex-direction: column;
+	gap: var(--app-espacio-1);
+}
+
+label,
+.retiro dt {
+	color: var(--app-texto-suave);
+	font-size: 12px;
+	font-weight: 600;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+}
+
+.opcional {
+	font-weight: 400;
+	letter-spacing: 0;
+	text-transform: none;
+}
+
+input,
+textarea {
+	width: 100%;
+	min-height: var(--app-area-tocable);
+	padding: var(--app-espacio-3);
+	border: 1px solid var(--app-borde-control);
+	border-radius: var(--app-radio-control);
+	background: var(--app-fondo);
+	color: var(--app-texto);
+	font: inherit;
+}
+
+textarea {
+	resize: vertical;
+}
+
+[aria-invalid='true'] {
+	border: 2px solid var(--app-error);
+}
+
+.error {
+	margin: 0;
+	color: var(--app-error);
+	font-size: 12.5px;
+	font-weight: 600;
+}
+
+.plazo {
+	margin: 0;
+	color: var(--app-texto-suave);
+	font-size: 14px;
+}
+
+// La acción principal de la tienda: amarilla, en sesgo, con el texto derecho
+.principal {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-height: var(--app-area-tocable);
+	padding: 0 var(--app-espacio-6);
+	border: 0;
+	border-radius: var(--app-radio-control);
+	background: var(--app-ambar);
+	color: var(--app-sobre-ambar);
+	font-family: var(--app-familia-titulos);
+	font-size: 20px;
+	font-weight: 800;
+	text-decoration: none;
+	text-transform: uppercase;
+	cursor: pointer;
+	transform: skewX(var(--app-sesgo));
+	transition:
+		background-color var(--app-transicion),
+		transform var(--app-duracion-rapida) var(--app-curva-salida);
+}
+
+// Las puntas del sesgo no se salen del formulario
+form .principal {
+	width: calc(100% - var(--app-espacio-3));
+	align-self: center;
+	min-height: 52px;
+	font-size: 22px;
+}
+
+.principal span {
+	display: inline-flex;
+	transform: skewX(calc(var(--app-sesgo) * -1));
+}
+
+@media (hover: hover) and (pointer: fine) {
+	.principal:hover {
+		background: var(--app-ambar-fuerte);
+	}
+}
+
+.principal:active {
+	transform: skewX(var(--app-sesgo)) scale(0.97);
+}
+
+// Confirmando: no se deshabilita (no pierde el foco), solo se apaga
+.principal[aria-disabled='true'] {
+	opacity: 0.7;
+	cursor: progress;
+}
+
+// --- Avisos y estados ---
+
+.aviso {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: var(--app-espacio-1) var(--app-espacio-3);
+	margin: 0;
+	padding: var(--app-espacio-3);
+	border: 1px solid var(--app-error);
+	background: var(--app-error-fondo);
+	color: var(--app-error);
+	animation: app-aparecer var(--app-duracion-media) var(--app-curva-salida);
+}
+
+.aviso p {
+	margin: 0;
+}
+
+.aviso a {
+	display: inline-flex;
+	align-items: center;
+	min-height: var(--app-area-tocable);
+	color: inherit;
+	font-weight: 700;
+	text-underline-offset: 3px;
+}
+
+.sin-confirmar,
+.tarjeta-error {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: var(--app-espacio-4);
+}
+
+.sin-confirmar p,
+.cargando {
+	margin: 0;
+	color: var(--app-texto-suave);
+	font-size: 18px;
+}
+
+.secundario {
+	min-height: var(--app-area-tocable);
+	padding: 0 var(--app-espacio-4);
+	border: 2px solid currentColor;
+	background: transparent;
+	color: var(--app-texto);
+	font: inherit;
+	font-weight: 600;
+	cursor: pointer;
+}

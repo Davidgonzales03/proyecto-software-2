@@ -24,9 +24,10 @@ const CON_MARTILLO: Carrito = {
   ],
   total: 171,
   cantidadLineas: 1,
+  idPedidoPendiente: null,
 };
 
-const VACIO: Carrito = { lineas: [], total: 0, cantidadLineas: 0 };
+const VACIO: Carrito = { lineas: [], total: 0, cantidadLineas: 0, idPedidoPendiente: null };
 
 function usuario(idUsuario: number, rol: Rol): Usuario {
   return {

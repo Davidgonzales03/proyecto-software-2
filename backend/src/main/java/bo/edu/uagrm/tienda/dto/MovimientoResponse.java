@@ -7,14 +7,16 @@ import bo.edu.uagrm.tienda.entity.MotivoAjuste;
 import bo.edu.uagrm.tienda.entity.MovimientoStock;
 import bo.edu.uagrm.tienda.entity.TipoMovimiento;
 
-// Una fila del historial de stock (HU-08 RF-11): la cantidad con signo y quién lo hizo, por su nombre
+// Una fila del historial de stock (HU-08 RF-11): la cantidad con signo y quién lo hizo, por su nombre. La reserva y la
+// liberación llevan su pedido (HU-12 RF-14)
 public record MovimientoResponse(Long idMovimiento, LocalDateTime fecha, TipoMovimiento tipo, MotivoAjuste motivo,
-		BigDecimal cantidad, BigDecimal stockResultante, String usuario, String nota) {
+		BigDecimal cantidad, BigDecimal stockResultante, String usuario, String nota, Long idPedido) {
 
 	// Lee el usuario: dentro de la transacción
 	public static MovimientoResponse from(MovimientoStock movimiento) {
 		return new MovimientoResponse(movimiento.getIdMovimiento(), movimiento.getFecha(), movimiento.getTipo(),
 				movimiento.getMotivo(), movimiento.getCantidad(), movimiento.getStockResultante(),
-				movimiento.getUsuario().getNombre() + " " + movimiento.getUsuario().getApellido(), movimiento.getNota());
+				movimiento.getUsuario().getNombre() + " " + movimiento.getUsuario().getApellido(), movimiento.getNota(),
+				movimiento.getPedido() == null ? null : movimiento.getPedido().getIdPedido());
 	}
 }

@@ -1,6 +1,13 @@
 import { ChangeDetectionStrategy, Component, computed, ElementRef, inject, signal, viewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { LucideCircleSlash, LucideShoppingCart, LucideTrash2, LucideTriangleAlert, LucideWrench } from '@lucide/angular';
+import {
+	LucideCircleSlash,
+	LucideClock,
+	LucideShoppingCart,
+	LucideTrash2,
+	LucideTriangleAlert,
+	LucideWrench,
+} from '@lucide/angular';
 
 import { comoErrorApi } from '../../core/api/autenticacion.service';
 import { CarritoService } from '../../core/api/carrito.service';
@@ -21,8 +28,8 @@ import { PasoDeCantidad } from '../../shared/paso-de-cantidad/paso-de-cantidad';
 
 // El carrito del Cliente (HU-11): cada línea con su foto, el precio de hoy, la
 // cantidad que se cambia en el lugar y el subtotal; lo que ya no se puede
-// comprar queda marcado y fuera del total. El botón para confirmar el pedido
-// llega con HU-12
+// comprar queda marcado y fuera del total. Con todo comprable, lleva a confirmar
+// el pedido (HU-12)
 @Component({
 	selector: 'app-carrito',
 	imports: [
@@ -30,6 +37,7 @@ import { PasoDeCantidad } from '../../shared/paso-de-cantidad/paso-de-cantidad';
 		DialogoConfirmacion,
 		PasoDeCantidad,
 		LucideCircleSlash,
+		LucideClock,
 		LucideShoppingCart,
 		LucideTrash2,
 		LucideTriangleAlert,
@@ -46,6 +54,10 @@ export class CarritoPage {
 
 	protected readonly recurso = this.servicio.carrito;
 	protected readonly carrito = computed(() => (this.recurso.hasValue() ? this.recurso.value() : undefined));
+	// Confirmar se rechazaría con alguna línea que no se puede comprar (HU-12 RF-3)
+	protected readonly todoComprable = computed(
+		() => this.carrito()?.lineas.every((linea) => linea.estado === 'DISPONIBLE') ?? false,
+	);
 	protected readonly errorDeCarga = computed(() => {
 		const error = this.recurso.error();
 		return error === undefined ? '' : mensajeDeError(comoErrorApi(error));

@@ -36,6 +36,12 @@ const MENSAJES: Record<string, string> = {
 	IMAGEN_DEMASIADO_GRANDE: 'La imagen pesa más de 2 MB. Elige una más liviana.',
 	PRODUCTO_AGOTADO: 'Este producto está agotado.',
 	CARRITO_LLENO: 'Su carrito ya tiene 50 productos distintos. Quite alguno para agregar otro.',
+	CARRITO_VACIO: 'Su carrito está vacío. Agregue algún producto antes de confirmar.',
+	PEDIDO_PENDIENTE: 'Ya tiene un pedido esperando el pago. Páguelo o cancélelo antes de confirmar otro.',
+	STOCK_INSUFICIENTE: 'Algunos productos ya no se pueden pedir así. Corríjalos en el carrito.',
+	TOTAL_CAMBIADO: 'El total del pedido cambió. Revíselo y confirme otra vez.',
+	PEDIDO_NO_PENDIENTE: 'Este pedido ya no espera el pago.',
+	PEDIDO_NO_ENCONTRADO: 'No encontramos ese pedido.',
 	SIN_CONEXION: 'No pudimos conectar con el servidor. Intenta de nuevo.',
 	ERROR_SERVIDOR: 'El servidor tuvo un problema. Vuelva a intentarlo en un momento.',
 };
@@ -79,6 +85,9 @@ const NOMBRES_DE_CAMPO: Record<string, string> = {
 	motivo: 'El motivo',
 	nota: 'La nota',
 	estado: 'El estado',
+	nombreRetira: 'El nombre de quien retira',
+	telefonoRetira: 'El teléfono de quien retira',
+	totalEsperado: 'El total',
 };
 
 export function mensajeDeCampo(campo: string, mensaje: string): string {
