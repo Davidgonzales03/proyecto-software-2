@@ -47,10 +47,14 @@ public class CarritoService {
 	private final LineaCarritoRepository lineaRepository;
 	private final ProductoRepository productoRepository;
 	private final UsuarioRepository usuarioRepository;
+	private final PedidoService pedidoService;
 	private final Clock clock;
 
-	@Transactional(readOnly = true)
+	// Primero vence el pedido del cliente si ya pasó la hora: sus líneas vuelven antes de mostrar el carrito (HU-12
+	// RF-10)
+	@Transactional
 	public CarritoResponse ver(Long idUsuario) {
+		pedidoService.vencerSiCorresponde(idUsuario);
 		return armar(idUsuario);
 	}
 
@@ -134,7 +138,7 @@ public class CarritoService {
 				.map(CarritoService::linea).toList();
 		BigDecimal total = lineas.stream().map(LineaCarritoResponse::subtotal).filter(subtotal -> subtotal != null)
 				.reduce(BigDecimal.ZERO.setScale(2), BigDecimal::add);
-		return new CarritoResponse(lineas, total, lineas.size());
+		return new CarritoResponse(lineas, total, lineas.size(), pedidoService.idDelPendiente(idUsuario).orElse(null));
 	}
 
 	// Lee la categoría y las imágenes del producto: dentro de la transacción
@@ -149,8 +153,9 @@ public class CarritoService {
 				producto.getUnidad(), linea.getCantidad(), subtotal, estado);
 	}
 
-	// Lo que dejó de venderse pesa más que lo agotado: un producto inactivo y sin stock dice «No disponible» (RF-9)
-	private static EstadoLineaCarrito estado(Producto producto, BigDecimal cantidad) {
+	// Lo que dejó de venderse pesa más que lo agotado: un producto inactivo y sin stock dice «No disponible» (RF-9). La
+	// confirmación del pedido rechaza lo mismo (HU-12 RF-3)
+	static EstadoLineaCarrito estado(Producto producto, BigDecimal cantidad) {
 		if (!producto.isActivo() || !producto.getCategoria().isVisible()) {
 			return EstadoLineaCarrito.NO_DISPONIBLE;
 		}

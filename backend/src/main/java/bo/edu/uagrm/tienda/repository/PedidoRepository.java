@@ -25,6 +25,14 @@ public interface PedidoRepository extends JpaRepository<Pedido, Long> {
 	// Un solo pedido pendiente de pago por cliente (RF-5)
 	Optional<Pedido> findFirstByUsuario_IdUsuarioAndEstado(Long idUsuario, EstadoPedido estado);
 
+	// Los pendientes del cliente, para vencerlos o rechazar otra confirmación con el cliente ya bloqueado (RF-5, RF-10)
+	@Lock(LockModeType.PESSIMISTIC_WRITE)
+	List<Pedido> findConBloqueoByUsuario_IdUsuarioAndEstadoOrderByIdPedido(Long idUsuario, EstadoPedido estado);
+
+	// Si hay que vencer algo al leer el carrito o un pedido, sin cargar ni bloquear el pedido (RF-10)
+	boolean existsByUsuario_IdUsuarioAndEstadoAndVenceLessThanEqual(Long idUsuario, EstadoPedido estado,
+			LocalDateTime ahora);
+
 	// Los que ya cumplieron la hora, para la tarea programada (RF-10): solo los ids, y cada uno vence en su transacción
 	@Query("""
 			select new bo.edu.uagrm.tienda.repository.PedidoRepository$PedidoAVencer(p.idPedido, p.usuario.idUsuario)
