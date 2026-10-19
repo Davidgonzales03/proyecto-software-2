@@ -23,6 +23,40 @@ de análisis de Spec Kit, dentro de sprints de Scrum.
 
 Cada PR cierra su issue (`Closes #N`), y el issue pasa a *Hecho* al mergear.
 
+### Scrum adaptado
+
+*19/10/2026.* El equipo es de dos personas con dedicación parcial: Fabio
+programa con Claude Code y David documenta. Por eso Scrum se usa adaptado:
+
+- **Sprints por objetivo, no por calendario.** Cada sprint tiene un objetivo
+  (un incremento que se puede mostrar, como «el cliente arma su carrito») y
+  termina cuando sus historias cumplen la Definition of Done, no en una fecha
+  fija. Para el informe se anotan las fechas reales de inicio y de cierre.
+- **Lo que no se cambia:** el backlog priorizado en el Project, una historia
+  por issue, la Definition of Done (`/sdd:cerrar`) y la revisión del
+  incremento antes de mergear.
+- **Eventos juntos y breves:** la planning es elegir las historias del
+  siguiente objetivo y pasarlas a *Sprint*. La review es la prueba manual de
+  cada historia más la demo de lo mergeado. La retro son los ajustes con
+  fecha en este archivo y en `decisiones.md`. No hay daily: con dos
+  personas, el tablero y los PR cumplen ese papel.
+- **Roles:** Fabio es Product Owner y desarrollador; David documenta y
+  revisa. No hay Scrum Master aparte: el flujo SDD hace cumplir el proceso.
+- **En el Project,** el campo «Sprint» (opciones fijas, sin fechas) dice a
+  qué sprint pertenece cada issue.
+
+| Sprint | Objetivo | Issues |
+|---|---|---|
+| 1 | Cuentas y sistema de diseño | chore de diseño, HU-01 a HU-05 |
+| 2 | Catálogo | HU-06 a HU-10, spike 3D, datos de demostración |
+| 3 | Compra | HU-11 a HU-14, HU-20 |
+| 4 | Operación y 3D | HU-15 a HU-19 |
+
+**Motivo:** con dos personas y horarios variables, un sprint de fecha fija
+cierra a medias o queda vacío. El objetivo por sprint conserva lo que importa
+de Scrum, que es entregar incrementos que funcionan, revisarlos y ajustar el
+proceso, sin inventar fechas.
+
 ## Historia nueva
 
 ```
