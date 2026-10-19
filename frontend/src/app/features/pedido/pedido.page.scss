@@ -1,0 +1,293 @@
+// El pedido en el mundo «Letrero de ruta» (DESIGN.md): el tiempo para pagar va
+// en la ventana del letrero, en amarillo grande; abajo, la placa de lona con lo
+// que se pidió y, al lado, dónde y quién lo retira
+:host {
+	display: flex;
+	flex-direction: column;
+	gap: var(--app-espacio-6);
+}
+
+.cabecera {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--app-espacio-3);
+	padding-bottom: var(--app-espacio-3);
+	border-bottom: 3px solid var(--app-ambar);
+}
+
+h1 {
+	margin: 0;
+	color: var(--app-titulo);
+	font-size: clamp(34px, 5vw, 56px);
+	font-weight: 800;
+	line-height: 1;
+	text-transform: uppercase;
+	text-wrap: balance;
+}
+
+h2 {
+	display: flex;
+	align-items: center;
+	gap: var(--app-espacio-2);
+	margin: 0;
+	font-family: var(--app-familia-titulos);
+	font-size: 24px;
+	font-weight: 800;
+	text-transform: uppercase;
+}
+
+h2 svg {
+	width: 22px;
+	height: 22px;
+}
+
+// El estado cosido en paralelogramo, como «Agotado»; el pendiente, en aviso
+.estado {
+	margin: 0;
+	padding: var(--app-espacio-1) var(--app-espacio-4);
+	outline: 1px dashed currentColor;
+	outline-offset: -4px;
+	clip-path: polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%);
+	background: var(--app-superficie-alta);
+	color: var(--app-texto-suave);
+	font-family: var(--app-familia-titulos);
+	font-size: 18px;
+	font-weight: 700;
+	letter-spacing: 0.05em;
+	text-transform: uppercase;
+}
+
+.estado.pendiente {
+	background: var(--app-aviso-fondo);
+	color: var(--app-aviso);
+}
+
+// La ventana del letrero: marco oscuro cortado en sesgo, filo amarillo y la
+// leyenda enorme. Las cifras no bailan al descontar
+.ventana {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: var(--app-espacio-2) var(--app-espacio-6);
+	padding: var(--app-espacio-6) var(--app-espacio-8);
+	background: var(--app-ventana);
+	box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--app-ambar) 30%, transparent);
+	clip-path: polygon(28px 0, 100% 0, 100% 100%, 0 100%, 0 28px);
+}
+
+.reloj {
+	margin: 0;
+	color: var(--app-ambar);
+	font-family: var(--app-familia-titulos);
+	font-size: clamp(64px, 14vw, 128px);
+	font-weight: 800;
+	line-height: 0.9;
+	font-variant-numeric: tabular-nums;
+}
+
+.plazo {
+	flex: 1 1 22ch;
+	margin: 0;
+	color: var(--app-lona);
+	font-size: 18px;
+	max-width: 46ch;
+}
+
+.cerrado {
+	display: flex;
+	flex-direction: column;
+	gap: var(--app-espacio-2);
+	padding: var(--app-espacio-4);
+	border: 1px solid var(--app-borde);
+	background: var(--app-superficie);
+}
+
+.cerrado p {
+	margin: 0;
+}
+
+.cerrado a {
+	color: var(--app-acento-texto);
+	font-weight: 600;
+	text-underline-offset: 3px;
+}
+
+.columnas {
+	display: grid;
+	gap: var(--app-espacio-6);
+	align-items: start;
+}
+
+@media (min-width: 900px) {
+	.columnas {
+		grid-template-columns: minmax(0, 1.15fr) minmax(300px, 0.85fr);
+		gap: var(--app-espacio-8);
+	}
+}
+
+// --- Lo que se pidió, en la placa de lona ---
+
+.resumen {
+	display: flex;
+	flex-direction: column;
+	gap: var(--app-espacio-4);
+	padding: var(--app-espacio-6);
+	border-radius: var(--app-radio);
+	background: var(--app-lona) var(--app-textura-cruda);
+	background-blend-mode: soft-light;
+	color: var(--app-sobre-lona);
+	outline: 1px dashed color-mix(in srgb, var(--app-sobre-lona) 12%, transparent);
+	outline-offset: -5px;
+}
+
+.lineas {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.linea {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) max-content;
+	column-gap: var(--app-espacio-4);
+	row-gap: var(--app-espacio-1);
+	padding-block: var(--app-espacio-3);
+	border-bottom: 1px dashed color-mix(in srgb, var(--app-sobre-lona) 25%, transparent);
+}
+
+.nombre {
+	font-weight: 600;
+	overflow-wrap: anywhere;
+}
+
+.detalle {
+	grid-row: 2;
+	color: var(--app-sobre-lona-suave);
+	font-size: 14px;
+	font-variant-numeric: tabular-nums;
+}
+
+.subtotal,
+.total strong {
+	font-family: var(--app-familia-titulos);
+	font-weight: 700;
+	font-variant-numeric: tabular-nums;
+}
+
+.subtotal {
+	font-size: 20px;
+	text-align: right;
+}
+
+.total {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	margin: 0;
+	color: var(--app-sobre-lona-suave);
+	font-weight: 600;
+	text-transform: uppercase;
+}
+
+.total strong {
+	color: var(--app-sobre-lona);
+	font-size: clamp(32px, 4vw, 44px);
+	font-weight: 800;
+	text-transform: none;
+}
+
+// --- Dónde y quién ---
+
+.lateral,
+.retiro {
+	display: flex;
+	flex-direction: column;
+	gap: var(--app-espacio-4);
+}
+
+.lateral {
+	gap: var(--app-espacio-6);
+}
+
+.retiro dl {
+	display: grid;
+	gap: var(--app-espacio-3);
+	margin: 0;
+}
+
+.retiro dt {
+	display: flex;
+	align-items: center;
+	gap: var(--app-espacio-2);
+	color: var(--app-texto-suave);
+	font-size: 12px;
+	font-weight: 600;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+}
+
+.retiro dt svg {
+	width: 16px;
+	height: 16px;
+}
+
+.retiro dd {
+	margin: var(--app-espacio-1) 0 0;
+	overflow-wrap: anywhere;
+}
+
+// Cancelar es secundario: borde del color del texto, sin amarillo
+.secundario {
+	align-self: flex-start;
+	min-height: var(--app-area-tocable);
+	padding: 0 var(--app-espacio-6);
+	border: 2px solid currentColor;
+	background: transparent;
+	color: var(--app-texto);
+	font: inherit;
+	font-weight: 600;
+	cursor: pointer;
+}
+
+@media (hover: hover) and (pointer: fine) {
+	.secundario:hover {
+		box-shadow: inset 0 0 0 2px currentColor;
+	}
+}
+
+.secundario[aria-disabled='true'] {
+	opacity: 0.6;
+	cursor: progress;
+}
+
+.aviso {
+	margin: 0;
+	padding: var(--app-espacio-3);
+	border: 1px solid var(--app-error);
+	background: var(--app-error-fondo);
+	color: var(--app-error);
+}
+
+.nada {
+	margin: 0;
+	color: var(--app-texto-suave);
+	font-size: 18px;
+}
+
+.tarjeta-error {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: var(--app-espacio-3);
+}
+
+.solo-lectores {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	clip-path: inset(50%);
+	white-space: nowrap;
+}

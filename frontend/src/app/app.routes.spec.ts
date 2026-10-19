@@ -142,6 +142,13 @@ describe('rutas', () => {
     expect(await navegarComo('EMPLEADO', '/confirmar-pedido')).toBe('/panel');
   });
 
+  // HU-12 RF-13
+  it('el pedido es solo del cliente', async () => {
+    expect(await navegarComo('CLIENTE', '/mis-pedidos/12')).toBe('/mis-pedidos/12');
+    expect(await navegarComo(null, '/mis-pedidos/12')).toBe('/inicio-sesion?destino=%2Fmis-pedidos%2F12');
+    expect(await navegarComo('EMPLEADO', '/mis-pedidos/12')).toBe('/panel');
+  });
+
   it('mis datos pide sesión', async () => {
     expect(await navegarComo(null, '/mis-datos')).toBe('/inicio-sesion?destino=%2Fmis-datos');
     expect(await navegarComo('CLIENTE', '/mis-datos')).toBe('/mis-datos');

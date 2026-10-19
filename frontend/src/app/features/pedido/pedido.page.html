@@ -1,0 +1,110 @@
+@if (noEncontrado()) {
+  <h1>Pedido</h1>
+  <p class="nada">No encontramos ese pedido.</p>
+} @else if (errorDeCarga()) {
+  <h1>Pedido</h1>
+  <div class="tarjeta-error">
+    <p class="aviso" role="alert">{{ errorDeCarga() }}</p>
+    <button type="button" class="secundario" (click)="recurso.reload()">Reintentar</button>
+  </div>
+} @else if (pedido(); as pedido) {
+  <div class="cabecera">
+    <h1>Pedido N.º {{ pedido.idPedido }}</h1>
+    <p class="estado" [class.pendiente]="pedido.estado === 'PENDIENTE_PAGO'">{{ nombresDeEstado[pedido.estado] }}</p>
+  </div>
+
+  <div role="alert">
+    @if (aviso()) {
+      <p class="aviso">{{ aviso() }}</p>
+    }
+  </div>
+
+  @if (pedido.estado === 'PENDIENTE_PAGO') {
+    <section class="ventana" aria-labelledby="titulo-plazo">
+      <h2 id="titulo-plazo" class="solo-lectores">Tiempo para pagar</h2>
+      <p class="reloj" role="timer" aria-live="off">{{ reloj() }}</p>
+      <p class="plazo">
+        para pagar. Vence a las {{ hora(pedido.vence) }}: si no se paga, los productos vuelven a su carrito.
+      </p>
+    </section>
+  } @else {
+    <section class="cerrado" role="status">
+      <p>
+        @if (pedido.estado === 'VENCIDO') {
+          Pasaron los 30 minutos sin pagar.
+        } @else {
+          Canceló el pedido.
+        }
+        Los productos volvieron a su carrito.
+        <a routerLink="/carrito">Ir al carrito</a>
+      </p>
+      @if (noVolvieron() > 0) {
+        <p>
+          {{ noVolvieron() === 1 ? '1 producto no volvió' : noVolvieron() + ' productos no volvieron' }} porque su
+          carrito ya tiene 50.
+        </p>
+      }
+    </section>
+  }
+
+  <div class="columnas">
+    <section class="resumen" aria-labelledby="titulo-resumen">
+      <h2 id="titulo-resumen">Lo que pidió</h2>
+      <ul class="lineas">
+        @for (linea of pedido.lineas; track linea.idProducto) {
+          <li class="linea">
+            <span class="nombre">{{ linea.nombre }}</span>
+            <span class="detalle">{{ cantidad(linea.cantidad) }} × {{ precio(linea.precio) }}{{ unidad(linea) }}</span>
+            <span class="subtotal">{{ precio(linea.subtotal) }}</span>
+          </li>
+        }
+      </ul>
+      <p class="total">Total <strong>{{ precio(pedido.total) }}</strong></p>
+    </section>
+
+    <div class="lateral">
+      <section class="retiro" aria-labelledby="titulo-retiro">
+        <h2 id="titulo-retiro"><svg lucideStore aria-hidden="true"></svg>Se retira en la tienda</h2>
+        <dl>
+          <div>
+            <dt>Retira</dt>
+            <dd>{{ pedido.nombreRetira }} · {{ pedido.telefonoRetira }}</dd>
+          </div>
+          @if (pedido.nota) {
+            <div>
+              <dt>Nota</dt>
+              <dd>{{ pedido.nota }}</dd>
+            </div>
+          }
+          @if (pedido.retiro.direccion) {
+            <div>
+              <dt><svg lucideMapPin aria-hidden="true"></svg>Dirección</dt>
+              <dd>{{ pedido.retiro.direccion }}</dd>
+            </div>
+          }
+          @if (pedido.retiro.horario) {
+            <div>
+              <dt><svg lucideClock aria-hidden="true"></svg>Horario</dt>
+              <dd>{{ pedido.retiro.horario }}</dd>
+            </div>
+          }
+        </dl>
+      </section>
+
+      @if (pedido.estado === 'PENDIENTE_PAGO') {
+        <button
+          type="button"
+          class="secundario"
+          [attr.aria-disabled]="cancelando() ? 'true' : null"
+          (click)="cancelar()"
+        >
+          Cancelar pedido
+        </button>
+      }
+    </div>
+  </div>
+} @else {
+  <p class="nada" role="status">Cargando el pedido…</p>
+}
+
+<app-dialogo-confirmacion />
