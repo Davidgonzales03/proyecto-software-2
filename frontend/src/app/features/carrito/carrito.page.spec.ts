@@ -31,9 +31,10 @@ const CON_DOS: Carrito = {
   ],
   total: 201,
   cantidadLineas: 2,
+  idPedidoPendiente: null,
 };
 
-const VACIO: Carrito = { lineas: [], total: 0, cantidadLineas: 0 };
+const VACIO: Carrito = { lineas: [], total: 0, cantidadLineas: 0, idPedidoPendiente: null };
 
 class CarritoFalso {
   readonly carrito = {
@@ -158,6 +159,7 @@ describe('CarritoPage', () => {
       ],
       total: 0,
       cantidadLineas: 3,
+      idPedidoPendiente: null,
     });
 
     expect(textoDe(fila('Martillo'))).toContain('Agotado');
@@ -305,6 +307,7 @@ describe('CarritoPage', () => {
       lineas: [linea({ estado: 'CANTIDAD_INVALIDA', subtotal: null, cantidad: 1.5 })],
       total: 0,
       cantidadLineas: 1,
+      idPedidoPendiente: null,
     });
 
     const campo = fila('Martillo').querySelector('input')!;
@@ -349,7 +352,7 @@ describe('CarritoPage', () => {
 
   // HU-11 RF-15
   it('− en 1 no hace nada', async () => {
-    await abrir({ lineas: [linea({ cantidad: 1, subtotal: 85.5 })], total: 85.5, cantidadLineas: 1 });
+    await abrir({ lineas: [linea({ cantidad: 1, subtotal: 85.5 })], total: 85.5, cantidadLineas: 1, idPedidoPendiente: null });
 
     const restar = boton('Restar uno a Martillo');
     expect(restar.getAttribute('aria-disabled')).toBe('true');

@@ -38,6 +38,7 @@ const MOVIMIENTOS: Movimiento[] = [
     stockResultante: 3,
     usuario: 'Eva Paz',
     nota: null,
+    idPedido: null,
   },
   {
     idMovimiento: 1,
@@ -48,6 +49,7 @@ const MOVIMIENTOS: Movimiento[] = [
     stockResultante: 5,
     usuario: 'Eva Paz',
     nota: 'Factura 123',
+    idPedido: null,
   },
 ];
 

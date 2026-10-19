@@ -2,7 +2,8 @@ import { UnidadVenta } from './producto';
 
 // Espejo de InventarioResponse, MovimientoResponse y de los pedidos de InventarioController (HU-08)
 
-export type TipoMovimiento = 'ENTRADA' | 'AJUSTE';
+// RESERVA y LIBERACION los registra un pedido al confirmarse y al cancelarse o vencer (HU-12 RF-14)
+export type TipoMovimiento = 'ENTRADA' | 'AJUSTE' | 'RESERVA' | 'LIBERACION';
 
 export type MotivoAjuste = 'CONTEO' | 'MERMA' | 'DEVOLUCION' | 'OTRO';
 
@@ -54,6 +55,22 @@ export interface Movimiento {
 	// Nombre y apellido de quien lo registró
 	usuario: string;
 	nota: string | null;
+	// Solo en la reserva y la liberación
+	idPedido: number | null;
+}
+
+// Cómo se nombra cada movimiento en el historial (HU-08 RF-11, HU-12 RF-14)
+export function descripcionDeMovimiento(movimiento: Movimiento): string {
+	switch (movimiento.tipo) {
+		case 'ENTRADA':
+			return 'Entrada';
+		case 'AJUSTE':
+			return `Ajuste · ${movimiento.motivo === null ? '' : NOMBRES_DE_MOTIVO[movimiento.motivo]}`;
+		case 'RESERVA':
+			return `Reserva por pedido N.º ${movimiento.idPedido}`;
+		case 'LIBERACION':
+			return `Liberación por pedido N.º ${movimiento.idPedido}`;
+	}
 }
 
 // Los filtros de la lista. null en categoría o estado es "todos"; la página

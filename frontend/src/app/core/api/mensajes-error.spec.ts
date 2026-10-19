@@ -15,6 +15,24 @@ describe('mensajeDeError', () => {
     expect(mensajeDeError(error(codigo))).not.toMatch(/stock/i);
   });
 
+  // HU-12 RF-3, RF-4, RF-5, RF-12, RF-15: cada rechazo del pedido explica qué hacer, de usted y sin
+  // decir cuánto stock hay
+  it.each([
+    ['CARRITO_VACIO', 'vacío'],
+    ['PEDIDO_PENDIENTE', 'esperando el pago'],
+    ['STOCK_INSUFICIENTE', 'carrito'],
+    ['TOTAL_CAMBIADO', 'total'],
+    ['PEDIDO_NO_PENDIENTE', 'ya no espera el pago'],
+    ['PEDIDO_NO_ENCONTRADO', 'pedido'],
+  ])('traduce %s', (codigo, motivo) => {
+    const mensaje = mensajeDeError(error(codigo));
+
+    expect(mensaje).toContain(motivo);
+    expect(mensaje).not.toBe(mensajeDeError(error('ALGO_RARO')));
+    expect(mensaje).not.toMatch(/\d/);
+    expect(mensaje).not.toMatch(/\b(tienes|tu|puedes|vuelve)\b/i);
+  });
+
   // Gestión de usuarios: cada operación rechazada explica su motivo, no el mensaje genérico
   it.each([
     ['ROL_PROPIO_NO_MODIFICABLE', 'propio rol'],
@@ -114,6 +132,14 @@ describe('mensajeDeCampo', () => {
     expect(mensajeDeCampo('imagen', 'es obligatoria')).toBe('La imagen es obligatoria.');
     expect(mensajeDeCampo('precio', 'debe ser mayor que 0')).toBe('El precio debe ser mayor que 0.');
     expect(mensajeDeCampo('cantidad', 'debe ser de al menos 1')).toBe('La cantidad debe ser de al menos 1.');
+  });
+
+  // HU-12 RF-6
+  it('nombra los datos de quien retira', () => {
+    expect(mensajeDeCampo('nombreRetira', 'es obligatorio')).toBe('El nombre de quien retira es obligatorio.');
+    expect(mensajeDeCampo('telefonoRetira', 'admite hasta 20 caracteres')).toBe(
+      'El teléfono de quien retira admite hasta 20 caracteres.',
+    );
   });
 
   it('no duplica el punto final', () => {

@@ -30,6 +30,8 @@ export interface Carrito {
 	lineas: LineaDeCarrito[];
 	total: number;
 	cantidadLineas: number;
+	// El pedido que espera el pago, o null: mientras exista no se confirma otro (HU-12 RF-5)
+	idPedidoPendiente: number | null;
 }
 
 // La cantidad por línea (HU-11 RF-3); los decimales dependen de la unidad

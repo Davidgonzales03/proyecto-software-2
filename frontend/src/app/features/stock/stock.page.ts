@@ -29,6 +29,7 @@ import { ConCambiosSinGuardar } from '../../core/guards/cambios-sin-guardar.guar
 import { comoError, ErrorApi } from '../../core/modelos/error-api';
 import {
 	DECIMALES_DE_UNIDAD,
+	descripcionDeMovimiento,
 	ENTRADA_MAXIMA,
 	MotivoAjuste,
 	MOTIVOS,
@@ -164,11 +165,7 @@ export class StockPage implements ConCambiosSinGuardar {
 		return `${movimiento.cantidad > 0 ? '+' : '−'}${cantidad(Math.abs(movimiento.cantidad))}`;
 	}
 
-	protected descripcion(movimiento: Movimiento): string {
-		return movimiento.tipo === 'ENTRADA'
-			? 'Entrada'
-			: `Ajuste · ${movimiento.motivo === null ? '' : NOMBRES_DE_MOTIVO[movimiento.motivo]}`;
-	}
+	protected readonly descripcion = descripcionDeMovimiento;
 
 	protected mensaje(estado: { touched(): boolean; invalid(): boolean; errors(): readonly { message?: string }[] }): string {
 		return estado.touched() && estado.invalid() ? primerMensaje(estado.errors()) : '';
