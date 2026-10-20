@@ -1,14 +1,17 @@
 import { AVISOS_DE_LINEA } from './carrito';
 import { UnidadVenta } from './producto';
 
-// Espejo de PedidoResponse, LineaPedidoResponse, RetiroResponse y CancelacionResponse del backend (HU-12)
+// Espejo de PedidoResponse, LineaPedidoResponse, RetiroResponse, CobroResponse y CancelacionResponse del
+// backend (HU-12, HU-13)
 
-export type EstadoDePedido = 'PENDIENTE_PAGO' | 'CANCELADO' | 'VENCIDO';
+export type EstadoDePedido = 'PENDIENTE_PAGO' | 'PAGADO' | 'CANCELADO' | 'VENCIDO' | 'PAGO_A_DEVOLVER';
 
 export const NOMBRES_DE_ESTADO: Record<EstadoDePedido, string> = {
 	PENDIENTE_PAGO: 'Pendiente de pago',
+	PAGADO: 'Pagado',
 	CANCELADO: 'Cancelado',
 	VENCIDO: 'Vencido',
+	PAGO_A_DEVOLVER: 'Pago a devolver',
 };
 
 // Dónde y cuándo retirar (RF-17); null si no está configurado
@@ -40,7 +43,22 @@ export interface Pedido {
 	// Los cuenta el servidor; 0 si ya no espera el pago (RF-8)
 	segundosParaPagar: number;
 	retiro: Retiro;
+	// Cuándo se pagó; null si no (HU-13 RF-5)
+	pagado: string | null;
+	// El QR pendiente mientras espera el pago; null si no hay (HU-13 RF-1)
+	cobro: Cobro | null;
 }
+
+// El QR que el Cliente paga y, si el sistema de pago la da, su página de pago.
+// simulador: se muestran «Simular pago» y «Simular error» (HU-13 RF-12)
+export interface Cobro {
+	codigoQr: string;
+	urlPasarela: string | null;
+	simulador: boolean;
+}
+
+// Lo que se fuerza en el simulador
+export type ResultadoSimulado = 'PAGADO' | 'ERROR';
 
 export interface Cancelacion {
 	pedido: Pedido;

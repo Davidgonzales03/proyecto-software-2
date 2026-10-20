@@ -24,6 +24,8 @@ const PENDIENTE: Pedido = {
   confirmado: '2026-10-19T10:00:00',
   vence: '2026-10-19T10:30:00',
   segundosParaPagar: 1795,
+  pagado: null,
+  cobro: null,
   retiro: { direccion: 'Av. Principal 123, Montero', horario: null },
 };
 
