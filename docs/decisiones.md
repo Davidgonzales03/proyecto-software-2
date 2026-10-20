@@ -17,7 +17,7 @@ solo las secciones que tocan la tarea. Al agregar una decisión, sumarla al
 - **[Seguridad](#seguridad)**: [`Usuario` es una sola clase con `rol` enumerado](#usuario-es-una-sola-clase-con-rol-enumerado) · [Autenticación por JWT stateless](#autenticación-por-jwt-stateless) · [Contraseñas con BCrypt](#contraseñas-con-bcrypt) · [Administrador inicial al arrancar](#administrador-inicial-al-arrancar) · [Registro](#registro) · [Inicio de sesión](#inicio-de-sesión) · [Recuperación de contraseña](#recuperación-de-contraseña) · [Datos personales](#datos-personales) · [Gestión de usuarios](#gestión-de-usuarios)
 - **[Notificaciones](#notificaciones)**: [Envío de correo detrás de `NotificadorCorreo`](#envío-de-correo-detrás-de-notificadorcorreo) · [Gmail por SMTP, sin servidor de correo propio](#gmail-por-smtp-sin-servidor-de-correo-propio)
 - **[Sistema de diseño (frontend)](#sistema-de-diseño-frontend)**: [La aplicación es un producto, no un trabajo académico](#la-aplicación-es-un-producto-no-un-trabajo-académico) · [Lo visual vive en `DESIGN.md`](#lo-visual-vive-en-designmd) · [Decisiones técnicas del frontend](#decisiones-técnicas-del-frontend)
-- **[Decisiones del proyecto](#decisiones-del-proyecto)**: [Tienda propia, no marketplace](#tienda-propia-no-marketplace) · [Roles de la tienda](#roles-de-la-tienda) · [Pago con Libélula, sin facturación SIAT](#pago-con-libélula-sin-facturación-siat) · [Rediseño del frontend dentro del flujo](#rediseño-del-frontend-dentro-del-flujo) · [Rubro: ferretería, con vista 3D](#rubro-ferretería-con-vista-3d) · [Visor 3D y modelos](#visor-3d-y-modelos) · [Categorías del catálogo](#categorías-del-catálogo) · [Productos](#productos) · [Inventario](#inventario) · [Catálogo público](#catálogo-público) · [Detalle del producto](#detalle-del-producto) · [Carrito](#carrito) · [Pedidos](#pedidos) · [Catálogo de demostración](#catálogo-de-demostración)
+- **[Decisiones del proyecto](#decisiones-del-proyecto)**: [Tienda propia, no marketplace](#tienda-propia-no-marketplace) · [Roles de la tienda](#roles-de-la-tienda) · [Pago con Libélula, sin facturación SIAT](#pago-con-libélula-sin-facturación-siat) · [Rediseño del frontend dentro del flujo](#rediseño-del-frontend-dentro-del-flujo) · [Rubro: ferretería, con vista 3D](#rubro-ferretería-con-vista-3d) · [Visor 3D y modelos](#visor-3d-y-modelos) · [Categorías del catálogo](#categorías-del-catálogo) · [Productos](#productos) · [Inventario](#inventario) · [Catálogo público](#catálogo-público) · [Detalle del producto](#detalle-del-producto) · [Carrito](#carrito) · [Pedidos](#pedidos) · [Pagos](#pagos) · [Catálogo de demostración](#catálogo-de-demostración)
 
 ---
 
@@ -697,6 +697,52 @@ retira en la tienda.
 pedido abandonado no bloquea el stock; retirar en la tienda evita calcular
 envíos en una tienda de un solo local; todo o nada evita cobrar un pedido
 distinto del que el cliente armó.
+
+### Pagos
+
+*20/10/2026 (HU-13).* El Cliente paga con un QR su pedido pendiente de pago.
+El circuito y el adaptador de Libélula vienen del proyecto de eventos del
+mismo equipo.
+
+- **El cobro se genera con «Pagar con QR»** en la página del pedido, uno por
+  pedido: volver a pedirlo devuelve el mismo. Si el sistema de pago informa
+  un error, ese cobro se descarta y se puede generar otro.
+- **La tienda se entera consultando:** la página consulta cada pocos segundos
+  mientras el QR está a la vista, «Ya pagué» consulta en el acto, el aviso del
+  proveedor (`callback_url`) solo adelanta la consulta y una tarea revisa cada
+  minuto los cobros de los pedidos pendientes y de los vencidos o cancelados
+  en las últimas 24 horas (la deuda del proveedor vence por día).
+- **Pagado:** el pedido queda «Pagado» con la fecha del pago; la reserva pasa
+  a ser la venta, sin otro movimiento de stock. No se cancela ni vence.
+- **Antes de vencer un pedido con cobro, se consulta:** si está pagado, queda
+  «Pagado»; si la consulta falla, no vence y se reintenta en la próxima
+  vuelta. Consultan la tarea de cada minuto y la página del pedido al llegar
+  a cero; leer el carrito o el pedido no llama al sistema de pago (una
+  llamada puede tardar 15 s), así que un pedido con cobro puede seguir
+  «Pendiente de pago» hasta un minuto después de su hora. Los cobros se leen
+  sin bloqueo y con el cliente ya bloqueado, por la misma razón que los
+  pedidos pendientes al confirmar.
+- **Pago tardío** (de un pedido vencido o cancelado): si todos sus productos
+  siguen a la venta y alcanza el stock, se vuelve a reservar, el pedido queda
+  «Pagado» y sus cantidades se restan del carrito (las líneas en cero se
+  quitan). Si no, queda «Pago a devolver»: la devolución del dinero se hace
+  fuera del sistema y no se registra.
+- **Un pago se aplica una sola vez,** aunque lleguen a la vez la consulta, el
+  aviso y la tarea; se bloquea primero el cliente, como todo lo que cambia un
+  pedido. Ninguna llamada al sistema de pago se hace con filas bloqueadas.
+- **Libélula** (`TIENDA_PAGO_PROVEEDOR=libelula`): la appkey y el correo fijo
+  que exige en cada deuda van solo en `.env` (`TIENDA_PAGO_LIBELULA_*`); sin
+  ellos la API no arranca y la appkey nunca sale en el registro. Su nombre
+  queda en el adaptador y su configuración. Las pruebas usan un servidor
+  falso.
+- **El simulador sigue por defecto,** y con él, bajo el QR, «Simular pago» y
+  «Simular error», marcados como herramienta de pruebas; con otro proveedor
+  ni los botones ni su endpoint existen.
+
+**Motivo:** el pago por QR se hace en la app del banco, así que la tienda
+solo puede preguntar; consultar antes de vencer y aceptar el pago tardío
+evita cobrar sin entregar, y la deuda que vence por día deja pagar un QR
+después de los 30 minutos del pedido.
 
 ### Catálogo de demostración
 
