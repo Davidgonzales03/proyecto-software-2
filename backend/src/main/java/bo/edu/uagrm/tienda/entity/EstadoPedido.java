@@ -1,6 +1,7 @@
 package bo.edu.uagrm.tienda.entity;
 
-// Dónde está un pedido (HU-12): espera el pago hasta que se cancela o vence; HU-13 suma el pagado
+// Dónde está un pedido: espera el pago hasta que se paga, se cancela o vence (HU-12). Un pago que llega con el pedido
+// vencido o cancelado lo revive como pagado, o lo deja para devolver si ya no alcanza el stock (HU-13 RF-9)
 public enum EstadoPedido {
-	PENDIENTE_PAGO, CANCELADO, VENCIDO
+	PENDIENTE_PAGO, PAGADO, CANCELADO, VENCIDO, PAGO_A_DEVOLVER
 }

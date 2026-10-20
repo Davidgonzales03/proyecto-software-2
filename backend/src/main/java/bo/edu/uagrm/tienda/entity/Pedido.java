@@ -26,8 +26,8 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-// Lo que un Cliente confirmó de su carrito, para retirar en la tienda (HU-12). Espera el pago hasta que vence a los
-// 30 minutos o el cliente lo cancela; el stock lo reserva y lo devuelve PedidoService
+// Lo que un Cliente confirmó de su carrito, para retirar en la tienda (HU-12). Espera el pago hasta que se paga
+// (HU-13), vence a los 30 minutos o el cliente lo cancela; el stock lo reserva y lo devuelve PedidoService
 @Entity
 @Table(name = "pedido", indexes = {
 		@Index(name = "idx_pedido_usuario_estado", columnList = "id_usuario, estado"),
@@ -71,6 +71,9 @@ public class Pedido {
 	// Cuándo se canceló o venció
 	private LocalDateTime cerrado;
 
+	// Cuándo se pagó, también en un pago para devolver (HU-13)
+	private LocalDateTime pagado;
+
 	@OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL)
 	@OrderBy("idLinea")
 	private List<LineaPedido> lineas = new ArrayList<>();
@@ -107,6 +110,29 @@ public class Pedido {
 
 	public void vencer(LocalDateTime fecha) {
 		cerrar(EstadoPedido.VENCIDO, fecha);
+	}
+
+	// Desde pendiente, o desde vencido o cancelado si es un pago tardío que revive (HU-13 RF-5, RF-9). La conciliación
+	// lo revisa antes, con el pedido bloqueado
+	public void pagar(LocalDateTime fecha) {
+		if (estado != EstadoPedido.PENDIENTE_PAGO && !esPagoTardio()) {
+			throw new IllegalStateException("El pedido " + idPedido + " no se puede pagar");
+		}
+		estado = EstadoPedido.PAGADO;
+		pagado = Objects.requireNonNull(fecha);
+	}
+
+	// Un pago tardío sin stock: la devolución se hace fuera del sistema (HU-13 RF-9)
+	public void marcarPagoADevolver(LocalDateTime fecha) {
+		if (!esPagoTardio()) {
+			throw new IllegalStateException("El pedido " + idPedido + " no tiene un pago tardío");
+		}
+		estado = EstadoPedido.PAGO_A_DEVOLVER;
+		pagado = Objects.requireNonNull(fecha);
+	}
+
+	private boolean esPagoTardio() {
+		return estado == EstadoPedido.VENCIDO || estado == EstadoPedido.CANCELADO;
 	}
 
 	// Solo desde «Pendiente de pago» (RF-12): PedidoService lo revisa antes, con el pedido bloqueado
