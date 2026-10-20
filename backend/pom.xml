@@ -94,6 +94,17 @@
 			<version>${jjwt.version}</version>
 			<scope>runtime</scope>
 		</dependency>
+		<!-- Lee el QR que el sistema de pago entrega como imagen (decisiones.md → Pagos) -->
+		<dependency>
+			<groupId>com.google.zxing</groupId>
+			<artifactId>core</artifactId>
+			<version>3.5.3</version>
+		</dependency>
+		<dependency>
+			<groupId>com.google.zxing</groupId>
+			<artifactId>javase</artifactId>
+			<version>3.5.3</version>
+		</dependency>
 		<!-- H2 en memoria: solo para las pruebas de unidad -->
 		<dependency>
 			<groupId>com.h2database</groupId>

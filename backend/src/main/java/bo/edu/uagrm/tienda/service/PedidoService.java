@@ -54,7 +54,7 @@ import lombok.RequiredArgsConstructor;
 @EnableConfigurationProperties(RetiroProperties.class)
 public class PedidoService {
 
-	static final Duration VIGENCIA = Duration.ofMinutes(30);
+	public static final Duration VIGENCIA = Duration.ofMinutes(30);
 
 	private final PedidoRepository pedidoRepository;
 	private final LineaCarritoRepository lineaCarritoRepository;
