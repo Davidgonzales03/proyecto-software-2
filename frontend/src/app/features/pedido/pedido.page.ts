@@ -14,24 +14,25 @@ import {
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { LucideClock, LucideMapPin, LucideStore } from '@lucide/angular';
+import { LucideCircleCheck, LucideClock, LucideMapPin, LucideStore } from '@lucide/angular';
 
 import { comoErrorApi } from '../../core/api/autenticacion.service';
 import { mensajeDeError } from '../../core/api/mensajes-error';
 import { PedidosService } from '../../core/api/pedidos.service';
 import { comoError } from '../../core/modelos/error-api';
-import { LineaDePedido, NOMBRES_DE_ESTADO } from '../../core/modelos/pedido';
+import { LineaDePedido, NOMBRES_DE_ESTADO, Pedido } from '../../core/modelos/pedido';
 import { DialogoConfirmacion } from '../../shared/dialogo-confirmacion/dialogo-confirmacion';
-import { horaCorta } from '../../shared/formato/fechas';
+import { fechaCorta, horaCorta } from '../../shared/formato/fechas';
 import { cantidad, precio } from '../../shared/formato/precios';
 import { idDeLaUrl } from '../../shared/navegacion/id-de-la-url';
+import { INTERVALO_DE_CONSULTA, PagoDelPedido } from './pago/pago-del-pedido';
 
 // El pedido del Cliente (HU-12): lo que se confirmó, quién lo retira y dónde,
-// y mientras espera el pago, el tiempo que queda y «Cancelar pedido». El
-// tiempo lo cuenta el servidor; la página solo lo descuenta
+// y mientras espera el pago, el tiempo que queda, el pago con QR (HU-13) y
+// «Cancelar pedido». El tiempo lo cuenta el servidor; la página solo lo descuenta
 @Component({
 	selector: 'app-pedido',
-	imports: [RouterLink, DialogoConfirmacion, LucideClock, LucideMapPin, LucideStore],
+	imports: [RouterLink, DialogoConfirmacion, PagoDelPedido, LucideCircleCheck, LucideClock, LucideMapPin, LucideStore],
 	templateUrl: './pedido.page.html',
 	styleUrl: './pedido.page.scss',
 	changeDetection: ChangeDetectionStrategy.OnPush,
@@ -79,6 +80,8 @@ export class PedidoPage {
 	});
 	// Cuándo se pidió de nuevo por última vez al llegar a cero
 	private ultimoPedido = Number.NEGATIVE_INFINITY;
+	// Al llegar a cero con un QR, primero se consulta el pago (HU-13 RF-7)
+	private consultandoAlVencer = false;
 
 	// --- Cancelar (RF-9, RF-16) ---
 
@@ -95,18 +98,58 @@ export class PedidoPage {
 		const intervalo = setInterval(() => this.ahora.set(Date.now()), 1000);
 		inject(DestroyRef).onDestroy(() => clearInterval(intervalo));
 		// Al llegar a cero se pide otra vez: el servidor lo vence en el acto y responde «Vencido».
-		// Si le faltaba menos de un segundo y todavía responde «Pendiente», se reintenta cada segundo
+		// Si le faltaba menos de un segundo y todavía responde «Pendiente», se reintenta cada segundo.
+		// Con un QR, primero pregunta si se pagó y el servidor lo vence solo si no; si el sistema de
+		// pago no responde, sigue «Pendiente» y se reintenta cada 5 segundos (HU-13 RF-7)
 		effect(() => {
 			const ahora = this.ahora();
-			if (this.segundos() === 0 && ahora - this.ultimoPedido >= 1000) {
+			const conCobro = this.pedido()?.cobro != null;
+			const espera = conCobro ? INTERVALO_DE_CONSULTA : 1000;
+			if (this.segundos() === 0 && ahora - this.ultimoPedido >= espera) {
 				this.ultimoPedido = ahora;
-				this.recurso.reload();
+				if (conCobro) {
+					void this.consultarAlVencer();
+				} else {
+					this.recurso.reload();
+				}
 			}
 		});
 	}
 
 	protected hora(fechaHora: string): string {
 		return horaCorta(fechaHora.slice(11));
+	}
+
+	protected fecha(fechaHora: string): string {
+		return fechaCorta(fechaHora);
+	}
+
+	// Lo que respondió el pago (HU-13). Si el Cliente estaba en el bloque del
+	// pago y este desaparece (pagado), el foco va al resultado
+	protected actualizar(pedido: Pedido): void {
+		if (pedido.idPedido !== this.idPedido()) {
+			return;
+		}
+		const enElPago = this.elemento.nativeElement.querySelector('app-pago-del-pedido')?.contains(document.activeElement);
+		this.recurso.value.set(pedido);
+		if (pedido.estado !== 'PENDIENTE_PAGO' && enElPago) {
+			this.enfocar('.cerrado');
+		}
+	}
+
+	private async consultarAlVencer(): Promise<void> {
+		const id = this.idPedido();
+		if (id === null || this.consultandoAlVencer) {
+			return;
+		}
+		this.consultandoAlVencer = true;
+		try {
+			this.actualizar(await this.pedidos.consultarPago(id));
+		} catch {
+			// Sin respuesta: se reintenta en la próxima vuelta
+		} finally {
+			this.consultandoAlVencer = false;
+		}
 	}
 
 	// «Unidad» no se escribe, como en el carrito

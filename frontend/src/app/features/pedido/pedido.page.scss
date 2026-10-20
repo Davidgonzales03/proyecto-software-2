@@ -64,6 +64,18 @@ h2 svg {
 	color: var(--app-aviso);
 }
 
+.estado.pagado,
+.cerrado.pagado {
+	background: var(--app-exito-fondo);
+	color: var(--app-exito);
+}
+
+.cerrado svg {
+	width: 20px;
+	height: 20px;
+	vertical-align: -4px;
+}
+
 // La ventana del letrero: marco oscuro cortado en sesgo, filo amarillo y la
 // leyenda enorme. Las cifras no bailan al descontar
 .ventana {

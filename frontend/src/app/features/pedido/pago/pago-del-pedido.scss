@@ -1,0 +1,153 @@
+// El pago en la placa de lona (DESIGN.md): el QR oscuro sobre claro en
+// cualquier tema, «Pagar con QR» amarillo y en sesgo como toda acción
+// principal; la herramienta de pruebas, aparte y cosida con línea punteada
+:host {
+	display: block;
+}
+
+.pago {
+	display: flex;
+	flex-direction: column;
+	gap: var(--app-espacio-4);
+	padding: var(--app-espacio-6);
+	border-radius: var(--app-radio);
+	background: var(--app-lona) var(--app-textura-cruda);
+	background-blend-mode: soft-light;
+	color: var(--app-sobre-lona);
+	outline: 1px dashed color-mix(in srgb, var(--app-sobre-lona) 12%, transparent);
+	outline-offset: -5px;
+}
+
+h2 {
+	display: flex;
+	align-items: center;
+	gap: var(--app-espacio-2);
+	margin: 0;
+	font-family: var(--app-familia-titulos);
+	font-size: 24px;
+	font-weight: 800;
+	text-transform: uppercase;
+}
+
+h2 svg {
+	width: 22px;
+	height: 22px;
+}
+
+p {
+	margin: 0;
+}
+
+.indicacion {
+	max-width: 46ch;
+	color: var(--app-sobre-lona-suave);
+}
+
+app-codigo-qr {
+	max-width: 240px;
+	margin-inline: 0;
+}
+
+.acciones {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--app-espacio-3) var(--app-espacio-4);
+}
+
+// La acción principal de la tienda: amarilla, en sesgo, con el texto derecho
+.principal {
+	align-self: flex-start;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 52px;
+	margin-inline: var(--app-espacio-2);
+	padding: 0 var(--app-espacio-6);
+	border: 0;
+	border-radius: var(--app-radio-control);
+	background: var(--app-ambar);
+	color: var(--app-sobre-ambar);
+	font-family: var(--app-familia-titulos);
+	font-size: 22px;
+	font-weight: 800;
+	text-transform: uppercase;
+	cursor: pointer;
+	transform: skewX(var(--app-sesgo));
+	transition:
+		background-color var(--app-transicion),
+		transform var(--app-duracion-rapida) var(--app-curva-salida);
+}
+
+.principal span {
+	display: inline-flex;
+	transform: skewX(calc(var(--app-sesgo) * -1));
+}
+
+.principal:active {
+	transform: skewX(var(--app-sesgo)) scale(0.97);
+}
+
+.secundario {
+	min-height: var(--app-area-tocable);
+	padding: 0 var(--app-espacio-6);
+	border: 2px solid currentColor;
+	background: transparent;
+	color: inherit;
+	font: inherit;
+	font-weight: 600;
+	cursor: pointer;
+}
+
+@media (hover: hover) and (pointer: fine) {
+	.principal:hover {
+		background: var(--app-ambar-fuerte);
+	}
+
+	.secundario:hover {
+		box-shadow: inset 0 0 0 2px currentColor;
+	}
+}
+
+// Mientras genera o consulta: no se deshabilita (no pierde el foco), solo se apaga
+[aria-disabled='true'] {
+	opacity: 0.7;
+	cursor: progress;
+}
+
+.enlace {
+	display: inline-flex;
+	align-items: center;
+	min-height: var(--app-area-tocable);
+	color: inherit;
+	font-weight: 600;
+	text-underline-offset: 3px;
+}
+
+.pruebas {
+	display: flex;
+	flex-direction: column;
+	gap: var(--app-espacio-3);
+	padding: var(--app-espacio-4);
+	border: 1px dashed currentColor;
+}
+
+.pruebas > p {
+	font-size: 12px;
+	font-weight: 600;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+}
+
+.estado {
+	color: var(--app-sobre-lona-suave);
+	font-weight: 600;
+}
+
+.aviso {
+	padding: var(--app-espacio-3);
+	border: 1px solid var(--app-error-sobre-lona);
+	color: var(--app-error-sobre-lona);
+	font-weight: 600;
+	animation: app-aparecer var(--app-duracion-media) var(--app-curva-salida);
+}
