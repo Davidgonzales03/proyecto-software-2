@@ -1,6 +1,7 @@
 package bo.edu.uagrm.tienda.service.pago;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
@@ -8,6 +9,8 @@ import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import bo.edu.uagrm.tienda.config.ClockConfig;
 import bo.edu.uagrm.tienda.config.LibelulaConfig;
 import bo.edu.uagrm.tienda.config.LibelulaProperties;
+import bo.edu.uagrm.tienda.controller.SimulacionDePagoController;
+import bo.edu.uagrm.tienda.service.PagoService;
 
 // HU-13 RF-13 (decisiones.md → Pago: interfaz propia con dos implementaciones), elegidas con tienda.pago.proveedor
 class SeleccionDelProveedorDePagoTest {
@@ -52,5 +55,17 @@ class SeleccionDelProveedorDePagoTest {
 	void laConfiguracionNoMuestraLaAppkey() {
 		conLibelula().run(ctx -> assertThat(ctx.getBean(LibelulaProperties.class)
 				.toString()).doesNotContain("clave-de-prueba"));
+	}
+
+	// HU-13 RF-12: los botones del simulador tienen su ruta solo con el simulador
+	@Test
+	void laSimulacionSoloExisteConElSimulador() {
+		ApplicationContextRunner conControlador = contexto.withUserConfiguration(SimulacionDePagoController.class)
+				.withBean(PagoService.class, () -> mock(PagoService.class));
+
+		conControlador.run(ctx -> assertThat(ctx).hasSingleBean(SimulacionDePagoController.class));
+		conControlador.withPropertyValues("tienda.pago.proveedor=libelula", "tienda.pago.libelula.appkey=clave-de-prueba",
+				"tienda.pago.libelula.email=pagos@tienda.test")
+				.run(ctx -> assertThat(ctx).hasNotFailed().doesNotHaveBean(SimulacionDePagoController.class));
 	}
 }

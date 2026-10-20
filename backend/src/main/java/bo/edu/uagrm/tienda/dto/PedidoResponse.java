@@ -9,19 +9,20 @@ import bo.edu.uagrm.tienda.entity.EstadoPedido;
 import bo.edu.uagrm.tienda.entity.Pedido;
 
 // La página del pedido (HU-12 RF-8). segundosParaPagar lo cuenta el servidor, así el contador de la página no depende
-// del reloj ni de la zona del dispositivo; es 0 si el pedido ya no espera el pago
+// del reloj ni de la zona del dispositivo; es 0 si el pedido ya no espera el pago. cobro: el QR pendiente, o nulo; pagado:
+// cuándo se pagó (HU-13)
 public record PedidoResponse(Long idPedido, EstadoPedido estado, List<LineaPedidoResponse> lineas, BigDecimal total,
 		String nombreRetira, String telefonoRetira, String nota, LocalDateTime confirmado, LocalDateTime vence,
-		long segundosParaPagar, RetiroResponse retiro) {
+		long segundosParaPagar, RetiroResponse retiro, LocalDateTime pagado, CobroResponse cobro) {
 
 	// Lee las líneas: dentro de la transacción
-	public static PedidoResponse from(Pedido pedido, RetiroResponse retiro, LocalDateTime ahora) {
+	public static PedidoResponse from(Pedido pedido, RetiroResponse retiro, LocalDateTime ahora, CobroResponse cobro) {
 		long segundos = pedido.getEstado() == EstadoPedido.PENDIENTE_PAGO
 				? Math.max(0, Duration.between(ahora, pedido.getVence()).toSeconds())
 				: 0;
 		return new PedidoResponse(pedido.getIdPedido(), pedido.getEstado(),
 				pedido.getLineas().stream().map(LineaPedidoResponse::from).toList(), pedido.getTotal(),
 				pedido.getNombreRetira(), pedido.getTelefonoRetira(), pedido.getNota(), pedido.getConfirmado(),
-				pedido.getVence(), segundos, retiro);
+				pedido.getVence(), segundos, retiro, pedido.getPagado(), cobro);
 	}
 }
