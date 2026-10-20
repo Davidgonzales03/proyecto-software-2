@@ -5,6 +5,7 @@ import { provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { vi } from 'vitest';
 
+import { CarritoService } from '../../core/api/carrito.service';
 import { PedidosService } from '../../core/api/pedidos.service';
 import { Cancelacion, Pedido } from '../../core/modelos/pedido';
 import { PedidoPage } from './pedido.page';
@@ -62,10 +63,12 @@ class PedidosFalso {
 describe('PedidoPage', () => {
   let harness: RouterTestingHarness;
   let pedidos: PedidosFalso;
+  let carrito: { carrito: { reload: ReturnType<typeof vi.fn> } };
 
   async function abrir(url = '/mis-pedidos/12', configurar: (falso: PedidosFalso) => void = () => {}): Promise<void> {
     TestBed.resetTestingModule();
     pedidos = new PedidosFalso();
+    carrito = { carrito: { reload: vi.fn(() => true) } };
     pedidos.recurso.value.set(PENDIENTE);
     configurar(pedidos);
     TestBed.configureTestingModule({
@@ -75,6 +78,7 @@ describe('PedidoPage', () => {
           { path: 'carrito', children: [] },
         ]),
         { provide: PedidosService, useValue: pedidos },
+        { provide: CarritoService, useValue: carrito },
       ],
     });
     harness = await RouterTestingHarness.create();
@@ -392,23 +396,22 @@ describe('PedidoPage', () => {
     expect(boton('Pagar con QR')).toBeDefined();
   });
 
-  // HU-13 RF-7: con un QR, al llegar a cero pregunta si se pagó; si no responde, reintenta cada 5 segundos
+  // HU-13 RF-7: con un QR, al llegar a cero no pide el pedido: la consulta de cada 5 segundos pregunta si se pagó,
+  // y el servidor lo vence si no. Una sola consulta por vuelta (revisión de HU-13, /code-review)
   it('al llegar a cero con cobro consulta antes de pedirlo', async () => {
     vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval', 'Date'] });
     await abrir('/mis-pedidos/12', (falso) => falso.recurso.value.set({ ...CON_COBRO, segundosParaPagar: 1 }));
-    pedidos.consultarPago.mockRejectedValueOnce({ status: 0, detail: '', codigo: 'SIN_CONEXION' });
 
     vi.advanceTimersByTime(1000);
     await harness.fixture.whenStable();
-    expect(pedidos.consultarPago).toHaveBeenCalledTimes(1);
     expect(pedidos.recurso.reload).not.toHaveBeenCalled();
 
     pedidos.consultarPago.mockResolvedValueOnce({ ...PENDIENTE, estado: 'VENCIDO', segundosParaPagar: 0 });
     vi.advanceTimersByTime(4000);
     await harness.fixture.whenStable();
-    // La consulta automática del QR también corre a los 5 segundos: una sola de las dos
-    expect(pedidos.consultarPago.mock.calls.length).toBeGreaterThanOrEqual(2);
     await harness.fixture.whenStable();
+
+    expect(pedidos.consultarPago).toHaveBeenCalledTimes(1);
     expect(texto()).toContain('Vencido');
     expect(pedidos.recurso.reload).not.toHaveBeenCalled();
   });
@@ -467,5 +470,52 @@ describe('PedidoPage', () => {
 
     expect(texto()).toContain('Pedido N.º 5');
     expect(qr()).toBeNull();
+  });
+
+  // Revisión de HU-13 (interfaz): el total a la vista junto al pago, y el foco no se pierde al generar el QR
+  it('muestra el total a pagar y al generar el QR el foco pasa a Ya pagué', async () => {
+    await abrir();
+    expect(pantalla().querySelector('.monto')?.textContent?.replace(/\s+/g, ' ')).toContain('Bs 213,00');
+    const pagar = boton('Pagar con QR')!;
+    pagar.focus();
+
+    pagar.click();
+    await harness.fixture.whenStable();
+    await harness.fixture.whenStable();
+    await new Promise((listo) => setTimeout(listo));
+    await harness.fixture.whenStable();
+
+    expect(document.activeElement).toBe(boton('Ya pagué'));
+  });
+
+  // Revisión de HU-13 (interfaz): un doble toque no manda dos simulaciones
+  it('Simular pago no se manda dos veces', async () => {
+    await abrir('/mis-pedidos/12', (falso) =>
+      falso.recurso.value.set({ ...CON_COBRO, cobro: { ...CON_COBRO.cobro!, simulador: true } }),
+    );
+    let responder!: () => void;
+    pedidos.simular.mockReturnValueOnce(new Promise<void>((listo) => (responder = listo)));
+
+    boton('Simular pago')!.click();
+    boton('Simular pago')!.click();
+    await harness.fixture.whenStable();
+
+    expect(pedidos.simular).toHaveBeenCalledTimes(1);
+    expect(boton('Simular pago')?.getAttribute('aria-disabled')).toBe('true');
+    responder();
+  });
+
+  // Revisión de HU-13 (/code-review ronda 2): por el camino que sea, al dejar de esperar el pago el encabezado se
+  // pone al día; mientras espera, no
+  it('al dejar de esperar el pago recarga el carrito', async () => {
+    await abrir();
+    pedidos.recurso.value.set(CON_COBRO);
+    await harness.fixture.whenStable();
+    expect(carrito.carrito.reload).not.toHaveBeenCalled();
+
+    pedidos.recurso.value.set({ ...PENDIENTE, estado: 'VENCIDO', segundosParaPagar: 0 });
+    await harness.fixture.whenStable();
+
+    expect(carrito.carrito.reload).toHaveBeenCalledTimes(1);
   });
 });

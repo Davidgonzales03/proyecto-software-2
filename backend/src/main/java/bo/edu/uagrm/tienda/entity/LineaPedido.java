@@ -57,6 +57,11 @@ public class LineaPedido {
 	@Column(nullable = false, precision = 11, scale = 2)
 	private BigDecimal subtotal;
 
+	// Lo que volvió al carrito al cancelar o vencer, con sus topes; nulo si no volvió nada. Un pago tardío resta del
+	// carrito solo esto (HU-13 RF-9)
+	@Column(name = "cantidad_devuelta", precision = 7, scale = 2)
+	private BigDecimal cantidadDevuelta;
+
 	LineaPedido(Pedido pedido, Producto producto, BigDecimal cantidad) {
 		this.pedido = Objects.requireNonNull(pedido);
 		this.producto = Objects.requireNonNull(producto);
@@ -65,6 +70,10 @@ public class LineaPedido {
 		this.precio = producto.getPrecio();
 		this.cantidad = cantidad.setScale(2, RoundingMode.UNNECESSARY);
 		this.subtotal = precio.multiply(this.cantidad).setScale(2, RoundingMode.HALF_UP);
+	}
+
+	public void volvioAlCarrito(BigDecimal cantidadDevuelta) {
+		this.cantidadDevuelta = cantidadDevuelta.signum() > 0 ? cantidadDevuelta : null;
 	}
 
 	public Long getIdProducto() {

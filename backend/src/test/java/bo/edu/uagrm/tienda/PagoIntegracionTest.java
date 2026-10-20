@@ -7,9 +7,12 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import java.math.BigDecimal;
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -43,6 +46,7 @@ import bo.edu.uagrm.tienda.PedidoIntegracionTest.RelojDePrueba;
 import bo.edu.uagrm.tienda.entity.Cobro;
 import bo.edu.uagrm.tienda.entity.EstadoCobro;
 import bo.edu.uagrm.tienda.entity.EstadoPedido;
+import bo.edu.uagrm.tienda.entity.LineaCarrito;
 import bo.edu.uagrm.tienda.entity.TipoMovimiento;
 import bo.edu.uagrm.tienda.repository.CategoriaRepository;
 import bo.edu.uagrm.tienda.repository.CobroRepository;
@@ -583,6 +587,42 @@ class PagoIntegracionTest {
 		assertThat(pedido).bodyJson().extractingPath("$.pagado").isNotNull();
 		assertThat(stock(martillo)).isEqualTo(1.0);
 		assertThat(get(CARRITO, ana)).bodyJson().extractingPath("$.lineas[0].cantidad").isEqualTo(2.0);
+	}
+
+	// HU-13 RF-9 (revisión de HU-13, /code-review): solo sale del carrito lo que volvió; lo que quedó fuera por el
+	// tope de 999 no se resta de lo que el Cliente ya tenía
+	@Test
+	void pagoTardioRestaSoloLoQueVolvioAlCarrito() throws Exception {
+		Integer idPedido = pedidoDeMartillos(ana);
+		Cobro cobro = conCobro(ana, idPedido);
+		lineaRepository.save(LineaCarrito.crear(usuarioRepository.findByCorreo("ana.hu13@mail.com").orElseThrow(),
+				productoRepository.findById(martillo.longValue()).orElseThrow(), new BigDecimal("998"),
+				LocalDateTime.now(reloj)));
+		assertThat(cancelar(ana, idPedido)).hasStatus(HttpStatus.OK);
+		elBancoPaga(cobro);
+
+		conciliacion.conciliar(cobro.getIdCobro());
+
+		assertThat(estado(idPedido)).isEqualTo(EstadoPedido.PAGADO);
+		// Volvió 1 (998 + 2 queda en 999): el pago tardío resta ese 1
+		assertThat(get(CARRITO, ana)).bodyJson().extractingPath("$.lineas[0].cantidad").isEqualTo(998.0);
+	}
+
+	// HU-13 RF-7 (revisión de HU-13, /code-review ronda 2): un pago entre la conciliación y el vencimiento no se
+	// pierde, porque la tarea de vencimiento consulta otra vez
+	@Test
+	void unPagoDespuesDeLaConciliacionNoSePierde() throws Exception {
+		Integer idPedido = pedidoDeMartillos(ana);
+		Cobro cobro = conCobro(ana, idPedido);
+		reloj.avanzar(Duration.ofMinutes(31));
+		conciliacion.conciliar(cobro.getIdCobro());
+		elBancoPaga(cobro);
+
+		vencimiento.vencer();
+
+		verify(simulador, times(2)).consultar(any());
+		assertThat(estado(idPedido)).isEqualTo(EstadoPedido.PAGADO);
+		assertThat(stock(martillo)).isEqualTo(8.0);
 	}
 
 	// HU-13 RF-9: un producto que ya no se vende tampoco revive

@@ -5,7 +5,10 @@
 	display: block;
 }
 
+// Sobre la lona clara, el foco y los enlaces van en la tinta de la lona: el
+// amarillo del modo oscuro no se ve (como en el carrito y la confirmación)
 .pago {
+	--app-acento-texto: var(--app-sobre-lona);
 	display: flex;
 	flex-direction: column;
 	gap: var(--app-espacio-4);
@@ -43,9 +46,43 @@ p {
 	color: var(--app-sobre-lona-suave);
 }
 
+// Los 280px del componente: con un QR largo, cada módulo sigue midiendo un
+// número de píxeles parejo
 app-codigo-qr {
-	max-width: 240px;
 	margin-inline: 0;
+}
+
+.monto {
+	display: flex;
+	align-items: baseline;
+	gap: var(--app-espacio-3);
+	color: var(--app-sobre-lona-suave);
+	font-weight: 600;
+	text-transform: uppercase;
+}
+
+.monto strong {
+	color: var(--app-sobre-lona);
+	font-family: var(--app-familia-titulos);
+	font-size: 28px;
+	font-weight: 800;
+	font-variant-numeric: tabular-nums;
+	text-transform: none;
+}
+
+// Las regiones vivas vacías no suman espacio, pero siguen en el árbol de
+// accesibilidad para anunciar lo que llegue
+.pago > [role]:empty {
+	margin-top: calc(-1 * var(--app-espacio-4));
+}
+
+.solo-lectores {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	clip-path: inset(50%);
+	white-space: nowrap;
 }
 
 .acciones {

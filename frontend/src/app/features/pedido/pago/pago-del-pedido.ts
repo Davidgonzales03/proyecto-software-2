@@ -1,9 +1,12 @@
 import {
+	afterNextRender,
 	ChangeDetectionStrategy,
 	Component,
 	computed,
 	effect,
+	ElementRef,
 	inject,
+	Injector,
 	input,
 	NgZone,
 	output,
@@ -16,6 +19,7 @@ import { PedidosService } from '../../../core/api/pedidos.service';
 import { comoError } from '../../../core/modelos/error-api';
 import { Pedido, ResultadoSimulado } from '../../../core/modelos/pedido';
 import { CodigoQr } from '../../../shared/codigo-qr/codigo-qr';
+import { precio } from '../../../shared/formato/precios';
 
 // RF-6: el sistema de pago informó un error y el cobro se descartó
 const PAGO_FALLIDO = 'El pago no se pudo completar. Genere otro QR para intentar de nuevo.';
@@ -39,6 +43,8 @@ export const INTERVALO_DE_CONSULTA = 5000;
 export class PagoDelPedido {
 	private readonly pedidos = inject(PedidosService);
 	private readonly zona = inject(NgZone);
+	private readonly elemento = inject<ElementRef<HTMLElement>>(ElementRef);
+	private readonly injector = inject(Injector);
 
 	// Solo mientras espera el pago
 	readonly pedido = input.required<Pedido>();
@@ -49,6 +55,10 @@ export class PagoDelPedido {
 
 	protected readonly generando = signal(false);
 	protected readonly consultando = signal(false);
+	protected readonly simulando = signal(false);
+	protected readonly precio = precio;
+	// Cada respuesta trae un pedido nuevo: el intervalo solo se rehace cuando el QR aparece o se va
+	private readonly hayCobro = computed(() => this.pedido().cobro !== null);
 	// Cada mensaje recuerda de qué pedido es: con otro pedido en pantalla no se
 	// muestra. Cada respuesta trae un objeto nuevo del mismo pedido, así que no
 	// se reinician al cambiar la entrada
@@ -63,7 +73,7 @@ export class PagoDelPedido {
 		// espera que se repite no es trabajo pendiente de la pantalla, y las
 		// señales que cambia la consulta ya la vuelven a dibujar
 		effect((alLimpiar) => {
-			if (this.pedido().cobro === null) {
+			if (!this.hayCobro()) {
 				return;
 			}
 			const consulta = this.zona.runOutsideAngular(() =>
@@ -84,7 +94,14 @@ export class PagoDelPedido {
 		try {
 			const pedido = await this.pedidos.pagar(id);
 			if (this.pedido().idPedido === id) {
+				// «Pagar con QR» deja de estar: el foco sigue en el bloque, en «Ya pagué»
+				const conFoco = this.elemento.nativeElement.contains(document.activeElement);
 				this.cambio.emit(pedido);
+				if (conFoco) {
+					afterNextRender(() => this.elemento.nativeElement.querySelector<HTMLElement>('.ya-pague')?.focus(), {
+						injector: this.injector,
+					});
+				}
 			}
 		} catch (rechazo: unknown) {
 			this.rechazado(id, rechazo);
@@ -100,13 +117,19 @@ export class PagoDelPedido {
 
 	// Herramienta de pruebas (RF-12): lo que haría el banco, y después la consulta
 	protected async simular(resultado: ResultadoSimulado): Promise<void> {
+		if (this.simulando()) {
+			return;
+		}
 		const id = this.pedido().idPedido;
 		this.errorDelPago.set(null);
+		this.simulando.set(true);
 		try {
 			await this.pedidos.simular(id, resultado);
 		} catch (rechazo: unknown) {
 			this.rechazado(id, rechazo);
 			return;
+		} finally {
+			this.simulando.set(false);
 		}
 		await this.consultar(false);
 	}

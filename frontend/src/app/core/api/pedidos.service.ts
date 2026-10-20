@@ -55,7 +55,8 @@ export class PedidosService {
 		return escribir(this.http.post<Pedido>(`${PEDIDOS}/${idPedido}/cobro`, null));
 	}
 
-	// El servidor pregunta al sistema de pago y responde cómo quedó (HU-13 RF-4)
+	// El servidor pregunta al sistema de pago y responde cómo quedó (HU-13 RF-4).
+	// Si cambió el pedido, la página del pedido pide el carrito de nuevo
 	consultarPago(idPedido: number): Promise<Pedido> {
 		return escribir(this.http.post<Pedido>(`${PEDIDOS}/${idPedido}/cobro/consulta`, null));
 	}

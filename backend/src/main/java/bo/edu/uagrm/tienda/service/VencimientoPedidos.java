@@ -16,7 +16,8 @@ import lombok.extern.slf4j.Slf4j;
 
 // Vence los pedidos sin pagar a los 30 minutos, aunque nadie los mire (HU-12 RF-10). Es otro bean que PedidoService:
 // así cada pedido vence en su propia transacción y uno que falla no frena a los demás. Uno con cobro se consulta antes,
-// sin nada bloqueado: si está pagado queda pagado, y si la consulta falla no vence en esta vuelta (HU-13 RF-7)
+// sin nada bloqueado: si está pagado queda pagado, y si la consulta falla no vence en esta vuelta (HU-13 RF-7). Se
+// consulta siempre, aunque la conciliación ya lo haya hecho: un pago entre las dos consultas no se pierde
 @Slf4j
 @Component
 @RequiredArgsConstructor

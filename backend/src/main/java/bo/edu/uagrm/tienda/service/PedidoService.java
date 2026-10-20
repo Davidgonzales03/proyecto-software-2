@@ -17,6 +17,7 @@ import java.util.TreeSet;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import bo.edu.uagrm.tienda.config.RetiroProperties;
@@ -55,7 +56,9 @@ import lombok.RequiredArgsConstructor;
 // cliente, después el pedido y después los productos por id ascendente. Así dos confirmaciones, una cancelación, el
 // vencimiento y el inventario nunca se esperan en círculo (RF-7, RF-12). Cada fila se bloquea antes de leerla en la
 // transacción: una entidad ya leída no se vuelve a leer al bloquearla y quedaría con datos viejos. Los cobros (HU-13) se
-// leen sin bloqueo y con el cliente ya bloqueado: todo el que escribe un cobro bloquea antes al cliente
+// leen sin bloqueo y con el cliente ya bloqueado: todo el que escribe un cobro bloquea antes al cliente. Por eso lo
+// que puede vencer un pedido va con READ_COMMITTED: con REPEATABLE_READ, una lectura sin bloqueo anterior al bloqueo
+// del cliente fija la vista y no vería un cobro guardado mientras esperaba (HU-13 RF-7)
 @Service
 @RequiredArgsConstructor
 @EnableConfigurationProperties(RetiroProperties.class)
@@ -81,7 +84,7 @@ public class PedidoService {
 	}
 
 	// Todo o nada, en una sola transacción (RF-2, RF-3)
-	@Transactional
+	@Transactional(isolation = Isolation.READ_COMMITTED)
 	public PedidoResponse confirmar(Long idUsuario, ConfirmacionRequest solicitud) {
 		Usuario cliente = bloquearCliente(idUsuario);
 		LocalDateTime ahora = LocalDateTime.now(clock);
@@ -134,7 +137,7 @@ public class PedidoService {
 
 	// Primero vence el del cliente si ya pasó la hora (RF-10). Uno con cobro sigue «Pendiente» con el tiempo agotado
 	// hasta que el sistema de pago diga que no se pagó: leer no lo consulta (HU-13 RF-7)
-	@Transactional
+	@Transactional(isolation = Isolation.READ_COMMITTED)
 	public PedidoResponse ver(Long idUsuario, Long idPedido) {
 		LocalDateTime ahora = LocalDateTime.now(clock);
 		vencerSiCorresponde(idUsuario);
@@ -143,7 +146,7 @@ public class PedidoService {
 		return respuesta(pedido, ahora);
 	}
 
-	@Transactional
+	@Transactional(isolation = Isolation.READ_COMMITTED)
 	public CancelacionResponse cancelar(Long idUsuario, Long idPedido) {
 		Pedido pedido = bloquear(idUsuario, idPedido);
 		if (pedido.getEstado() != EstadoPedido.PENDIENTE_PAGO) {
@@ -156,7 +159,7 @@ public class PedidoService {
 
 	// Para la tarea programada (VencimientoPedidos), un pedido por transacción. Si ya se canceló, venció o pagó, o
 	// todavía no puede vencer, no hace nada (RF-12; HU-13 RF-7)
-	@Transactional
+	@Transactional(isolation = Isolation.READ_COMMITTED)
 	public void vencer(Long idUsuario, Long idPedido) {
 		Pedido pedido = bloquear(idUsuario, idPedido);
 		LocalDateTime ahora = LocalDateTime.now(clock);
@@ -166,7 +169,7 @@ public class PedidoService {
 	}
 
 	// Al leer el carrito o un pedido. Sin nada vencido no bloquea nada: es lo de casi siempre
-	@Transactional
+	@Transactional(isolation = Isolation.READ_COMMITTED)
 	public void vencerSiCorresponde(Long idUsuario) {
 		LocalDateTime ahora = LocalDateTime.now(clock);
 		if (pedidoRepository.existsByUsuario_IdUsuarioAndEstadoAndVenceLessThanEqual(idUsuario,
@@ -318,10 +321,13 @@ public class PedidoService {
 		for (LineaPedido linea : pedido.getLineas()) {
 			LineaCarrito existente = carrito.get(linea.getIdProducto());
 			if (existente != null) {
-				existente.cambiar(existente.getCantidad().add(linea.getCantidad()).min(CarritoService.MAXIMO_CANTIDAD));
+				BigDecimal antes = existente.getCantidad();
+				existente.cambiar(antes.add(linea.getCantidad()).min(CarritoService.MAXIMO_CANTIDAD));
+				linea.volvioAlCarrito(existente.getCantidad().subtract(antes));
 			} else if (carrito.size() < CarritoService.MAXIMO_LINEAS) {
 				carrito.put(linea.getIdProducto(), lineaCarritoRepository.save(
 						LineaCarrito.crear(pedido.getUsuario(), linea.getProducto(), linea.getCantidad(), ahora)));
+				linea.volvioAlCarrito(linea.getCantidad());
 			} else {
 				noVolvieron++;
 			}
@@ -329,8 +335,9 @@ public class PedidoService {
 		return noVolvieron;
 	}
 
-	// A cada línea del carrito se le resta lo del pedido; en cero o menos, se quita. Lo que el Cliente agregó aparte se
-	// queda (HU-13 RF-9). Con el cliente bloqueado, nadie más cambia el carrito
+	// A cada línea del carrito se le resta lo que el pedido devolvió al cancelar o vencer (no más: lo que no entró por
+	// los topes no volvió); en cero o menos, se quita. Lo que el Cliente agregó aparte se queda (HU-13 RF-9). Con el
+	// cliente bloqueado, nadie más cambia el carrito
 	private void restarDelCarrito(Pedido pedido) {
 		Map<Long, LineaCarrito> carrito = new HashMap<>();
 		lineaCarritoRepository.findByUsuario_IdUsuarioOrderByFechaAgregadaAscIdLineaAsc(
@@ -338,10 +345,10 @@ public class PedidoService {
 				.forEach(linea -> carrito.put(linea.getProducto().getIdProducto(), linea));
 		for (LineaPedido linea : pedido.getLineas()) {
 			LineaCarrito existente = carrito.get(linea.getIdProducto());
-			if (existente == null) {
+			if (existente == null || linea.getCantidadDevuelta() == null) {
 				continue;
 			}
-			BigDecimal queda = existente.getCantidad().subtract(linea.getCantidad());
+			BigDecimal queda = existente.getCantidad().subtract(linea.getCantidadDevuelta());
 			if (queda.signum() > 0) {
 				existente.cambiar(queda);
 			} else {
