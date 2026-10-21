@@ -15,9 +15,9 @@ import { destinoInterno, parametrosDelDestino } from '../../shared/navegacion/de
 // Lo que se viene a contar desde otra pantalla. Un solo parámetro con valores
 // conocidos, en vez de una bandera por caso.
 const AVISOS: Record<string, string> = {
-	'contrasena-actualizada': 'Tu contraseña quedó actualizada. Inicia sesión con la nueva.',
+	'contrasena-actualizada': 'Su contraseña quedó actualizada. Inicie sesión con la nueva.',
 	// HU-02 RF-10: la sesión venció o el servidor la rechazó
-	'sesion-cerrada': 'Tu sesión se cerró. Inicia sesión de nuevo.',
+	'sesion-cerrada': 'Su sesión se cerró. Inicie sesión de nuevo.',
 };
 
 interface Credenciales {
@@ -30,9 +30,9 @@ type CampoDelFormulario = keyof Credenciales;
 const ORDEN_DE_CAMPOS: readonly CampoDelFormulario[] = ['correo', 'contrasena'];
 
 const esquema = schema<Credenciales>((ruta) => {
-	required(ruta.correo, { message: 'Escribe tu correo.' });
+	required(ruta.correo, { message: 'Escriba su correo.' });
 	email(ruta.correo, { message: 'Ese correo no tiene formato de correo.' });
-	required(ruta.contrasena, { message: 'Escribe tu contraseña.' });
+	required(ruta.contrasena, { message: 'Escriba su contraseña.' });
 });
 
 @Component({
@@ -81,6 +81,9 @@ export class InicioSesionPage {
 
 	protected async enviar(evento: Event): Promise<void> {
 		evento.preventDefault();
+		if (this.enviando()) {
+			return;
+		}
 		// El aviso ya cumplió: a partir de acá manda lo que pase al entrar
 		this.aviso.set('');
 		this.avisoDeError.set('');

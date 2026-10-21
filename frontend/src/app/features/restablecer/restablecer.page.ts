@@ -16,11 +16,11 @@ interface ContrasenaNueva {
 
 // Las mismas reglas que el registro, que son las de RestablecimientoContrasenaRequest
 const esquema = schema<ContrasenaNueva>((ruta) => {
-	required(ruta.contrasena, { message: 'Elige una contraseña.' });
+	required(ruta.contrasena, { message: 'Elija una contraseña.' });
 	minLength(ruta.contrasena, 8, { message: 'La contraseña necesita al menos 8 caracteres.' });
 	validate(ruta.contrasena, ({ value }) =>
 		bytesUtf8(value()) > 72
-			? { kind: 'contrasenaLarga', message: 'Esa contraseña es demasiado larga. Prueba con una más corta.' }
+			? { kind: 'contrasenaLarga', message: 'Esa contraseña es demasiado larga. Pruebe con una más corta.' }
 			: null,
 	);
 });
@@ -67,6 +67,9 @@ export class RestablecerPage {
 
 	protected async enviar(evento: Event): Promise<void> {
 		evento.preventDefault();
+		if (this.enviando()) {
+			return;
+		}
 		this.errorDelServidor.set(null);
 		this.enviando.set(true);
 

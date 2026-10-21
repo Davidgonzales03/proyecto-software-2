@@ -58,7 +58,7 @@ describe('RecuperacionPage', () => {
     return fijo.nativeElement.textContent as string;
   }
 
-  const CONFIRMACION = 'Si ese correo tiene una cuenta, te enviamos las instrucciones';
+  const CONFIRMACION = 'Si ese correo tiene una cuenta, le enviamos las instrucciones';
 
   it('pide el correo de la cuenta', () => {
     const etiqueta: HTMLLabelElement = fijo.nativeElement.querySelector('label');
@@ -95,7 +95,7 @@ describe('RecuperacionPage', () => {
     await enviar();
 
     expect(autenticacion.correos).toEqual([]);
-    expect(texto()).toContain('Escribe tu correo');
+    expect(texto()).toContain('Escriba su correo');
   });
 
   it('avisa cuando el correo no tiene formato de correo', async () => {
@@ -114,7 +114,7 @@ describe('RecuperacionPage', () => {
 
     await enviar();
 
-    expect(texto()).toContain('Espera unos minutos');
+    expect(texto()).toContain('Espere unos minutos');
     expect(texto()).not.toContain(CONFIRMACION);
     expect(texto()).not.toContain('detalle técnico');
     expect(fijo.nativeElement.querySelector('form')).not.toBeNull();

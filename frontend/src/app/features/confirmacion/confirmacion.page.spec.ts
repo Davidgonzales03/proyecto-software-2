@@ -66,11 +66,15 @@ class CarritoFalso {
 class PedidosFalso {
   readonly datosDeRetiro = signal<Retiro | undefined>({ direccion: null, horario: null });
   readonly confirmar = vi.fn((_datos: DatosDeConfirmacion): Promise<Pedido> => Promise.resolve(PEDIDO));
+  readonly errorDeRetiro = signal<unknown>(undefined);
+  readonly recargarRetiro = vi.fn(() => true);
   retiro() {
     const valor = this.datosDeRetiro;
     return {
       value: valor,
       hasValue: () => valor() !== undefined,
+      error: this.errorDeRetiro,
+      reload: this.recargarRetiro,
     };
   }
 }
@@ -290,5 +294,20 @@ describe('ConfirmacionPage', () => {
     await abrir(CON_DOS, { direccion: null, horario: null });
     expect(texto()).not.toContain('Dirección');
     expect(texto()).not.toContain('Horario');
+  });
+
+  // Auditoría (20/10/2026): si no carga dónde retirar, lo dice en vez de dejar el título solo
+  it('si no carga dónde retirar lo avisa y deja reintentar', async () => {
+    await abrir();
+    pedidos.datosDeRetiro.set(undefined);
+    pedidos.errorDeRetiro.set(new Error('sin conexión'));
+    await harness.fixture.whenStable();
+
+    expect(harness.routeNativeElement?.textContent).toContain('No pudimos cargar dónde y cuándo retirar.');
+    const reintentar = Array.from(harness.routeNativeElement!.querySelectorAll('button')).find(
+      (boton) => boton.textContent?.trim() === 'Reintentar',
+    )!;
+    reintentar.click();
+    expect(pedidos.recargarRetiro).toHaveBeenCalled();
   });
 });

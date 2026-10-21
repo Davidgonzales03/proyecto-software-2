@@ -13,8 +13,8 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { Title } from '@angular/platform-browser';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { LucideCircleCheck, LucideCircleSlash, LucidePencil } from '@lucide/angular';
+import { comoErrorApi } from '../../core/modelos/error-api';
 
-import { comoErrorApi } from '../../core/api/autenticacion.service';
 import { CatalogoService } from '../../core/api/catalogo.service';
 import { mensajeDeError } from '../../core/api/mensajes-error';
 import { MARCA } from '../../core/marca';

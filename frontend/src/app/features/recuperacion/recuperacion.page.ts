@@ -13,8 +13,8 @@ interface Solicitud {
 }
 
 const esquema = schema<Solicitud>((ruta) => {
-	required(ruta.correo, { message: 'Escribe tu correo.' });
-	sinEspaciosSolos(ruta.correo, 'Escribe tu correo.');
+	required(ruta.correo, { message: 'Escriba su correo.' });
+	sinEspaciosSolos(ruta.correo, 'Escriba su correo.');
 	email(ruta.correo, { message: 'Ese correo no tiene formato de correo.' });
 	maxLength(ruta.correo, 120, { message: 'El correo admite hasta 120 caracteres.' });
 });
@@ -44,6 +44,9 @@ export class RecuperacionPage {
 
 	protected async enviar(evento: Event): Promise<void> {
 		evento.preventDefault();
+		if (this.enviando()) {
+			return;
+		}
 		this.avisoDeError.set('');
 		this.enviando.set(true);
 

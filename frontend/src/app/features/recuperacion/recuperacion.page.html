@@ -3,12 +3,12 @@
 
   @if (pedida()) {
     <p class="aviso exito" role="status" tabindex="-1">
-      Si ese correo tiene una cuenta, te enviamos las instrucciones para recuperarla. Revisa tu
+      Si ese correo tiene una cuenta, le enviamos las instrucciones para recuperarla. Revise su
       bandeja de entrada.
     </p>
   } @else {
     <p class="bajada">
-      Escribe el correo de tu cuenta y te enviamos un enlace para elegir una contraseña nueva.
+      Escriba el correo de su cuenta y le enviamos un enlace para elegir una contraseña nueva.
     </p>
 
     @if (avisoDeError()) {
@@ -34,7 +34,7 @@
         }
       </div>
 
-      <button type="submit" class="boton" [disabled]="enviando()">
+      <button type="submit" class="boton" [attr.aria-disabled]="enviando() ? 'true' : null">
         {{ enviando() ? 'Enviando…' : 'Enviar instrucciones' }}
       </button>
     </form>

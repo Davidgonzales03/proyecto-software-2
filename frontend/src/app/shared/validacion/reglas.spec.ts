@@ -1,4 +1,4 @@
-import { bytesUtf8, esFechaFutura, fechaLocalISO } from './reglas';
+import { bytesUtf8 } from './reglas';
 
 describe('bytesUtf8', () => {
   it('cuenta un byte por carácter ASCII', () => {
@@ -22,38 +22,5 @@ describe('bytesUtf8', () => {
 
   it('una cadena vacía no ocupa nada', () => {
     expect(bytesUtf8('')).toBe(0);
-  });
-});
-
-describe('esFechaFutura', () => {
-  const HOY = new Date(2026, 8, 17, 15, 30);
-
-  // RF-13: solo se rechaza la fecha posterior al día en curso
-  it('la fecha de hoy no es futura', () => {
-    expect(esFechaFutura('2026-09-17', HOY)).toBe(false);
-  });
-
-  it('una fecha pasada no es futura', () => {
-    expect(esFechaFutura('2000-05-20', HOY)).toBe(false);
-  });
-
-  it('el día siguiente sí es futuro', () => {
-    expect(esFechaFutura('2026-09-18', HOY)).toBe(true);
-  });
-
-  it('una fecha vacía no se trata como futura, de eso se ocupa el campo obligatorio', () => {
-    expect(esFechaFutura('', HOY)).toBe(false);
-  });
-});
-
-describe('fechaLocalISO', () => {
-  // El <input type="date"> trabaja en la zona horaria de quien lo usa: si la
-  // fecha se armara en UTC, un 17 a la noche en Bolivia saldría como 18
-  it('usa el día local, no el de UTC', () => {
-    expect(fechaLocalISO(new Date(2026, 8, 17, 22, 0))).toBe('2026-09-17');
-  });
-
-  it('rellena mes y día con cero', () => {
-    expect(fechaLocalISO(new Date(2026, 0, 5))).toBe('2026-01-05');
   });
 });

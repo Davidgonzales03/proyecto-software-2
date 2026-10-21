@@ -110,7 +110,7 @@
                       type="button"
                       class="secundario"
                       [attr.aria-label]="(desactivada ? 'Reactivar a ' : 'Desactivar a ') + nombreDe(usuario)"
-                      [disabled]="ocupada"
+                      [attr.aria-disabled]="ocupada ? 'true' : null"
                       (click)="alCambiarEstadoDe(usuario)"
                     >
                       {{ desactivada ? 'Reactivar' : 'Desactivar' }}

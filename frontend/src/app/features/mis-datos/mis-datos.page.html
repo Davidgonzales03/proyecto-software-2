@@ -2,7 +2,7 @@
 
 @if (usuario(); as usuario) {
   <section class="tarjeta" aria-labelledby="titulo-datos">
-    <h2 id="titulo-datos">Tus datos</h2>
+    <h2 id="titulo-datos">Sus datos</h2>
 
     <dl class="fijos">
       <div>
@@ -80,7 +80,7 @@
         }
       </div>
 
-      <button type="submit" class="boton" [disabled]="guardandoDatos()">
+      <button type="submit" class="boton" [attr.aria-disabled]="guardandoDatos() ? 'true' : null">
         {{ guardandoDatos() ? 'Guardando…' : 'Guardar datos' }}
       </button>
     </form>
@@ -88,7 +88,7 @@
 
   <section class="tarjeta" aria-labelledby="titulo-contrasena">
     <h2 id="titulo-contrasena">Cambiar contraseña</h2>
-    <p class="bajada">Al cambiarla se cierran tus sesiones en otros dispositivos.</p>
+    <p class="bajada">Al cambiarla se cierran sus sesiones en otros dispositivos.</p>
 
     @if (avisoDeContrasena()) {
       <p class="aviso" role="alert">{{ avisoDeContrasena() }}</p>
@@ -142,16 +142,16 @@
         }
       </div>
 
-      <button type="submit" class="boton" [disabled]="cambiandoContrasena()">
+      <button type="submit" class="boton" [attr.aria-disabled]="cambiandoContrasena() ? 'true' : null">
         {{ cambiandoContrasena() ? 'Cambiando…' : 'Cambiar contraseña' }}
       </button>
     </form>
   </section>
 } @else if (cargaFallida()) {
   <section class="tarjeta">
-    <p class="aviso" role="alert">No pudimos cargar tus datos. Revisa tu conexión y vuelve a intentar.</p>
+    <p class="aviso" role="alert">No pudimos cargar sus datos. Revise su conexión y vuelva a intentar.</p>
     <button type="button" class="boton reintentar" (click)="recurso.reload()">Reintentar</button>
   </section>
 } @else {
-  <p class="cargando" role="status">Cargando tus datos…</p>
+  <p class="cargando" role="status">Cargando sus datos…</p>
 }

@@ -22,11 +22,10 @@ import {
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { LucideArrowLeft, LucideCircleSlash, LucideTriangleAlert } from '@lucide/angular';
 
-import { comoErrorApi } from '../../core/api/autenticacion.service';
 import { InventarioService } from '../../core/api/inventario.service';
 import { mensajeDeError, mensajeDelRechazo, primerMensaje } from '../../core/api/mensajes-error';
 import { ConCambiosSinGuardar } from '../../core/guards/cambios-sin-guardar.guard';
-import { comoError, ErrorApi } from '../../core/modelos/error-api';
+import { comoError, comoErrorApi, ErrorApi } from '../../core/modelos/error-api';
 import {
 	DECIMALES_DE_UNIDAD,
 	descripcionDeMovimiento,
@@ -113,7 +112,7 @@ export class StockPage implements ConCambiosSinGuardar {
 
 	private readonly datosDeEntrada = signal<DatosDeEntrada>({ ...SIN_ENTRADA });
 	protected readonly entrada = form(this.datosDeEntrada, (ruta) => {
-		required(ruta.cantidad, { message: 'Escribe la cantidad que entró.' });
+		required(ruta.cantidad, { message: 'Escriba la cantidad que entró.' });
 		this.validarCantidad(ruta.cantidad, () => ({ decimales: this.decimales(), maximo: ENTRADA_MAXIMA, positiva: true }));
 		maxLength(ruta.nota, 200, { message: 'La nota admite hasta 200 caracteres.' });
 	});
@@ -124,7 +123,7 @@ export class StockPage implements ConCambiosSinGuardar {
 
 	private readonly datosDeAjuste = signal<DatosDeAjuste>({ ...SIN_AJUSTE });
 	protected readonly ajuste = form(this.datosDeAjuste, (ruta) => {
-		required(ruta.contada, { message: 'Escribe cuánto hay.' });
+		required(ruta.contada, { message: 'Escriba cuánto hay.' });
 		this.validarCantidad(ruta.contada, () => ({ decimales: this.decimales(), maximo: STOCK_MAXIMO, positiva: false }));
 		validate(ruta.nota, ({ value, valueOf }) =>
 			valueOf(ruta.motivo) === 'OTRO' && value().trim() === ''
@@ -142,7 +141,7 @@ export class StockPage implements ConCambiosSinGuardar {
 	private readonly minimoGuardado = computed(() => textoDeMinimo(this.producto()?.stockMinimo));
 	private readonly datosDeMinimo = linkedSignal<DatosDeMinimo>(() => ({ minimo: this.minimoGuardado() }));
 	protected readonly minimo = form(this.datosDeMinimo, (ruta) => {
-		required(ruta.minimo, { message: 'Escribe el mínimo, o quítalo.' });
+		required(ruta.minimo, { message: 'Escriba el mínimo, o quítelo.' });
 		this.validarCantidad(ruta.minimo, () => ({ decimales: this.decimales(), maximo: STOCK_MAXIMO, positiva: false }));
 	});
 	protected readonly guardandoMinimo = signal(false);
@@ -234,7 +233,7 @@ export class StockPage implements ConCambiosSinGuardar {
 
 	protected async quitarMinimo(): Promise<void> {
 		const id = this.idProducto();
-		if (id === null) {
+		if (id === null || this.guardandoMinimo()) {
 			return;
 		}
 		const anterior = this.producto()?.stockMinimo;

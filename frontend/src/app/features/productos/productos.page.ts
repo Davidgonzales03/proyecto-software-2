@@ -12,11 +12,10 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
 import { LucidePackage, LucidePlus } from '@lucide/angular';
 
-import { comoErrorApi } from '../../core/api/autenticacion.service';
 import { CategoriasService } from '../../core/api/categorias.service';
 import { mensajeDeError } from '../../core/api/mensajes-error';
 import { ProductosService } from '../../core/api/productos.service';
-import { comoError } from '../../core/modelos/error-api';
+import { comoError, comoErrorApi } from '../../core/modelos/error-api';
 import { FiltrosDeProductos, NOMBRES_DE_UNIDAD, ProductoResumen } from '../../core/modelos/producto';
 import { DialogoConfirmacion } from '../../shared/dialogo-confirmacion/dialogo-confirmacion';
 import { precio } from '../../shared/formato/precios';
@@ -52,7 +51,7 @@ export class ProductosPage {
 	});
 
 	// Las categorías para el filtro, también las ocultas: sus productos se gestionan igual
-	private readonly recursoDeCategorias = inject(CategoriasService).gestion();
+	protected readonly recursoDeCategorias = inject(CategoriasService).gestion();
 	protected readonly categorias = computed(() =>
 		this.recursoDeCategorias.hasValue() ? (this.recursoDeCategorias.value() ?? []) : [],
 	);
@@ -106,11 +105,14 @@ export class ProductosPage {
 
 	// Desactivar lo saca de la venta y pide confirmación (RF-9); activarlo solo lo devuelve
 	protected async alCambiarActivo(producto: ProductoResumen): Promise<void> {
+		if (this.procesando().has(producto.idProducto)) {
+			return;
+		}
 		const desactivar = producto.activo;
 		if (desactivar) {
 			const confirmado = await this.dialogo().abrir({
 				titulo: `¿Desactivar «${producto.nombre}»?`,
-				mensaje: 'Deja de venderse, pero se conserva para los pedidos y los reportes. Puedes activarlo cuando quieras.',
+				mensaje: 'Deja de venderse, pero se conserva para los pedidos y los reportes. Puede activarlo cuando quiera.',
 				confirmar: 'Desactivar',
 			});
 			if (!confirmado) {

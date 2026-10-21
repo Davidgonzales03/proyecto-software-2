@@ -40,12 +40,12 @@ const SIN_CONTRASENAS: CambioDeContrasena = { contrasenaActual: '', contrasenaNu
 
 // Las reglas de DatosPersonalesRequest, que son las del registro
 const esquemaDeDatos = schema<DatosPersonales>((ruta) => {
-	required(ruta.nombre, { message: 'Escribe tu nombre.' });
-	sinEspaciosSolos(ruta.nombre, 'Escribe tu nombre.');
+	required(ruta.nombre, { message: 'Escriba su nombre.' });
+	sinEspaciosSolos(ruta.nombre, 'Escriba su nombre.');
 	maxLength(ruta.nombre, 80, { message: 'El nombre admite hasta 80 caracteres.' });
 
-	required(ruta.apellido, { message: 'Escribe tu apellido.' });
-	sinEspaciosSolos(ruta.apellido, 'Escribe tu apellido.');
+	required(ruta.apellido, { message: 'Escriba su apellido.' });
+	sinEspaciosSolos(ruta.apellido, 'Escriba su apellido.');
 	maxLength(ruta.apellido, 80, { message: 'El apellido admite hasta 80 caracteres.' });
 
 	maxLength(ruta.telefono, 20, { message: 'El teléfono admite hasta 20 caracteres.' });
@@ -54,16 +54,16 @@ const esquemaDeDatos = schema<DatosPersonales>((ruta) => {
 // Las de CambioContrasenaRequest: la actual solo tiene que estar; la nueva
 // sigue las reglas de la contraseña del registro
 const esquemaDeContrasena = schema<CambioDeContrasena>((ruta) => {
-	required(ruta.contrasenaActual, { message: 'Escribe tu contraseña actual.' });
+	required(ruta.contrasenaActual, { message: 'Escriba su contraseña actual.' });
 
-	required(ruta.contrasenaNueva, { message: 'Elige una contraseña nueva.' });
+	required(ruta.contrasenaNueva, { message: 'Elija una contraseña nueva.' });
 	minLength(ruta.contrasenaNueva, 8, {
 		message: 'La contraseña nueva necesita al menos 8 caracteres.',
 	});
 	// El límite del backend es de bytes, no de caracteres: es el de BCrypt
 	validate(ruta.contrasenaNueva, ({ value }) =>
 		bytesUtf8(value()) > 72
-			? { kind: 'contrasenaLarga', message: 'Esa contraseña es demasiado larga. Prueba con una más corta.' }
+			? { kind: 'contrasenaLarga', message: 'Esa contraseña es demasiado larga. Pruebe con una más corta.' }
 			: null,
 	);
 });
@@ -174,6 +174,9 @@ export class MisDatosPage implements ConCambiosSinGuardar {
 
 	protected async guardarDatos(evento: Event): Promise<void> {
 		evento.preventDefault();
+		if (this.guardandoDatos()) {
+			return;
+		}
 		this.errorDeDatos.set(null);
 		this.datosEnviados.set(null);
 		this.datosGuardados.set(null);
@@ -213,6 +216,9 @@ export class MisDatosPage implements ConCambiosSinGuardar {
 
 	protected async cambiarContrasena(evento: Event): Promise<void> {
 		evento.preventDefault();
+		if (this.cambiandoContrasena()) {
+			return;
+		}
 		this.errorDeContrasena.set(null);
 		this.contrasenasEnviadas.set(null);
 		this.contrasenaCambiada.set(false);

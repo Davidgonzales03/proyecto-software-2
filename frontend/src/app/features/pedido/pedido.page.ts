@@ -9,6 +9,7 @@ import {
 	inject,
 	Injector,
 	linkedSignal,
+	NgZone,
 	signal,
 	untracked,
 	viewChild,
@@ -17,11 +18,10 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { LucideCircleCheck, LucideClock, LucideMapPin, LucideStore } from '@lucide/angular';
 
-import { comoErrorApi } from '../../core/api/autenticacion.service';
 import { mensajeDeError } from '../../core/api/mensajes-error';
 import { CarritoService } from '../../core/api/carrito.service';
 import { PedidosService } from '../../core/api/pedidos.service';
-import { comoError } from '../../core/modelos/error-api';
+import { comoError, comoErrorApi } from '../../core/modelos/error-api';
 import { EstadoDePedido, LineaDePedido, NOMBRES_DE_ESTADO, Pedido } from '../../core/modelos/pedido';
 import { DialogoConfirmacion } from '../../shared/dialogo-confirmacion/dialogo-confirmacion';
 import { fechaCorta, horaCorta } from '../../shared/formato/fechas';
@@ -98,7 +98,9 @@ export class PedidoPage {
 	protected readonly cantidad = cantidad;
 
 	constructor() {
-		const intervalo = setInterval(() => this.ahora.set(Date.now()), 1000);
+		// Fuera de la zona: el reloj no dispara la detección de cambios de toda la
+		// aplicación cada segundo; la señal ya redibuja lo que la usa
+		const intervalo = inject(NgZone).runOutsideAngular(() => setInterval(() => this.ahora.set(Date.now()), 1000));
 		inject(DestroyRef).onDestroy(() => clearInterval(intervalo));
 		// Al llegar a cero se pide otra vez: el servidor lo vence en el acto y responde «Vencido».
 		// Si le faltaba menos de un segundo y todavía responde «Pendiente», se reintenta cada segundo.

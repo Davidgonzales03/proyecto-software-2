@@ -13,8 +13,8 @@ const VACIO: DatosDeCategoria = { nombre: '', descripcion: '' };
 
 // Las mismas reglas que valida el backend en CategoriaRequest; el backend sigue decidiendo
 const esquema = schema<DatosDeCategoria>((ruta) => {
-	required(ruta.nombre, { message: 'Escribe el nombre de la categoría.' });
-	sinEspaciosSolos(ruta.nombre, 'Escribe el nombre de la categoría.');
+	required(ruta.nombre, { message: 'Escriba el nombre de la categoría.' });
+	sinEspaciosSolos(ruta.nombre, 'Escriba el nombre de la categoría.');
 	maxLength(ruta.nombre, 60, { message: 'El nombre admite hasta 60 caracteres.' });
 	maxLength(ruta.descripcion, 300, { message: 'La descripción admite hasta 300 caracteres.' });
 });
@@ -71,6 +71,9 @@ export class CategoriasPage {
 
 	protected async guardar(evento: Event): Promise<void> {
 		evento.preventDefault();
+		if (this.guardando()) {
+			return;
+		}
 		this.limpiarAvisos();
 		this.guardando.set(true);
 		await submit(this.formulario, {
@@ -159,7 +162,7 @@ export class CategoriasPage {
 			titulo: `«${categoria.nombre}» tiene productos`,
 			mensaje:
 				'Una categoría con productos no se borra, para no perder su historial. ' +
-				'Puedes ocultarla: sus productos se conservan.',
+				'Puede ocultarla: sus productos se conservan.',
 			confirmar: 'Ocultar',
 		});
 		if (ocultar) {

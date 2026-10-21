@@ -19,7 +19,6 @@ import {
 	LucideSlidersHorizontal,
 } from '@lucide/angular';
 
-import { comoErrorApi } from '../../core/api/autenticacion.service';
 import { CatalogoService } from '../../core/api/catalogo.service';
 import { CategoriasService } from '../../core/api/categorias.service';
 import { mensajeDeError } from '../../core/api/mensajes-error';
@@ -36,6 +35,7 @@ import { cantidad, leerPrecio } from '../../shared/formato/precios';
 import { idDeLaUrl } from '../../shared/navegacion/id-de-la-url';
 import { paginaDeLaUrl } from '../../shared/navegacion/pagina-de-la-url';
 import { TarjetaProducto } from '../../shared/tarjeta-producto/tarjeta-producto';
+import { comoErrorApi } from '../../core/modelos/error-api';
 
 // Cuánto se espera después de la última tecla antes de buscar
 const ESPERA_DE_BUSQUEDA_MS = 300;
@@ -83,7 +83,7 @@ export class CatalogoPage {
 		() => JSON.stringify(aConsulta({ ...this.filtros(), pagina: 0, orden: 'RECIENTES' })) !== '{}',
 	);
 
-	private readonly recursoDeCategorias = inject(CategoriasService).catalogo();
+	protected readonly recursoDeCategorias = inject(CategoriasService).catalogo();
 	protected readonly categorias = computed(() =>
 		this.recursoDeCategorias.hasValue() ? (this.recursoDeCategorias.value() ?? []) : [],
 	);

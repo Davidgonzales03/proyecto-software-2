@@ -291,15 +291,6 @@ select,
 	color: var(--app-error);
 }
 
-.solo-lectores {
-	position: absolute;
-	width: 1px;
-	height: 1px;
-	overflow: hidden;
-	clip-path: inset(50%);
-	white-space: nowrap;
-}
-
 // En el celular, los filtros se pliegan detrás de un botón
 @media (max-width: 760px) {
 	.cuerpo {

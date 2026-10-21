@@ -13,12 +13,11 @@ import { form, FormField, schema, submit, validate } from '@angular/forms/signal
 import { Router, RouterLink } from '@angular/router';
 import { LucideArrowLeft, LucideCircleSlash, LucideClock, LucideMapPin, LucideStore } from '@lucide/angular';
 
-import { comoErrorApi } from '../../core/api/autenticacion.service';
 import { CarritoService } from '../../core/api/carrito.service';
 import { EstadoDelCampo, mensajeDeError, mensajeDelCampo, mensajeDelRechazo } from '../../core/api/mensajes-error';
 import { PedidosService } from '../../core/api/pedidos.service';
 import { LineaDeCarrito } from '../../core/modelos/carrito';
-import { comoError, ErrorApi } from '../../core/modelos/error-api';
+import { comoError, comoErrorApi, ErrorApi } from '../../core/modelos/error-api';
 import { AVISOS_DE_RECHAZO, MotivoDeRechazo } from '../../core/modelos/pedido';
 import { SesionService } from '../../core/sesion/sesion.service';
 import { cantidad, precio } from '../../shared/formato/precios';
@@ -90,8 +89,10 @@ export class ConfirmacionPage {
 		);
 	});
 
-	private readonly retiro = this.pedidos.retiro();
-	protected readonly datosDeRetiro = computed(() => (this.retiro.hasValue() ? this.retiro.value() : undefined));
+	protected readonly recursoDeRetiro = this.pedidos.retiro();
+	protected readonly datosDeRetiro = computed(() =>
+		this.recursoDeRetiro.hasValue() ? this.recursoDeRetiro.value() : undefined,
+	);
 
 	// Llenos con los de la cuenta; se pueden cambiar por los de otra persona (RF-1)
 	private readonly datos = signal<DatosDeRetiro>(datosDeLaCuenta(inject(SesionService)));

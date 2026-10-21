@@ -164,7 +164,7 @@ describe('MisDatosPage', () => {
     });
 
     expect(fijo.nativeElement.querySelector('form')).toBeNull();
-    expect(texto()).toContain('Cargando tus datos');
+    expect(texto()).toContain('Cargando sus datos');
   });
 
   // HU-04 RF-10
@@ -175,7 +175,7 @@ describe('MisDatosPage', () => {
     });
 
     expect(fijo.nativeElement.querySelector('form')).toBeNull();
-    expect(texto()).toContain('No pudimos cargar tus datos');
+    expect(texto()).toContain('No pudimos cargar sus datos');
     const boton: HTMLButtonElement = fijo.nativeElement.querySelector('button.reintentar');
     boton.click();
     expect(cuenta.recurso.reload).toHaveBeenCalledTimes(1);
@@ -227,7 +227,7 @@ describe('MisDatosPage', () => {
     await enviar('formulario-datos');
 
     expect(cuenta.llamadasDatos).toEqual([]);
-    expect(texto()).toContain('Escribe tu nombre.');
+    expect(texto()).toContain('Escriba su nombre.');
   });
 
   it('un nombre de solo espacios cuenta como vacío', async () => {
@@ -236,7 +236,7 @@ describe('MisDatosPage', () => {
     await enviar('formulario-datos');
 
     expect(cuenta.llamadasDatos).toEqual([]);
-    expect(texto()).toContain('Escribe tu nombre.');
+    expect(texto()).toContain('Escriba su nombre.');
   });
 
   it('frena un apellido de más de 80 caracteres', async () => {
@@ -382,7 +382,7 @@ describe('MisDatosPage', () => {
     await enviar('formulario-contrasena');
 
     expect(cuenta.llamadasContrasena).toEqual([]);
-    expect(texto()).toContain('Escribe tu contraseña actual.');
+    expect(texto()).toContain('Escriba su contraseña actual.');
   });
 
   // HU-04 RF-8
@@ -438,7 +438,7 @@ describe('MisDatosPage', () => {
 
     await enviar('formulario-contrasena');
 
-    expect(texto()).toContain('Espera 15 minutos');
+    expect(texto()).toContain('Espere 15 minutos');
   });
 
   // HU-04 RF-8

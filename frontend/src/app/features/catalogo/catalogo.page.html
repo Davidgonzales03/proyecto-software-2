@@ -47,6 +47,10 @@
           </option>
         }
       </select><svg lucideChevronDown aria-hidden="true"></svg></span>
+      @if (recursoDeCategorias.error()) {
+        <p class="aviso" role="alert">No pudimos cargar las categorías.</p>
+        <button type="button" class="secundario" (click)="recursoDeCategorias.reload()">Reintentar</button>
+      }
     </div>
 
     <div class="campo">

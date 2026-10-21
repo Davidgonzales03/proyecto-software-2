@@ -15,5 +15,5 @@ export const cambiosSinGuardarGuard: CanDeactivateFn<ConCambiosSinGuardar> = (pa
 	if (!inject(SesionService).autenticado() || !pantalla.tieneCambiosSinGuardar()) {
 		return true;
 	}
-	return window.confirm('Tienes cambios sin guardar. ¿Salir de todos modos?');
+	return window.confirm('Tiene cambios sin guardar. ¿Salir de todos modos?');
 };

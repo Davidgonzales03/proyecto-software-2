@@ -132,7 +132,7 @@ describe('RestablecerPage', () => {
     await enviar();
 
     expect(autenticacion.llamadas).toEqual([]);
-    expect(texto()).toContain('Elige una contraseña');
+    expect(texto()).toContain('Elija una contraseña');
   });
 
   // HU-03 RF-10
@@ -162,7 +162,7 @@ describe('RestablecerPage', () => {
 
     await enviar();
 
-    expect(texto()).toContain('Este enlace ya no sirve. Pide uno nuevo.');
+    expect(texto()).toContain('Este enlace ya no sirve. Pida uno nuevo.');
     expect(texto()).not.toContain('detalle técnico');
     expect(navegaciones).toEqual([]);
     expect(enlaceA('/recuperacion')).not.toBeNull();
@@ -208,7 +208,7 @@ describe('RestablecerPage', () => {
     fijo.detectChanges();
 
     expect(autenticacion.llamadas.length).toBe(1);
-    expect(fijo.nativeElement.querySelector('button[type="submit"]').disabled).toBe(false);
+    expect(fijo.nativeElement.querySelector('button[type="submit"]').getAttribute('aria-disabled')).toBeNull();
   });
 
   describe('sin token en la dirección', () => {
@@ -220,7 +220,7 @@ describe('RestablecerPage', () => {
     // HU-03 RF-9
     it('no muestra el formulario y explica qué hacer', () => {
       expect(fijo.nativeElement.querySelector('form')).toBeNull();
-      expect(texto()).toContain('Este enlace ya no sirve. Pide uno nuevo.');
+      expect(texto()).toContain('Este enlace ya no sirve. Pida uno nuevo.');
       expect(enlaceA('/recuperacion')).not.toBeNull();
     });
 
@@ -238,6 +238,6 @@ describe('RestablecerPage', () => {
     await preparar();
 
     expect(fijo.nativeElement.querySelector('form')).toBeNull();
-    expect(texto()).toContain('Este enlace ya no sirve. Pide uno nuevo.');
+    expect(texto()).toContain('Este enlace ya no sirve. Pida uno nuevo.');
   });
 });

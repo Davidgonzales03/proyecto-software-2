@@ -152,7 +152,7 @@ legend {
 	color: var(--app-texto);
 }
 
-.boton.secundario:hover:not([disabled]) {
+.boton.secundario:hover:not([disabled], [aria-disabled='true']) {
 	background: var(--app-superficie-alta);
 }
 

@@ -1,11 +1,10 @@
 import { HttpClient, httpResource, HttpResourceRef } from '@angular/common/http';
 import { inject, Injectable, Signal } from '@angular/core';
-import { firstValueFrom } from 'rxjs';
 
 import { Pagina } from '../modelos/pagina';
 import { EstadoCuenta, Rol } from '../modelos/usuario';
 import { FiltrosDeUsuarios, UsuarioResumen } from '../modelos/usuario-resumen';
-import { comoErrorApi } from './autenticacion.service';
+import { escribir } from './escribir';
 
 // Llamadas a /api/usuarios. Solo el administrador llega: el backend lo
 // valida en cada petición, la pantalla solo evita mostrarse a otros roles.
@@ -23,21 +22,13 @@ export class UsuariosService {
 	}
 
 	async cambiarRol(idUsuario: number, rol: Rol): Promise<UsuarioResumen> {
-		try {
-			return await firstValueFrom(this.http.put<UsuarioResumen>(`/api/usuarios/${idUsuario}/rol`, { rol }));
-		} catch (error) {
-			throw comoErrorApi(error);
-		}
+		return await escribir(this.http.put<UsuarioResumen>(`/api/usuarios/${idUsuario}/rol`, { rol }));
 	}
 
 	async cambiarEstado(idUsuario: number, estado: EstadoCuenta): Promise<UsuarioResumen> {
-		try {
-			return await firstValueFrom(
-				this.http.put<UsuarioResumen>(`/api/usuarios/${idUsuario}/estado`, { estado }),
-			);
-		} catch (error) {
-			throw comoErrorApi(error);
-		}
+		return await escribir(
+			this.http.put<UsuarioResumen>(`/api/usuarios/${idUsuario}/estado`, { estado }),
+		);
 	}
 }
 

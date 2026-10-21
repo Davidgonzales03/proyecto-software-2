@@ -16,7 +16,7 @@ dialog[open] {
 // Los navegadores anteriores a 2024 no heredan las variables en ::backdrop:
 // ahí queda el velo del modo oscuro, que también sirve sobre el claro
 dialog::backdrop {
-	background: var(--app-velo, rgb(11 16 32 / 0.75));
+	background: var(--app-velo);
 }
 
 h2 {

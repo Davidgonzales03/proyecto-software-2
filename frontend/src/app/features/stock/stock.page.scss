@@ -149,11 +149,12 @@ input[aria-invalid='true'] {
 	cursor: pointer;
 }
 
-.boton:hover:not([disabled]) {
+.boton:hover:not([disabled], [aria-disabled='true']) {
 	background: var(--app-ambar-fuerte);
 }
 
-.boton[disabled] {
+.boton[disabled],
+.boton[aria-disabled='true'] {
 	opacity: 0.6;
 	cursor: default;
 }
