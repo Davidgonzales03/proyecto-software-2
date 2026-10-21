@@ -97,12 +97,12 @@
     </div>
 
 
-    <button type="submit" class="boton" [disabled]="enviando()">
+    <button type="submit" class="boton" [attr.aria-disabled]="enviando() ? 'true' : null">
       {{ enviando() ? 'Creando cuenta…' : 'Crear cuenta' }}
     </button>
   </form>
 
   <p class="enlace-cruzado">
-    ¿Ya tienes cuenta? <a routerLink="/inicio-sesion" [queryParams]="paraIniciarSesion">Inicia sesión</a>
+    ¿Ya tiene cuenta? <a routerLink="/inicio-sesion" [queryParams]="paraIniciarSesion">Inicie sesión</a>
   </p>
 </section>

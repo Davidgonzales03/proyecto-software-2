@@ -111,12 +111,13 @@ tbody th {
 	transition: background-color var(--app-transicion), border-color var(--app-transicion);
 }
 
-.secundario:hover:not([disabled]) {
+.secundario:hover:not([disabled], [aria-disabled='true']) {
 	border-color: var(--app-texto-suave);
 	background: var(--app-superficie-alta);
 }
 
-.secundario[disabled] {
+.secundario[disabled],
+.secundario[aria-disabled='true'] {
 	opacity: 0.5;
 	cursor: default;
 }
@@ -173,15 +174,6 @@ div.vacio p {
 	border-color: var(--app-exito);
 	background: var(--app-exito-fondo);
 	color: var(--app-exito);
-}
-
-.solo-lectores {
-	position: absolute;
-	width: 1px;
-	height: 1px;
-	overflow: hidden;
-	clip-path: inset(50%);
-	white-space: nowrap;
 }
 
 // En un celular cada fila es un bloque con la etiqueta de cada dato

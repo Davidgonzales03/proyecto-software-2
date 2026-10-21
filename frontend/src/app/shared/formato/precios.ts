@@ -31,12 +31,12 @@ export function problemaDelPrecio(texto: string): string | null {
 		return 'El precio admite hasta dos decimales.';
 	}
 	if (/^[1-9]\d{0,2}(\.\d{3})+(,\d{1,2})?$/.test(limpio)) {
-		return 'Escribe el precio sin separador de miles, por ejemplo 1234,50.';
+		return 'Escriba el precio sin separador de miles, por ejemplo 1234,50.';
 	}
 	if (/^\d+([.,]\d{1,2})?$/.test(limpio)) {
 		return 'El precio admite hasta Bs 99.999,99.';
 	}
-	return 'Escribe el precio con números, por ejemplo 420,50.';
+	return 'Escriba el precio con números, por ejemplo 420,50.';
 }
 
 // Cantidades: separa los miles como se leen en Bolivia («5.000»)

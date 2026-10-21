@@ -9,7 +9,6 @@ import {
 	LucideWrench,
 } from '@lucide/angular';
 
-import { comoErrorApi } from '../../core/api/autenticacion.service';
 import { CarritoService } from '../../core/api/carrito.service';
 import { mensajeDeError, mensajeDelRechazo } from '../../core/api/mensajes-error';
 import {
@@ -19,7 +18,7 @@ import {
 	LineaDeCarrito,
 } from '../../core/modelos/carrito';
 import { urlDeImagen } from '../../core/modelos/catalogo';
-import { ErrorApi } from '../../core/modelos/error-api';
+import { comoErrorApi, ErrorApi } from '../../core/modelos/error-api';
 import { DECIMALES_DE_UNIDAD } from '../../core/modelos/inventario';
 import { DialogoConfirmacion } from '../../shared/dialogo-confirmacion/dialogo-confirmacion';
 import { leerCantidad, problemaDeCantidad } from '../../shared/formato/cantidades';

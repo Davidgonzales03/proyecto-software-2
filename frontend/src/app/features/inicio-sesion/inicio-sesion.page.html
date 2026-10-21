@@ -50,12 +50,12 @@
       }
     </div>
 
-    <button type="submit" class="boton" [disabled]="enviando()">
+    <button type="submit" class="boton" [attr.aria-disabled]="enviando() ? 'true' : null">
       {{ enviando() ? 'Entrando…' : 'Entrar' }}
     </button>
   </form>
 
-  <p class="enlace-cruzado"><a routerLink="/recuperacion">¿Olvidaste tu contraseña?</a></p>
+  <p class="enlace-cruzado"><a routerLink="/recuperacion">¿Olvidó su contraseña?</a></p>
 
-  <p class="enlace-cruzado">¿No tienes cuenta? <a routerLink="/registro" [queryParams]="paraElRegistro">Crear cuenta</a></p>
+  <p class="enlace-cruzado">¿No tiene cuenta? <a routerLink="/registro" [queryParams]="paraElRegistro">Crear cuenta</a></p>
 </section>

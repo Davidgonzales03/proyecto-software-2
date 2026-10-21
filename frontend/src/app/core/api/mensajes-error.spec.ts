@@ -65,7 +65,7 @@ describe('mensajeDeError', () => {
   });
 
   it('traduce el conflicto por operación simultánea', () => {
-    expect(mensajeDeError(error('OPERACION_SIMULTANEA'))).toContain('Vuelve a intentar');
+    expect(mensajeDeError(error('OPERACION_SIMULTANEA'))).toContain('Vuelva a intentar');
   });
 
   // El bloqueo protege cualquier dato, no solo cuentas: el mensaje no puede
@@ -194,7 +194,7 @@ describe('mensajeDelCampo', () => {
 
 describe('primerMensaje', () => {
   it('devuelve el primer error que trae mensaje', () => {
-    expect(primerMensaje([{}, { message: 'Escribe tu correo.' }, { message: 'otro' }])).toBe('Escribe tu correo.');
+    expect(primerMensaje([{}, { message: 'Escriba su correo.' }, { message: 'otro' }])).toBe('Escriba su correo.');
   });
 
   it('sin mensajes devuelve vacío', () => {

@@ -49,25 +49,25 @@ const SIN_DATOS: DatosDeRegistro = {
 // repiten para no ir y volver por un dato que ya se sabe que está mal; el
 // backend sigue siendo quien decide.
 const esquema = schema<DatosDeRegistro>((ruta) => {
-	required(ruta.nombre, { message: 'Escribe tu nombre.' });
-	sinEspaciosSolos(ruta.nombre, 'Escribe tu nombre.');
+	required(ruta.nombre, { message: 'Escriba su nombre.' });
+	sinEspaciosSolos(ruta.nombre, 'Escriba su nombre.');
 	maxLength(ruta.nombre, 80, { message: 'El nombre admite hasta 80 caracteres.' });
 
-	required(ruta.apellido, { message: 'Escribe tu apellido.' });
-	sinEspaciosSolos(ruta.apellido, 'Escribe tu apellido.');
+	required(ruta.apellido, { message: 'Escriba su apellido.' });
+	sinEspaciosSolos(ruta.apellido, 'Escriba su apellido.');
 	maxLength(ruta.apellido, 80, { message: 'El apellido admite hasta 80 caracteres.' });
 
-	required(ruta.correo, { message: 'Escribe tu correo.' });
-	sinEspaciosSolos(ruta.correo, 'Escribe tu correo.');
+	required(ruta.correo, { message: 'Escriba su correo.' });
+	sinEspaciosSolos(ruta.correo, 'Escriba su correo.');
 	email(ruta.correo, { message: 'Ese correo no tiene formato de correo.' });
 	maxLength(ruta.correo, 120, { message: 'El correo admite hasta 120 caracteres.' });
 
-	required(ruta.contrasena, { message: 'Elige una contraseña.' });
+	required(ruta.contrasena, { message: 'Elija una contraseña.' });
 	minLength(ruta.contrasena, 8, { message: 'La contraseña necesita al menos 8 caracteres.' });
 	// El límite del backend es de bytes, no de caracteres: es el de BCrypt
 	validate(ruta.contrasena, ({ value }) =>
 		bytesUtf8(value()) > 72
-			? { kind: 'contrasenaLarga', message: 'Esa contraseña es demasiado larga. Prueba con una más corta.' }
+			? { kind: 'contrasenaLarga', message: 'Esa contraseña es demasiado larga. Pruebe con una más corta.' }
 			: null,
 	);
 
@@ -118,6 +118,9 @@ export class RegistroPage {
 
 	protected async enviar(evento: Event): Promise<void> {
 		evento.preventDefault();
+		if (this.enviando()) {
+			return;
+		}
 		this.errorDelServidor.set(null);
 		this.datosEnviados.set(null);
 		this.enviando.set(true);

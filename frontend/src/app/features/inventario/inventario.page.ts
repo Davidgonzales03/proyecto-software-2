@@ -2,8 +2,8 @@ import { ChangeDetectionStrategy, Component, computed, DestroyRef, inject, linke
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
 import { LucideCircleSlash, LucideTriangleAlert } from '@lucide/angular';
+import { comoErrorApi } from '../../core/modelos/error-api';
 
-import { comoErrorApi } from '../../core/api/autenticacion.service';
 import { InventarioService } from '../../core/api/inventario.service';
 import { mensajeDeError } from '../../core/api/mensajes-error';
 import { FiltrosDeInventario } from '../../core/modelos/inventario';
@@ -40,7 +40,7 @@ export class InventarioPage {
 	});
 
 	// Todas, también las ocultas: el inventario lista sus productos
-	private readonly recursoDeCategorias = this.inventario.categorias();
+	protected readonly recursoDeCategorias = this.inventario.categorias();
 	protected readonly categorias = computed(() =>
 		this.recursoDeCategorias.hasValue() ? (this.recursoDeCategorias.value() ?? []) : [],
 	);

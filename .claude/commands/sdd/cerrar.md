@@ -34,19 +34,17 @@ cada revisión se corre de verdad.
 - Backend: `./mvnw test` en `backend/`.
 - Frontend: `npx ng test --watch=false` y `npx ng build` en `frontend/`, sin
   avisos.
+- Una suite después de la otra, nunca las dos a la vez (`docs/flujo-sdd.md`).
 - Anotar los números exactos. Si algo falla, `systematic-debugging` y se vuelve
   a correr todo.
 
 ## 3. Revisiones que le tocan a esta historia
 
-Las que pide `docs/flujo-sdd.md` → «Revisión antes del PR». La
-lista vive solo ahí: leerla en lugar de suponerla. Hoy son:
-
-- `/code-review`, siempre;
-- `/security-review` en seguridad, pagos y superficies nuevas;
-- `web-design-guidelines`, si hay frontend, bajando las reglas actualizadas;
-- `review-animations`, si hay animaciones nuevas o cambiadas;
-- `break-ui`, si hay pantallas nuevas que muestran datos.
+Las que pide `docs/flujo-sdd.md` → «Revisión antes del PR», con los límites
+de «Las revisiones, sin gastar de más». La lista y el orden viven solo ahí:
+leerlos en lugar de suponerlos (la revisión de interfaz con un subagente va
+antes de la prueba manual; `/code-review` y `/security-review`, sobre el diff
+final).
 
 Cada hallazgo real se corrige con su prueba y se vuelve al paso 2. Los
 descartados se anotan con su motivo.

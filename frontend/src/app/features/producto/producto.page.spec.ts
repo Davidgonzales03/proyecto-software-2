@@ -89,8 +89,9 @@ class ProductosFalso {
 }
 
 class CategoriasFalso {
+  readonly recurso = new RecursoFalso<CategoriaGestion[]>(CATEGORIAS);
   gestion() {
-    return new RecursoFalso<CategoriaGestion[]>(CATEGORIAS);
+    return this.recurso;
   }
 }
 
@@ -105,10 +106,12 @@ function rechaza(codigo: string, status = 409, errores?: ErrorApi['errores']): P
 describe('ProductoPage', () => {
   let harness: RouterTestingHarness;
   let productos: ProductosFalso;
+  let categorias: CategoriasFalso;
 
   async function abrir(url: string, configurar: (falso: ProductosFalso) => void = () => {}) {
     TestBed.resetTestingModule();
     productos = new ProductosFalso();
+    categorias = new CategoriasFalso();
     configurar(productos);
     TestBed.configureTestingModule({
       providers: [
@@ -117,7 +120,7 @@ describe('ProductoPage', () => {
           { path: 'productos/:id', component: ProductoPage },
         ]),
         { provide: ProductosService, useValue: productos },
-        { provide: CategoriasService, useValue: new CategoriasFalso() },
+        { provide: CategoriasService, useValue: categorias },
       ],
     });
     harness = await RouterTestingHarness.create();
@@ -187,7 +190,7 @@ describe('ProductoPage', () => {
     expect(texto()).toContain('Nuevo producto');
     expect(campo('nombre').value).toBe('');
     expect(campo<HTMLSelectElement>('unidad').value).toBe('UNIDAD');
-    expect(texto()).toContain('Crea el producto para subir sus fotos.');
+    expect(texto()).toContain('Cree el producto para subir sus fotos.');
     expect(productos.id!()).toBeNull();
     // Las ocultas también se pueden elegir, y se distinguen
     expect(texto()).toContain('Jardín (oculta)');
@@ -199,9 +202,9 @@ describe('ProductoPage', () => {
 
     await pulsar('Crear producto');
 
-    expect(texto()).toContain('Escribe el nombre del producto.');
-    expect(texto()).toContain('Elige una categoría.');
-    expect(texto()).toContain('Escribe el precio.');
+    expect(texto()).toContain('Escriba el nombre del producto.');
+    expect(texto()).toContain('Elija una categoría.');
+    expect(texto()).toContain('Escriba el precio.');
     expect(productos.creados).toEqual([]);
     expect(document.activeElement?.id).toBe('nombre');
   });
@@ -282,7 +285,7 @@ describe('ProductoPage', () => {
 
     await pulsar('Crear producto');
 
-    expect(texto()).toContain('Escribe el valor.');
+    expect(texto()).toContain('Escriba el valor.');
     expect(texto()).toContain('Hay otro dato con este nombre.');
     expect(productos.creados).toEqual([]);
   });
@@ -436,7 +439,7 @@ describe('ProductoPage', () => {
     );
 
     expect(pantalla().querySelector('#foto-nueva')).toBeNull();
-    expect(texto()).toContain('Ya tiene 5 fotos: quita una para subir otra.');
+    expect(texto()).toContain('Ya tiene 5 fotos: quite una para subir otra.');
   });
 
   it('explica una foto rechazada', async () => {
@@ -450,7 +453,7 @@ describe('ProductoPage', () => {
     entrada.dispatchEvent(new Event('change'));
     await harness.fixture.whenStable();
 
-    expect(texto()).toContain('El producto ya tiene 5 fotos. Quita una antes de subir otra.');
+    expect(texto()).toContain('El producto ya tiene 5 fotos. Quite una antes de subir otra.');
   });
 
   it('avisa si la dirección no es la de un producto', async () => {
@@ -469,5 +472,20 @@ describe('ProductoPage', () => {
     await escribir('marca', 'Makita');
 
     expect(pagina.tieneCambiosSinGuardar()).toBe(true);
+  });
+
+  // Auditoría (20/10/2026): sin las categorías el producto no se puede guardar; lo dice y deja reintentar
+  it('si no cargan las categorías lo avisa y deja reintentar', async () => {
+    await abrir('/productos/nuevo');
+    categorias.recurso.value.set(undefined);
+    categorias.recurso.error.set(new Error('sin conexión'));
+    await harness.fixture.whenStable();
+
+    expect(harness.routeNativeElement?.textContent).toContain('No pudimos cargar las categorías.');
+    const reintentar = Array.from(harness.routeNativeElement!.querySelectorAll('button')).find(
+      (boton) => boton.textContent?.trim() === 'Reintentar',
+    )!;
+    reintentar.click();
+    expect(categorias.recurso.reload).toHaveBeenCalled();
   });
 });

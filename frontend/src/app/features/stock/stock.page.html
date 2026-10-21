@@ -91,14 +91,14 @@
             <p class="error" id="error-entrada-nota">{{ errorNota }}</p>
           }
         </div>
-        <button type="submit" class="boton" [disabled]="registrandoEntrada()">
+        <button type="submit" class="boton" [attr.aria-disabled]="registrandoEntrada() ? 'true' : null">
           {{ registrandoEntrada() ? 'Registrando…' : 'Registrar entrada' }}
         </button>
       </form>
 
       <form class="tarjeta" (submit)="registrarAjuste($event)" novalidate aria-labelledby="titulo-ajuste">
         <h2 id="titulo-ajuste">Ajuste</h2>
-        <p class="ayuda">Escribe cuánto hay realmente; el sistema guarda la diferencia.</p>
+        <p class="ayuda">Escriba cuánto hay realmente; el sistema guarda la diferencia.</p>
         <div role="alert">
           @if (errorDeAjuste()) {
             <p class="aviso">{{ errorDeAjuste() }}</p>
@@ -147,7 +147,7 @@
             <p class="error" id="error-ajuste-nota">{{ errorNotaAjuste }}</p>
           }
         </div>
-        <button type="submit" class="boton" [disabled]="registrandoAjuste()">
+        <button type="submit" class="boton" [attr.aria-disabled]="registrandoAjuste() ? 'true' : null">
           {{ registrandoAjuste() ? 'Registrando…' : 'Registrar ajuste' }}
         </button>
       </form>
@@ -177,9 +177,9 @@
           }
         </div>
         <div class="acciones">
-          <button type="submit" class="boton" [disabled]="guardandoMinimo()">Guardar mínimo</button>
+          <button type="submit" class="boton" [attr.aria-disabled]="guardandoMinimo() ? 'true' : null">Guardar mínimo</button>
           @if (producto.stockMinimo !== null) {
-            <button type="button" class="secundario" [disabled]="guardandoMinimo()" (click)="quitarMinimo()">
+            <button type="button" class="secundario" [attr.aria-disabled]="guardandoMinimo() ? 'true' : null" (click)="quitarMinimo()">
               Quitar mínimo
             </button>
           }

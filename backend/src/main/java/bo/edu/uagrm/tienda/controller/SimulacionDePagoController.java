@@ -1,7 +1,5 @@
 package bo.edu.uagrm.tienda.controller;
 
-import java.util.List;
-
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -13,8 +11,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import bo.edu.uagrm.tienda.dto.SimulacionRequest;
-import bo.edu.uagrm.tienda.exception.CamposInvalidosException;
-import bo.edu.uagrm.tienda.exception.CamposInvalidosException.CampoInvalido;
 import bo.edu.uagrm.tienda.service.PagoService;
 import bo.edu.uagrm.tienda.service.pago.EstadoDelCobro;
 import bo.edu.uagrm.tienda.service.pago.SimuladorDePago;
@@ -36,9 +32,8 @@ public class SimulacionDePagoController {
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	public void simular(@AuthenticationPrincipal Long idUsuario, @PathVariable Long idPedido,
 			@Valid @RequestBody SimulacionRequest solicitud) {
-		if (solicitud.resultado() == EstadoDelCobro.PENDIENTE) {
-			throw new CamposInvalidosException(List.of(new CampoInvalido("resultado", "tiene que ser PAGADO o ERROR")));
-		}
-		simuladorDePago.forzar(pagoService.referenciaParaSimular(idUsuario, idPedido), solicitud.resultado());
+		EstadoDelCobro resultado = solicitud.resultado() == SimulacionRequest.Resultado.PAGADO ? EstadoDelCobro.PAGADO
+				: EstadoDelCobro.ERROR;
+		simuladorDePago.forzar(pagoService.referenciaParaSimular(idUsuario, idPedido), resultado);
 	}
 }

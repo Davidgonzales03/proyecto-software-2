@@ -6,7 +6,8 @@ import { ErrorApi } from '../modelos/error-api';
 import { DatosDeRegistro } from '../modelos/registro';
 import { Sesion } from '../modelos/sesion';
 import { Usuario } from '../modelos/usuario';
-import { AutenticacionService, comoErrorApi } from './autenticacion.service';
+import { comoErrorApi } from '../modelos/error-api';
+import { AutenticacionService } from './autenticacion.service';
 
 const RESPUESTA: Sesion = {
   token: 'jwt.de.prueba',

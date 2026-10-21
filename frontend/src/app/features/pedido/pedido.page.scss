@@ -301,12 +301,3 @@ h2 svg {
 	align-items: flex-start;
 	gap: var(--app-espacio-3);
 }
-
-.solo-lectores {
-	position: absolute;
-	width: 1px;
-	height: 1px;
-	overflow: hidden;
-	clip-path: inset(50%);
-	white-space: nowrap;
-}

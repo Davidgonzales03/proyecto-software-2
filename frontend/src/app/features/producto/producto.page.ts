@@ -24,12 +24,11 @@ import {
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { LucideArrowLeft, LucidePlus, LucideTrash2 } from '@lucide/angular';
 
-import { comoErrorApi } from '../../core/api/autenticacion.service';
 import { CategoriasService } from '../../core/api/categorias.service';
 import { EstadoDelCampo, mensajeDeError, mensajeDelCampo, primerMensaje } from '../../core/api/mensajes-error';
 import { ProductosService } from '../../core/api/productos.service';
 import { ConCambiosSinGuardar } from '../../core/guards/cambios-sin-guardar.guard';
-import { comoError, ErrorApi } from '../../core/modelos/error-api';
+import { comoError, comoErrorApi, ErrorApi } from '../../core/modelos/error-api';
 import {
 	DatosDeProducto,
 	MAXIMO_CARACTERISTICAS,
@@ -71,12 +70,12 @@ function clave(nombre: string): string {
 
 // Las reglas de ProductoRequest y ProductoService (HU-07 RF-3, RF-6); el backend sigue decidiendo
 const esquema = schema<DatosDeProducto>((ruta) => {
-	required(ruta.nombre, { message: 'Escribe el nombre del producto.' });
-	sinEspaciosSolos(ruta.nombre, 'Escribe el nombre del producto.');
+	required(ruta.nombre, { message: 'Escriba el nombre del producto.' });
+	sinEspaciosSolos(ruta.nombre, 'Escriba el nombre del producto.');
 	maxLength(ruta.nombre, 120, { message: 'El nombre admite hasta 120 caracteres.' });
 	maxLength(ruta.marca, 60, { message: 'La marca admite hasta 60 caracteres.' });
-	required(ruta.idCategoria, { message: 'Elige una categoría.' });
-	required(ruta.precio, { message: 'Escribe el precio.' });
+	required(ruta.idCategoria, { message: 'Elija una categoría.' });
+	required(ruta.precio, { message: 'Escriba el precio.' });
 	validate(ruta.precio, ({ value }) => {
 		const problema = problemaDelPrecio(value());
 		return problema === null ? null : { kind: 'precio', message: problema };
@@ -87,7 +86,7 @@ const esquema = schema<DatosDeProducto>((ruta) => {
 	applyEach(ruta.ficha, (par) => {
 		validate(par.nombre, ({ value, valueOf }) =>
 			value().trim() === '' && valueOf(par.valor).trim() !== ''
-				? { kind: 'required', message: 'Escribe el nombre del dato.' }
+				? { kind: 'required', message: 'Escriba el nombre del dato.' }
 				: null,
 		);
 		validate(par.nombre, ({ value, valueOf }) => {
@@ -98,7 +97,7 @@ const esquema = schema<DatosDeProducto>((ruta) => {
 		maxLength(par.nombre, 40, { message: 'El nombre del dato admite hasta 40 caracteres.' });
 		validate(par.valor, ({ value, valueOf }) =>
 			value().trim() === '' && valueOf(par.nombre).trim() !== ''
-				? { kind: 'required', message: 'Escribe el valor.' }
+				? { kind: 'required', message: 'Escriba el valor.' }
 				: null,
 		);
 		maxLength(par.valor, 100, { message: 'El valor admite hasta 100 caracteres.' });
@@ -144,7 +143,7 @@ export class ProductoPage implements ConCambiosSinGuardar {
 	});
 
 	// Las categorías para elegir, también las ocultas (HU-07: se les pueden asignar productos)
-	private readonly recursoDeCategorias = inject(CategoriasService).gestion();
+	protected readonly recursoDeCategorias = inject(CategoriasService).gestion();
 	protected readonly categorias = computed(() =>
 		this.recursoDeCategorias.hasValue() ? (this.recursoDeCategorias.value() ?? []) : [],
 	);
@@ -240,6 +239,9 @@ export class ProductoPage implements ConCambiosSinGuardar {
 
 	protected async guardar(evento: Event): Promise<void> {
 		evento.preventDefault();
+		if (this.guardando()) {
+			return;
+		}
 		this.error.set(null);
 		this.enviados.set(null);
 		this.avisoDeExito.set('');
@@ -326,7 +328,7 @@ export class ProductoPage implements ConCambiosSinGuardar {
 
 	private async creado(producto: Producto): Promise<void> {
 		this.producto.set(producto);
-		this.avisoDeExito.set(`Producto creado con el código ${producto.codigo}. Ya puedes subir sus fotos.`);
+		this.avisoDeExito.set(`Producto creado con el código ${producto.codigo}. Ya puede subir sus fotos.`);
 		this.trasCrear = true;
 		try {
 			await this.router.navigate(['/productos', producto.idProducto], { replaceUrl: true });
@@ -336,6 +338,9 @@ export class ProductoPage implements ConCambiosSinGuardar {
 	}
 
 	private async operarFotos(operacion: () => Promise<Producto>, exito: string): Promise<void> {
+		if (this.operandoFotos()) {
+			return;
+		}
 		this.operandoFotos.set(true);
 		this.errorDeFotos.set('');
 		this.exitoDeFotos.set('');

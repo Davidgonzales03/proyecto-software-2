@@ -48,8 +48,8 @@ describe('problemaDelPrecio', () => {
     expect(problemaDelPrecio('12,345')).toBe('El precio admite hasta dos decimales.');
     expect(problemaDelPrecio('0.125')).toBe('El precio admite hasta dos decimales.');
     expect(problemaDelPrecio('100000')).toBe('El precio admite hasta Bs 99.999,99.');
-    expect(problemaDelPrecio('1.234,50')).toBe('Escribe el precio sin separador de miles, por ejemplo 1234,50.');
-    expect(problemaDelPrecio('abc')).toBe('Escribe el precio con números, por ejemplo 420,50.');
+    expect(problemaDelPrecio('1.234,50')).toBe('Escriba el precio sin separador de miles, por ejemplo 1234,50.');
+    expect(problemaDelPrecio('abc')).toBe('Escriba el precio con números, por ejemplo 420,50.');
   });
 });
 

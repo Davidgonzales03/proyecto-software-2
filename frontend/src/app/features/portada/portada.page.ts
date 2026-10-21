@@ -11,8 +11,8 @@ import {
 	viewChild,
 } from '@angular/core';
 import { Params } from '@angular/router';
+import { comoErrorApi } from '../../core/modelos/error-api';
 
-import { comoErrorApi } from '../../core/api/autenticacion.service';
 import { CatalogoService } from '../../core/api/catalogo.service';
 import { mensajeDeError } from '../../core/api/mensajes-error';
 import { aTarjeta, ProductoEnTienda } from '../../core/modelos/catalogo';

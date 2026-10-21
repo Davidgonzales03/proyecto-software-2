@@ -266,15 +266,6 @@
 	cursor: pointer;
 }
 
-.solo-lectores {
-	position: absolute;
-	width: 1px;
-	height: 1px;
-	overflow: hidden;
-	clip-path: inset(50%);
-	white-space: nowrap;
-}
-
 // En el modo claro la lona clara se pierde sobre el fondo: la actual lleva borde
 :host-context([data-tema='claro']) .cinta button.actual {
 	border-color: var(--app-sobre-lona);

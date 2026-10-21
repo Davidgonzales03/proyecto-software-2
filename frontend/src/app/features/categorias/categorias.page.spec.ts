@@ -172,7 +172,7 @@ describe('CategoriasPage', () => {
   it('frena un nombre vacío o de más de 60 caracteres', async () => {
     escribir('nombre', '   ');
     await guardar();
-    expect(texto()).toContain('Escribe el nombre');
+    expect(texto()).toContain('Escriba el nombre');
 
     escribir('nombre', 'a'.repeat(61));
     await guardar();

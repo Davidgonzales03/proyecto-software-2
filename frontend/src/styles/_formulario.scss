@@ -132,13 +132,19 @@ textarea[aria-invalid='true'] {
 	transition: background-color var(--app-transicion);
 }
 
-.boton:hover:not([disabled]) {
+.boton:hover:not([disabled], [aria-disabled='true']) {
 	background: var(--app-ambar-fuerte);
 }
 
 .boton[disabled] {
 	opacity: 0.6;
 	cursor: default;
+}
+
+// Mientras envía: no se deshabilita (no pierde el foco), solo se apaga
+.boton[aria-disabled='true'] {
+	opacity: 0.6;
+	cursor: progress;
 }
 
 // Enlace al otro lado del circuito: de iniciar sesión a registrarse y al revés

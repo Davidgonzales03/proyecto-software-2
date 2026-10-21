@@ -41,7 +41,6 @@ public class CuentaController {
 	@PutMapping("/contrasena")
 	public InicioSesionResponse cambiarContrasena(@AuthenticationPrincipal Long idUsuario,
 			@Valid @RequestBody CambioContrasenaRequest solicitud, HttpServletRequest peticion) {
-		return InicioSesionResponse
-				.from(autenticacionService.cambiarContrasena(idUsuario, solicitud, peticion.getRemoteAddr()));
+		return autenticacionService.cambiarContrasena(idUsuario, solicitud, peticion.getRemoteAddr()).respuesta();
 	}
 }

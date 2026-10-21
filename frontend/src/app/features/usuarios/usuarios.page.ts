@@ -11,7 +11,6 @@ import {
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, ParamMap, Router } from '@angular/router';
 
-import { comoErrorApi } from '../../core/api/autenticacion.service';
 import { mensajeDeError } from '../../core/api/mensajes-error';
 import { UsuariosService } from '../../core/api/usuarios.service';
 import {
@@ -22,7 +21,7 @@ import {
 	Rol,
 	ROLES,
 } from '../../core/modelos/usuario';
-import { comoError } from '../../core/modelos/error-api';
+import { comoError, comoErrorApi } from '../../core/modelos/error-api';
 import { FiltrosDeUsuarios, UsuarioResumen } from '../../core/modelos/usuario-resumen';
 import { SesionService } from '../../core/sesion/sesion.service';
 import { DialogoConfirmacion } from '../../shared/dialogo-confirmacion/dialogo-confirmacion';
@@ -139,11 +138,14 @@ export class UsuariosPage {
 	// Desactivar corta el acceso y pide confirmación (RF-10); reactivar solo lo
 	// devuelve, así que no pregunta (RF-11)
 	protected async alCambiarEstadoDe(usuario: UsuarioResumen): Promise<void> {
+		if (this.procesando().has(usuario.idUsuario)) {
+			return;
+		}
 		const desactivar = usuario.estado === 'ACTIVA';
 		if (desactivar) {
 			const confirmado = await this.dialogo().abrir({
 				titulo: 'Desactivar cuenta',
-				mensaje: `${nombreDe(usuario)} (${usuario.correo}) no podrá iniciar sesión hasta que la reactives.`,
+				mensaje: `${nombreDe(usuario)} (${usuario.correo}) no podrá iniciar sesión hasta que la reactive.`,
 				confirmar: 'Desactivar',
 			});
 			if (!confirmado) {

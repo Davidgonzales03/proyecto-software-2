@@ -24,7 +24,6 @@
             "outputPath": "dist/frontend",
             "index": "src/index.html",
             "browser": "src/main.ts",
-            "allowedCommonJsDependencies": ["jsqr"],
             "polyfills": [
               "zone.js"
             ],

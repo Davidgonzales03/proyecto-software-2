@@ -257,7 +257,7 @@ describe('ProductosPage', () => {
     boton('Activar Manguera').click();
     await harness.fixture.whenStable();
 
-    expect(texto()).toContain('Ese producto ya no existe. Recarga la página.');
+    expect(texto()).toContain('Ese producto ya no existe. Recargue la página.');
   });
 
   it('dice cuando no hay productos con esos filtros', async () => {

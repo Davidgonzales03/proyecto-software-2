@@ -31,6 +31,10 @@
         </option>
       }
     </select>
+    @if (recursoDeCategorias.error()) {
+      <p class="aviso" role="alert">No pudimos cargar las categorías.</p>
+      <button type="button" class="secundario" (click)="recursoDeCategorias.reload()">Reintentar</button>
+    }
   </div>
 
   <div class="campo">
@@ -125,7 +129,7 @@
                     type="button"
                     class="secundario"
                     [attr.aria-label]="(producto.activo ? 'Desactivar ' : 'Activar ') + producto.nombre"
-                    [disabled]="procesando().has(producto.idProducto)"
+                    [attr.aria-disabled]="procesando().has(producto.idProducto) ? 'true' : null"
                     (click)="alCambiarActivo(producto)"
                   >
                     {{ producto.activo ? 'Desactivar' : 'Activar' }}

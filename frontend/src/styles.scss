@@ -161,3 +161,14 @@ main > :not(router-outlet) {
 	padding: 0;
 	accent-color: var(--app-ambar);
 }
+
+// Solo para lectores de pantalla: fuera de la vista, pero en el árbol de
+// accesibilidad. Global: la usan casi todas las pantallas
+.solo-lectores {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	clip-path: inset(50%);
+	white-space: nowrap;
+}

@@ -52,7 +52,8 @@ public class CatalogoService {
 		// Una página negativa es la primera, como en la gestión (HU-07); una enorme, una que llega vacía
 		PageRequest paginacion = PageRequest.of(Math.clamp(filtros.pagina(), 0, PAGINA_MAXIMA), POR_PAGINA,
 				orden.orden());
-		return PaginaResponse.from(productoRepository.catalogo(patronDeBusqueda(filtros.texto()), filtros.idCategoria(),
+		String patron = Busquedas.patron(filtros.texto(), Producto::textoDeBusqueda);
+		return PaginaResponse.from(productoRepository.catalogo(patron, filtros.idCategoria(),
 				marca, filtros.precioMin(), filtros.precioMax(), filtros.soloDisponibles(), paginacion),
 				ProductoTarjetaResponse::from);
 	}
@@ -121,15 +122,5 @@ public class CatalogoService {
 		} else if (precio.stripTrailingZeros().scale() > 2) {
 			errores.add(new CampoInvalido(campo, "admite hasta dos decimales"));
 		}
-	}
-
-	// Como en la gestión, pero sobre el texto ya sin tildes del producto (HU-09 RF-8)
-	private static String patronDeBusqueda(String texto) {
-		if (texto == null || texto.isBlank()) {
-			return null;
-		}
-		// '!' primero, para no volver a escapar los que agregan las otras dos sustituciones
-		String literal = Producto.textoDeBusqueda(texto).replace("!", "!!").replace("%", "!%").replace("_", "!_");
-		return "%" + literal + "%";
 	}
 }

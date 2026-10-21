@@ -279,7 +279,7 @@ describe('UsuariosPage', () => {
       );
     });
 
-    expect(texto()).toContain('Tu cuenta no tiene acceso a esta parte del sistema.');
+    expect(texto()).toContain('Su cuenta no tiene acceso a esta parte del sistema.');
     expect(texto()).not.toContain('detalle técnico');
   });
 
@@ -488,10 +488,10 @@ describe('UsuariosPage', () => {
     botonDeFila('ana@mail.com').click();
     await harness.fixture.whenStable();
 
-    expect(botonDeFila('ana@mail.com').disabled).toBe(true);
+    expect(botonDeFila('ana@mail.com').getAttribute('aria-disabled')).toBe('true');
     terminar(ANA);
     await asentar();
-    expect(botonDeFila('ana@mail.com').disabled).toBe(false);
+    expect(botonDeFila('ana@mail.com').getAttribute('aria-disabled')).toBeNull();
   });
 
   // --- Hallazgos de la revisión de código ---
@@ -540,8 +540,8 @@ describe('UsuariosPage', () => {
     terminar[0](ANA);
     await asentar();
 
-    expect(botonDeFila('ana@mail.com').disabled).toBe(false);
-    expect(botonDeFila('luis@mail.com').disabled).toBe(true);
+    expect(botonDeFila('ana@mail.com').getAttribute('aria-disabled')).toBeNull();
+    expect(botonDeFila('luis@mail.com').getAttribute('aria-disabled')).toBe('true');
   });
 
   // Un número que el backend no puede leer como página sería un error de carga

@@ -29,7 +29,7 @@
         }
       </div>
 
-      <button type="submit" class="boton" [disabled]="enviando()">
+      <button type="submit" class="boton" [attr.aria-disabled]="enviando() ? 'true' : null">
         {{ enviando() ? 'Guardando…' : 'Guardar contraseña' }}
       </button>
     </form>

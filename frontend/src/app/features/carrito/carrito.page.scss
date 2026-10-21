@@ -370,15 +370,6 @@ input[aria-invalid='true'] {
 	color: var(--app-error);
 }
 
-.solo-lectores {
-	position: absolute;
-	width: 1px;
-	height: 1px;
-	overflow: hidden;
-	clip-path: inset(50%);
-	white-space: nowrap;
-}
-
 // En el celular, el total primero y después la acción de vaciar
 @media (max-width: 640px) {
 	.total {

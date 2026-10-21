@@ -4,10 +4,8 @@ import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Locale;
 
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,8 +36,6 @@ import lombok.RequiredArgsConstructor;
 public class InventarioService {
 
 	static final BigDecimal STOCK_MAXIMO = new BigDecimal("9999999.99");
-	private static final int TAMANO_POR_DEFECTO = 20;
-	private static final int TAMANO_MAXIMO = 100;
 	private static final Sort ORDEN_INVENTARIO = Sort.by("nombre", "idProducto");
 	private static final Sort ORDEN_HISTORIAL = Sort.by(Sort.Direction.DESC, "fecha", "idMovimiento");
 
@@ -51,8 +47,8 @@ public class InventarioService {
 	@Transactional(readOnly = true)
 	public Page<InventarioResponse> listar(String texto, Long idCategoria, Boolean activo, boolean soloBajo,
 			int pagina, int tamano) {
-		return productoRepository.inventario(patronDeBusqueda(texto), idCategoria, activo, soloBajo,
-				paginacion(pagina, tamano, ORDEN_INVENTARIO)).map(InventarioResponse::from);
+		return productoRepository.inventario(Busquedas.patron(texto), idCategoria, activo, soloBajo,
+				Busquedas.pagina(pagina, tamano, ORDEN_INVENTARIO)).map(InventarioResponse::from);
 	}
 
 	@Transactional(readOnly = true)
@@ -66,7 +62,8 @@ public class InventarioService {
 		if (!productoRepository.existsById(idProducto)) {
 			throw new ProductoNoEncontradoException();
 		}
-		return movimientoRepository.findByProducto_IdProducto(idProducto, paginacion(pagina, tamano, ORDEN_HISTORIAL))
+		return movimientoRepository
+				.findByProducto_IdProducto(idProducto, Busquedas.pagina(pagina, tamano, ORDEN_HISTORIAL))
 				.map(MovimientoResponse::from);
 	}
 
@@ -131,20 +128,5 @@ public class InventarioService {
 	private Producto bloquear(Long idProducto) {
 		return productoRepository.findConBloqueoByIdProducto(idProducto)
 				.orElseThrow(ProductoNoEncontradoException::new);
-	}
-
-	// Igual que el Pageable de Spring Data: una página negativa es la primera y un tamaño inválido, el por defecto
-	private static PageRequest paginacion(int pagina, int tamano, Sort orden) {
-		return PageRequest.of(Math.max(pagina, 0), tamano < 1 ? TAMANO_POR_DEFECTO : Math.min(tamano, TAMANO_MAXIMO),
-				orden);
-	}
-
-	private static String patronDeBusqueda(String texto) {
-		if (texto == null || texto.isBlank()) {
-			return null;
-		}
-		// '!' primero, para no volver a escapar los que agregan las otras dos sustituciones
-		String literal = texto.strip().toLowerCase(Locale.ROOT).replace("!", "!!").replace("%", "!%").replace("_", "!_");
-		return "%" + literal + "%";
 	}
 }

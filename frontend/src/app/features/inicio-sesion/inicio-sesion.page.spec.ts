@@ -124,8 +124,8 @@ describe('InicioSesionPage', () => {
     await enviar();
 
     expect(autenticacion.llamadas).toEqual([]);
-    expect(texto()).toContain('Escribe tu correo');
-    expect(texto()).toContain('Escribe tu contraseña');
+    expect(texto()).toContain('Escriba su correo');
+    expect(texto()).toContain('Escriba su contraseña');
   });
 
   // HU-02 RF-8
@@ -344,7 +344,7 @@ describe('InicioSesionPage', () => {
       parametros = { aviso: 'sesion-cerrada' };
       await preparar();
 
-      expect(texto()).toContain('Tu sesión se cerró. Inicia sesión de nuevo.');
+      expect(texto()).toContain('Su sesión se cerró. Inicie sesión de nuevo.');
     });
 
     // HU-02 RF-10: al volver a entrar, sigue donde estaba
@@ -364,7 +364,7 @@ describe('InicioSesionPage', () => {
       parametros = { aviso: 'contrasena-actualizada' };
       await preparar();
 
-      expect(texto()).toContain('Tu contraseña quedó actualizada');
+      expect(texto()).toContain('Su contraseña quedó actualizada');
     });
 
     // El parámetro se lee de la URL: un valor cualquiera no puede pintar nada
@@ -414,7 +414,7 @@ describe('InicioSesionPage', () => {
 
       await enviar();
 
-      expect(texto()).not.toContain('Tu contraseña quedó actualizada');
+      expect(texto()).not.toContain('Su contraseña quedó actualizada');
       expect(texto()).toContain('El correo o la contraseña no son correctos.');
     });
 

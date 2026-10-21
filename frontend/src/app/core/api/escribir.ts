@@ -1,6 +1,6 @@
 import { firstValueFrom, Observable } from 'rxjs';
 
-import { comoErrorApi } from './autenticacion.service';
+import { comoErrorApi } from '../modelos/error-api';
 
 // Una escritura con HttpClient como promesa: si el backend rechaza, falla con el
 // ErrorApi ya armado, con el código que la pantalla traduce

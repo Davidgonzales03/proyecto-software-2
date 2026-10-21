@@ -126,7 +126,7 @@ describe('RegistroPage', () => {
 
   function iniciaSesion(): string | null {
     const enlace = Array.from(fijo.nativeElement.querySelectorAll('a') as NodeListOf<HTMLAnchorElement>).find(
-      (cada) => cada.textContent?.trim() === 'Inicia sesión',
+      (cada) => cada.textContent?.trim() === 'Inicie sesión',
     );
     return enlace?.getAttribute('href') ?? null;
   }
@@ -218,10 +218,10 @@ describe('RegistroPage', () => {
     await enviar();
 
     expect(autenticacion.llamadas).toEqual([]);
-    expect(texto()).toContain('Escribe tu nombre');
-    expect(texto()).toContain('Escribe tu apellido');
-    expect(texto()).toContain('Escribe tu correo');
-    expect(texto()).toContain('Elige una contraseña');
+    expect(texto()).toContain('Escriba su nombre');
+    expect(texto()).toContain('Escriba su apellido');
+    expect(texto()).toContain('Escriba su correo');
+    expect(texto()).toContain('Elija una contraseña');
     expect(navegaciones).toEqual([]);
   });
 
@@ -350,7 +350,7 @@ describe('RegistroPage', () => {
     await enviar();
 
     expect(autenticacion.llamadas).toEqual([]);
-    expect(texto()).toContain('Escribe tu nombre');
+    expect(texto()).toContain('Escriba su nombre');
   });
 
   // La cuenta ya quedó creada: decir que falló el registro haría reintentar y
@@ -369,7 +369,7 @@ describe('RegistroPage', () => {
     expect(autenticacion.llamadas.length).toBe(1);
     expect(texto()).not.toContain('No pudimos conectar con el servidor.');
     // Y la pantalla no se queda trabada en "Creando cuenta…"
-    expect(fijo.nativeElement.querySelector('button[type="submit"]').disabled).toBe(false);
+    expect(fijo.nativeElement.querySelector('button[type="submit"]').getAttribute('aria-disabled')).toBeNull();
   });
 
   // HU-01 RF-8: el correo ya pertenece a una cuenta
@@ -408,7 +408,7 @@ describe('RegistroPage', () => {
     fijo.nativeElement.querySelector('form').dispatchEvent(new Event('submit'));
     fijo.detectChanges();
 
-    expect(fijo.nativeElement.querySelector('button[type="submit"]').disabled).toBe(true);
+    expect(fijo.nativeElement.querySelector('button[type="submit"]').getAttribute('aria-disabled')).toBe('true');
     responder(SESION);
     await fijo.whenStable();
   });
