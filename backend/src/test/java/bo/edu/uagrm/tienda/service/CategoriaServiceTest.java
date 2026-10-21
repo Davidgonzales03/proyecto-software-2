@@ -61,7 +61,8 @@ class CategoriaServiceTest {
 		return categoria;
 	}
 
-	// Borrar y cambiar la imagen bloquean la fila (dos a la vez no dejan archivos huérfanos)
+	// Editar, ocultar, borrar y cambiar la imagen bloquean la fila (dos a la vez no pisan la imagen ni dejan archivos
+	// huérfanos)
 	private Categoria bloqueada(long id, String nombre) {
 		Categoria categoria = Categoria.crear(nombre, null);
 		ReflectionTestUtils.setField(categoria, "idCategoria", id);
@@ -109,7 +110,7 @@ class CategoriaServiceTest {
 	// HU-06 RF-5
 	@Test
 	void editarAlMismoNombreConOtrasMayusculasSePermite() {
-		Categoria jardin = existente(4, "jardín");
+		Categoria jardin = bloqueada(4, "jardín");
 		given(categoriaRepository.existsByNombreClaveAndIdCategoriaNot("jardin", 4L)).willReturn(false);
 		guardaComoViene();
 
@@ -122,7 +123,7 @@ class CategoriaServiceTest {
 	// HU-06 RF-4, RF-5
 	@Test
 	void renombrarAlNombreDeOtraSeRechaza() {
-		existente(4, "Jardín");
+		bloqueada(4, "Jardín");
 		given(categoriaRepository.existsByNombreClaveAndIdCategoriaNot("pintura", 4L)).willReturn(true);
 
 		assertThatThrownBy(() -> servicio.editar(4L, new CategoriaRequest("Pintura", null)))
@@ -132,7 +133,7 @@ class CategoriaServiceTest {
 	// HU-06 RF-8
 	@Test
 	void ocultarYMostrar() {
-		Categoria jardin = existente(4, "Jardín");
+		Categoria jardin = bloqueada(4, "Jardín");
 
 		servicio.cambiarVisibilidad(4L, false);
 		assertThat(jardin.isVisible()).isFalse();
@@ -189,7 +190,7 @@ class CategoriaServiceTest {
 	// HU-06 RF-13
 	@Test
 	void categoriaInexistente() {
-		given(categoriaRepository.findById(99L)).willReturn(Optional.empty());
+		given(categoriaRepository.findConBloqueoByIdCategoria(99L)).willReturn(Optional.empty());
 
 		assertThatThrownBy(() -> servicio.cambiarVisibilidad(99L, false))
 				.isInstanceOfSatisfying(CategoriaNoEncontradaException.class,

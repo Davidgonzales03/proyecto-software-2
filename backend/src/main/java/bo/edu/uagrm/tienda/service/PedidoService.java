@@ -80,7 +80,7 @@ public class PedidoService {
 	private String proveedor;
 
 	public RetiroResponse retiro() {
-		return RetiroResponse.de(retiroProperties);
+		return RetiroResponse.de(retiroProperties.direccion(), retiroProperties.horario());
 	}
 
 	// Todo o nada, en una sola transacción (RF-2, RF-3)

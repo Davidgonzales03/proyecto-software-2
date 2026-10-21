@@ -22,10 +22,6 @@ public interface PedidoRepository extends JpaRepository<Pedido, Long> {
 	@Lock(LockModeType.PESSIMISTIC_WRITE)
 	Optional<Pedido> findConBloqueoByIdPedidoAndUsuario_IdUsuario(Long idPedido, Long idUsuario);
 
-	// El que el carrito informa como pendiente: todavía no pasó la hora (RF-5, RF-10)
-	Optional<Pedido> findFirstByUsuario_IdUsuarioAndEstadoAndVenceAfter(Long idUsuario, EstadoPedido estado,
-			LocalDateTime ahora);
-
 	// Los pendientes del cliente al confirmar, con el cliente ya bloqueado (RF-5)
 	List<Pedido> findByUsuario_IdUsuarioAndEstadoOrderByIdPedido(Long idUsuario, EstadoPedido estado);
 

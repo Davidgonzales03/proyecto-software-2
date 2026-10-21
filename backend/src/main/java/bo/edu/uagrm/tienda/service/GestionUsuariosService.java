@@ -1,6 +1,5 @@
 package bo.edu.uagrm.tienda.service;
 
-import java.util.Locale;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -26,8 +25,6 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class GestionUsuariosService {
 
-	private static final int TAMANO_POR_DEFECTO = 20;
-	private static final int TAMANO_MAXIMO = 100;
 	private static final Sort ORDEN = Sort.by(Sort.Direction.DESC, "fechaRegistro", "idUsuario");
 
 	private final UsuarioRepository usuarioRepository;
@@ -35,10 +32,8 @@ public class GestionUsuariosService {
 
 	@Transactional(readOnly = true)
 	public Page<Usuario> listar(Rol rol, EstadoCuenta estado, String texto, int pagina, int tamano) {
-		// Igual que el Pageable de Spring Data: una página negativa es la primera y un tamaño inválido, el por defecto
-		PageRequest paginacion = PageRequest.of(Math.max(pagina, 0),
-				tamano < 1 ? TAMANO_POR_DEFECTO : Math.min(tamano, TAMANO_MAXIMO), ORDEN);
-		return usuarioRepository.buscar(rol, estado, patronDeBusqueda(texto), paginacion);
+		PageRequest paginacion = Busquedas.pagina(pagina, tamano, ORDEN);
+		return usuarioRepository.buscar(rol, estado, Busquedas.patron(texto), paginacion);
 	}
 
 	@Transactional
@@ -95,14 +90,5 @@ public class GestionUsuariosService {
 
 	private static boolean esAdministradorActivo(Usuario usuario) {
 		return usuario.getRol() == Rol.ADMINISTRADOR && usuario.estaActiva();
-	}
-
-	private static String patronDeBusqueda(String texto) {
-		if (texto == null || texto.isBlank()) {
-			return null;
-		}
-		// '!' primero, para no volver a escapar los que agregan las otras dos sustituciones
-		String literal = texto.strip().toLowerCase(Locale.ROOT).replace("!", "!!").replace("%", "!%").replace("_", "!_");
-		return "%" + literal + "%";
 	}
 }

@@ -36,7 +36,6 @@ import org.springframework.test.web.servlet.assertj.MvcTestResult;
 
 import com.jayway.jsonpath.JsonPath;
 
-import bo.edu.uagrm.tienda.config.RetiroProperties;
 import bo.edu.uagrm.tienda.dto.RetiroResponse;
 import bo.edu.uagrm.tienda.entity.EstadoPedido;
 import bo.edu.uagrm.tienda.entity.TipoMovimiento;
@@ -709,9 +708,9 @@ class PedidoIntegracionTest {
 	// HU-12 RF-17
 	@Test
 	void sinConfigurarVieneVacio() {
-		assertThat(RetiroResponse.de(new RetiroProperties(null, null))).isEqualTo(new RetiroResponse(null, null));
-		assertThat(RetiroResponse.de(new RetiroProperties("  ", ""))).isEqualTo(new RetiroResponse(null, null));
-		assertThat(RetiroResponse.de(new RetiroProperties(" Av. Principal ", null)))
+		assertThat(RetiroResponse.de(null, null)).isEqualTo(new RetiroResponse(null, null));
+		assertThat(RetiroResponse.de("  ", "")).isEqualTo(new RetiroResponse(null, null));
+		assertThat(RetiroResponse.de(" Av. Principal ", null))
 				.isEqualTo(new RetiroResponse("Av. Principal", null));
 	}
 

@@ -38,8 +38,6 @@ import lombok.RequiredArgsConstructor;
 public class ProductoService {
 
 	static final int MAXIMO_IMAGENES = 5;
-	private static final int TAMANO_POR_DEFECTO = 20;
-	private static final int TAMANO_MAXIMO = 100;
 	private static final Sort ORDEN = Sort.by(Sort.Direction.DESC, "fechaAlta", "idProducto");
 	private static final String PREFIJO_SIN_LETRAS = "PRD";
 
@@ -51,10 +49,8 @@ public class ProductoService {
 	@Transactional(readOnly = true)
 	public Page<ProductoResumenResponse> listar(Long idCategoria, Boolean activo, String texto, int pagina,
 			int tamano) {
-		// Igual que el Pageable de Spring Data: una página negativa es la primera y un tamaño inválido, el por defecto
-		PageRequest paginacion = PageRequest.of(Math.max(pagina, 0),
-				tamano < 1 ? TAMANO_POR_DEFECTO : Math.min(tamano, TAMANO_MAXIMO), ORDEN);
-		return productoRepository.buscar(idCategoria, activo, patronDeBusqueda(texto), paginacion)
+		PageRequest paginacion = Busquedas.pagina(pagina, tamano, ORDEN);
+		return productoRepository.buscar(idCategoria, activo, Busquedas.patron(texto), paginacion)
 				.map(ProductoResumenResponse::from);
 	}
 
@@ -173,14 +169,5 @@ public class ProductoService {
 			}
 		}
 		return solicitud.ficha().stream().map(par -> new Caracteristica(par.nombre(), par.valor())).toList();
-	}
-
-	private static String patronDeBusqueda(String texto) {
-		if (texto == null || texto.isBlank()) {
-			return null;
-		}
-		// '!' primero, para no volver a escapar los que agregan las otras dos sustituciones
-		String literal = texto.strip().toLowerCase(Locale.ROOT).replace("!", "!!").replace("%", "!%").replace("_", "!_");
-		return "%" + literal + "%";
 	}
 }

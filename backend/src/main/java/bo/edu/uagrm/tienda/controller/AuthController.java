@@ -40,7 +40,7 @@ public class AuthController {
 	public ResponseEntity<InicioSesionResponse> registrar(@Valid @RequestBody RegistroClienteRequest solicitud,
 			HttpServletRequest peticion) {
 		return ResponseEntity.status(HttpStatus.CREATED)
-				.body(InicioSesionResponse.from(usuarioService.registrarCliente(solicitud, peticion.getRemoteAddr())));
+				.body(usuarioService.registrarCliente(solicitud, peticion.getRemoteAddr()).respuesta());
 	}
 
 	// La IP alimenta el límite de intentos fallidos. Detrás de un proxy inverso, la IP real requiere configurar el
@@ -48,7 +48,7 @@ public class AuthController {
 	@PostMapping("/inicio-sesion")
 	public InicioSesionResponse iniciarSesion(@Valid @RequestBody InicioSesionRequest solicitud,
 			HttpServletRequest peticion) {
-		return InicioSesionResponse.from(autenticacionService.iniciarSesion(solicitud, peticion.getRemoteAddr()));
+		return autenticacionService.iniciarSesion(solicitud, peticion.getRemoteAddr()).respuesta();
 	}
 
 	// Misma respuesta exista o no la cuenta. La IP alimenta el límite de solicitudes, con la misma salvedad del

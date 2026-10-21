@@ -60,7 +60,7 @@ public class CategoriaService {
 
 	@Transactional
 	public Categoria editar(Long idCategoria, CategoriaRequest solicitud) {
-		Categoria categoria = buscar(idCategoria);
+		Categoria categoria = bloquear(idCategoria);
 		if (categoriaRepository.existsByNombreClaveAndIdCategoriaNot(Categoria.clave(solicitud.nombre()),
 				idCategoria)) {
 			throw new CategoriaExistenteException();
@@ -71,7 +71,7 @@ public class CategoriaService {
 
 	@Transactional
 	public Categoria cambiarVisibilidad(Long idCategoria, boolean visible) {
-		Categoria categoria = buscar(idCategoria);
+		Categoria categoria = bloquear(idCategoria);
 		if (visible) {
 			categoria.mostrar();
 		} else {
