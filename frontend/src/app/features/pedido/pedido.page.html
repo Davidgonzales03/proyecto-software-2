@@ -11,7 +11,13 @@
 } @else if (pedido(); as pedido) {
   <div class="cabecera">
     <h1>Pedido N.º {{ pedido.idPedido }}</h1>
-    <p class="estado" [class.pendiente]="pedido.estado === 'PENDIENTE_PAGO'">{{ nombresDeEstado[pedido.estado] }}</p>
+    <p
+      class="estado"
+      [class.pendiente]="pedido.estado === 'PENDIENTE_PAGO' || pedido.estado === 'PAGO_A_DEVOLVER'"
+      [class.pagado]="pedido.estado === 'PAGADO'"
+    >
+      {{ nombresDeEstado[pedido.estado] }}
+    </p>
   </div>
 
   <div role="alert">
@@ -26,6 +32,26 @@
       <p class="reloj" role="timer" aria-live="off">{{ reloj() }}</p>
       <p class="plazo">
         para pagar. Vence a las {{ hora(pedido.vence) }}: si no se paga, los productos vuelven a su carrito.
+      </p>
+    </section>
+    <app-pago-del-pedido [pedido]="pedido" (cambio)="actualizar($event)" (desactualizado)="recurso.reload()" />
+  } @else if (pedido.estado === 'PAGADO') {
+    <section class="cerrado pagado" role="status" tabindex="-1">
+      <p>
+        <svg lucideCircleCheck aria-hidden="true"></svg>
+        @if (pedido.pagado) {
+          Recibimos su pago el {{ fecha(pedido.pagado) }} a las {{ hora(pedido.pagado) }}.
+        } @else {
+          Recibimos su pago.
+        }
+        Ya puede retirar su pedido en la tienda.
+      </p>
+    </section>
+  } @else if (pedido.estado === 'PAGO_A_DEVOLVER') {
+    <section class="cerrado devolver" role="status" tabindex="-1">
+      <p>
+        Su pago llegó cuando el pedido ya no estaba vigente y el stock ya no alcanzaba. La tienda le devolverá el
+        dinero.
       </p>
     </section>
   } @else {

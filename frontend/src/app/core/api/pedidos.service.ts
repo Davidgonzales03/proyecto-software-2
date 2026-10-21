@@ -1,7 +1,7 @@
 import { HttpClient, httpResource, HttpResourceRef } from '@angular/common/http';
 import { inject, Injectable, Signal } from '@angular/core';
 
-import { Cancelacion, DatosDeConfirmacion, Pedido, Retiro } from '../modelos/pedido';
+import { Cancelacion, DatosDeConfirmacion, Pedido, ResultadoSimulado, Retiro } from '../modelos/pedido';
 import { CarritoService } from './carrito.service';
 import { escribir } from './escribir';
 
@@ -48,5 +48,21 @@ export class PedidosService {
 		const cancelacion = await escribir(this.http.post<Cancelacion>(`${PEDIDOS}/${idPedido}/cancelacion`, null));
 		this.carrito.carrito.reload();
 		return cancelacion;
+	}
+
+	// Genera el cobro, o devuelve el que ya tiene (HU-13 RF-1, RF-2)
+	pagar(idPedido: number): Promise<Pedido> {
+		return escribir(this.http.post<Pedido>(`${PEDIDOS}/${idPedido}/cobro`, null));
+	}
+
+	// El servidor pregunta al sistema de pago y responde cómo quedó (HU-13 RF-4).
+	// Si cambió el pedido, la página del pedido pide el carrito de nuevo
+	consultarPago(idPedido: number): Promise<Pedido> {
+		return escribir(this.http.post<Pedido>(`${PEDIDOS}/${idPedido}/cobro/consulta`, null));
+	}
+
+	// Solo con el simulador (HU-13 RF-12)
+	async simular(idPedido: number, resultado: ResultadoSimulado): Promise<void> {
+		await escribir(this.http.post<void>(`${PEDIDOS}/${idPedido}/cobro/simulacion`, { resultado }));
 	}
 }

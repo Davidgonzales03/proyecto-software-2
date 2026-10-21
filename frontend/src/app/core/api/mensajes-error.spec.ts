@@ -24,6 +24,9 @@ describe('mensajeDeError', () => {
     ['TOTAL_CAMBIADO', 'total'],
     ['PEDIDO_NO_PENDIENTE', 'ya no espera el pago'],
     ['PEDIDO_NO_ENCONTRADO', 'pedido'],
+    // HU-13 RF-3, RF-12
+    ['COBRO_NO_DISPONIBLE', 'Intente de nuevo'],
+    ['COBRO_NO_ENCONTRADO', 'cobro'],
   ])('traduce %s', (codigo, motivo) => {
     const mensaje = mensajeDeError(error(codigo));
 

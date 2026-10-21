@@ -24,6 +24,8 @@ const PEDIDO: Pedido = {
   vence: '2026-10-19T10:30:00',
   segundosParaPagar: 1800,
   retiro: { direccion: 'Av. Principal 123', horario: null },
+  pagado: null,
+  cobro: null,
 };
 
 const VACIO: Carrito = { lineas: [], total: 0, cantidadLineas: 0, idPedidoPendiente: null };
@@ -112,6 +114,28 @@ describe('PedidosService', () => {
     await expect(cancelado).resolves.toEqual(respuesta);
     TestBed.tick();
     http.expectOne({ method: 'GET', url: '/api/carrito' }).flush(VACIO);
+  });
+
+  // HU-13 RF-1, RF-4, RF-12: cada uno a su ruta, sin tocar el carrito
+  it('pagar, consultar y simular llaman a su ruta', async () => {
+    const pedidos = await servicio();
+    const conCobro: Pedido = { ...PEDIDO, cobro: { codigoQr: 'QR', urlPasarela: null, simulador: true } };
+
+    const pago = pedidos.pagar(12);
+    http.expectOne({ method: 'POST', url: '/api/pedidos/12/cobro' }).flush(conCobro);
+    await expect(pago).resolves.toEqual(conCobro);
+
+    const consulta = pedidos.consultarPago(12);
+    http.expectOne({ method: 'POST', url: '/api/pedidos/12/cobro/consulta' }).flush(conCobro);
+    await expect(consulta).resolves.toEqual(conCobro);
+
+    const simulado = pedidos.simular(12, 'PAGADO');
+    const simulacion = http.expectOne({ method: 'POST', url: '/api/pedidos/12/cobro/simulacion' });
+    expect(simulacion.request.body).toEqual({ resultado: 'PAGADO' });
+    simulacion.flush(null, { status: 204, statusText: 'No Content' });
+    await expect(simulado).resolves.toBeUndefined();
+    TestBed.tick();
+    http.expectNone('/api/carrito');
   });
 
   // HU-12 RF-8, RF-17

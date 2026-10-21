@@ -57,6 +57,10 @@ public class SecurityConfig {
 						.requestMatchers("/api/inventario/**").hasAnyRole("EMPLEADO", "ADMINISTRADOR")
 						// El carrito es solo del Cliente: el personal no compra (HU-11 RF-7)
 						.requestMatchers("/api/carrito/**").hasRole("CLIENTE")
+						// El aviso del sistema de pago llega sin sesión. No confirma nada: solo adelanta la consulta
+						// (HU-13 RF-10)
+						.requestMatchers(HttpMethod.GET, "/api/pagos/aviso").permitAll()
+						.requestMatchers(HttpMethod.POST, "/api/pagos/aviso").permitAll()
 						// Los pedidos de la API del Cliente: el personal los verá por otra (HU-12 RF-13)
 						.requestMatchers("/api/pedidos/**").hasRole("CLIENTE")
 						.anyRequest().authenticated())

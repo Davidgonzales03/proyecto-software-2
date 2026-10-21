@@ -39,6 +39,10 @@ services:
       TIENDA_ADMIN_PASSWORD: ${TIENDA_ADMIN_PASSWORD:?Falta TIENDA_ADMIN_PASSWORD en .env}
       TIENDA_CORS_ORIGENES: ${TIENDA_CORS_ORIGENES:-http://localhost}
       TIENDA_PAGO_PROVEEDOR: ${TIENDA_PAGO_PROVEEDOR:-simulador}
+      # Solo con libelula (decisiones.md → Pagos); la URL vacía usa la de producción
+      TIENDA_PAGO_LIBELULA_URL: ${TIENDA_PAGO_LIBELULA_URL:-https://api.libelula.bo}
+      TIENDA_PAGO_LIBELULA_APPKEY: ${TIENDA_PAGO_LIBELULA_APPKEY:-}
+      TIENDA_PAGO_LIBELULA_EMAIL: ${TIENDA_PAGO_LIBELULA_EMAIL:-}
       TIENDA_MARCA: ${TIENDA_MARCA:-Tienda Montero}
       # Correo: simulador por defecto; smtp con Gmail (decisiones.md → Notificaciones)
       TIENDA_CORREO_PROVEEDOR: ${TIENDA_CORREO_PROVEEDOR:-simulador}

@@ -1,0 +1,71 @@
+<section class="pago" aria-labelledby="titulo-pago">
+  <h2 id="titulo-pago"><svg lucideQrCode aria-hidden="true"></svg>Pago</h2>
+  <p class="monto">Total a pagar <strong>{{ precio(pedido().total) }}</strong></p>
+
+  @if (pedido().cobro; as cobro) {
+    <p class="indicacion">
+      Escanee el código con la app de su banco. Esta página se actualiza sola cuando llega el pago.
+    </p>
+    <app-codigo-qr [valor]="cobro.codigoQr" [etiqueta]="'Código QR para pagar el pedido N.º ' + pedido().idPedido" />
+    <div class="acciones">
+      <button
+        type="button"
+        class="secundario ya-pague"
+        [attr.aria-disabled]="consultando() ? 'true' : null"
+        (click)="yaPague()"
+      >
+        Ya pagué
+      </button>
+      @if (cobro.urlPasarela) {
+        <a class="enlace" [href]="cobro.urlPasarela" target="_blank" rel="noopener noreferrer">
+          Pagar en la página del sistema de pago<span class="solo-lectores"> (se abre en otra pestaña)</span>
+        </a>
+      }
+    </div>
+
+    @if (cobro.simulador) {
+      <div class="pruebas" role="group" aria-labelledby="titulo-pruebas">
+        <p id="titulo-pruebas">Herramienta de pruebas: el pago no es real</p>
+        <div class="acciones">
+          <button
+            type="button"
+            class="secundario"
+            [attr.aria-disabled]="simulando() ? 'true' : null"
+            (click)="simular('PAGADO')"
+          >
+            Simular pago
+          </button>
+          <button
+            type="button"
+            class="secundario"
+            [attr.aria-disabled]="simulando() ? 'true' : null"
+            (click)="simular('ERROR')"
+          >
+            Simular error
+          </button>
+        </div>
+      </div>
+    }
+  } @else {
+    <p class="indicacion">Genere el QR y páguelo desde la app de su banco.</p>
+    <button
+      type="button"
+      class="principal"
+      [attr.aria-disabled]="generando() ? 'true' : null"
+      (click)="pagar()"
+    >
+      <span>Pagar con QR</span>
+    </button>
+  }
+
+  <div role="status">
+    @if (estado()) {
+      <p class="estado">{{ estado() }}</p>
+    }
+  </div>
+  <div role="alert">
+    @if (aviso()) {
+      <p class="aviso">{{ aviso() }}</p>
+    }
+  </div>
+</section>

@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import bo.edu.uagrm.tienda.dto.CantidadRequest;
@@ -52,7 +53,8 @@ public class CarritoService {
 
 	// Primero vence el pedido del cliente si ya pasó la hora: sus líneas vuelven antes de mostrar el carrito (HU-12
 	// RF-10)
-	@Transactional
+	// READ_COMMITTED, como lo que vence en PedidoService: ve el cobro que se guardó mientras esperaba (HU-13 RF-7)
+	@Transactional(isolation = Isolation.READ_COMMITTED)
 	public CarritoResponse ver(Long idUsuario) {
 		pedidoService.vencerSiCorresponde(idUsuario);
 		return armar(idUsuario);

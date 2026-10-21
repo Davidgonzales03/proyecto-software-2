@@ -59,9 +59,22 @@ h2 svg {
 	text-transform: uppercase;
 }
 
-.estado.pendiente {
+.estado.pendiente,
+.cerrado.devolver {
 	background: var(--app-aviso-fondo);
 	color: var(--app-aviso);
+}
+
+.estado.pagado,
+.cerrado.pagado {
+	background: var(--app-exito-fondo);
+	color: var(--app-exito);
+}
+
+.cerrado svg {
+	width: 20px;
+	height: 20px;
+	vertical-align: -4px;
 }
 
 // La ventana del letrero: marco oscuro cortado en sesgo, filo amarillo y la
