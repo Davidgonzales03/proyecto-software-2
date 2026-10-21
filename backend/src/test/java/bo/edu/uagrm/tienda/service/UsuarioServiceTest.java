@@ -48,6 +48,9 @@ class UsuarioServiceTest {
 	@Mock
 	private UsuarioRepository usuarioRepository;
 
+	@Mock
+	private VerificacionCorreoService verificacionCorreoService;
+
 	private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 	private final TokenJwt tokenJwt = new TokenJwt(
 			new JwtProperties("Y2xhdmUtZGUtcHJ1ZWJhcy1wYXJhLXRva2Vucy1qd3QtZXZlbnRvcw==", Duration.ofHours(8)), RELOJ);
@@ -57,7 +60,8 @@ class UsuarioServiceTest {
 
 	@BeforeEach
 	void crearServicio() {
-		usuarioService = new UsuarioService(usuarioRepository, passwordEncoder, RELOJ, tokenJwt, limiteRegistros);
+		usuarioService = new UsuarioService(usuarioRepository, passwordEncoder, RELOJ, tokenJwt, limiteRegistros,
+				verificacionCorreoService);
 	}
 
 	private void guardarConId() {
@@ -93,6 +97,17 @@ class UsuarioServiceTest {
 		assertThat(usuario.getFechaRegistro()).isEqualTo(LocalDateTime.of(2026, 9, 12, 11, 0));
 		assertThat(usuario.getContrasena()).isNotEqualTo("secreta12").startsWith("$2");
 		assertThat(passwordEncoder.matches("secreta12", usuario.getContrasena())).isTrue();
+	}
+
+	// HU-20 RF-1
+	@Test
+	void registrarClienteIniciaLaVerificacionDeCorreo() {
+		given(usuarioRepository.existsByCorreo("ana@mail.com")).willReturn(false);
+		guardarConId();
+
+		usuarioService.registrarCliente(solicitud("ana@mail.com", "70000000"), IP);
+
+		then(verificacionCorreoService).should().iniciarVerificacion(any(Usuario.class));
 	}
 
 	// HU-01 RF-10

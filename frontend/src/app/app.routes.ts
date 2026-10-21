@@ -34,6 +34,12 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./features/restablecer/restablecer.page').then((m) => m.RestablecerPage),
   },
+  {
+    path: 'verificar-correo',
+    title: `Verificar correo · ${MARCA.nombre}`,
+    loadComponent: () =>
+      import('./features/verificar-correo/verificar-correo.page').then((m) => m.VerificarCorreoPage),
+  },
   // La portada es la tienda, para todos (HU-09). El panel con los accesos de
   // cada rol pasa a /panel
   {

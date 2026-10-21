@@ -1,0 +1,48 @@
+<div class="tarjeta">
+  <h1>Verificación de correo</h1>
+
+  @if (cargando()) {
+    <p class="cargando" role="status">Verificando su correo electrónico…</p>
+  } @else if (verificado()) {
+    <div class="estado-exito" role="status">
+      <div class="icono" aria-hidden="true">
+        <svg lucideCircleCheck aria-hidden="true"></svg>
+      </div>
+      <p class="aviso exito">¡Correo verificado con éxito!</p>
+      <p class="descripcion">
+        Su correo electrónico ha sido confirmado. Ya puede realizar y confirmar pedidos en la tienda.
+      </p>
+      <div class="acciones">
+        <a class="boton" routerLink="/catalogo">Ir al catálogo</a>
+        @if (autenticado()) {
+          <a class="boton secundario" routerLink="/carrito">Ver mi carrito</a>
+        }
+      </div>
+    </div>
+  } @else {
+    <div class="estado-error" role="alert">
+      <p class="aviso">{{ error() }}</p>
+      <p class="descripcion">
+        El enlace de verificación tiene una validez de 24 horas y puede utilizarse una sola vez. Si venció o ya lo usó, puede solicitar uno nuevo.
+      </p>
+
+      @if (autenticado()) {
+        <div class="acciones-reenvio">
+          <button type="button" class="boton" [disabled]="reenviando()" (click)="reenviarVerificacion()">
+            {{ reenviando() ? 'Enviando…' : 'Reenviar correo de verificación' }}
+          </button>
+          @if (reenvioExitoso()) {
+            <p class="exito-reenvio">Hemos enviado un nuevo enlace de verificación a su correo electrónico.</p>
+          }
+          @if (errorReenvio(); as err) {
+            <p class="error">{{ err }}</p>
+          }
+        </div>
+      } @else {
+        <div class="acciones">
+          <a class="boton" routerLink="/inicio-sesion">Iniciar sesión</a>
+        </div>
+      }
+    </div>
+  }
+</div>

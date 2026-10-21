@@ -21,6 +21,7 @@ const ANA: Usuario = {
   rol: 'CLIENTE',
   estado: 'ACTIVA',
   fechaRegistro: '2026-09-14T10:00:00',
+  correoVerificado: true,
 };
 
 function sesionDe(usuario: Usuario, token = 'jwt.de.prueba'): Sesion {

@@ -22,6 +22,7 @@ const RESPUESTA: Sesion = {
     rol: 'CLIENTE',
     estado: 'ACTIVA',
     fechaRegistro: '2026-09-14T10:00:00',
+    correoVerificado: true,
   },
 };
 
@@ -146,6 +147,7 @@ const CLIENTE_REGISTRADO: Usuario = {
   rol: 'CLIENTE',
   estado: 'ACTIVA',
   fechaRegistro: '2026-09-17T10:00:00',
+  correoVerificado: false,
 };
 
 // HU-01 RF-2: el registro responde con la sesión, igual que el inicio de sesión
@@ -404,5 +406,65 @@ describe('AutenticacionService, recuperacion de contrasena', () => {
     http.expectOne('/api/auth/recuperacion').error(new ProgressEvent('error'));
 
     await expect(promesa).rejects.toMatchObject({ codigo: 'SIN_CONEXION' });
+  });
+
+  // HU-20 RF-2
+  it('envía el token de verificación y resuelve exitosamente', async () => {
+    const promesa = servicio.verificarCorreo('  token-de-prueba-123  ');
+
+    const peticion = http.expectOne('/api/auth/verificacion-correo');
+    expect(peticion.request.method).toBe('POST');
+    expect(peticion.request.body).toEqual({ token: 'token-de-prueba-123' });
+    peticion.flush({ mensaje: 'Su correo electrónico ha sido verificado con éxito. Ya puede realizar pedidos.' });
+
+    await expect(promesa).resolves.toBeUndefined();
+  });
+
+  // HU-20 RF-3
+  it('rechaza con TOKEN_VERIFICACION_INVALIDO si el token no sirve', async () => {
+    const promesa = servicio.verificarCorreo('token-invalido');
+
+    http.expectOne('/api/auth/verificacion-correo').flush(
+      {
+        type: 'about:blank',
+        title: 'Bad Request',
+        status: 400,
+        detail: 'El enlace de verificación no es válido o ya fue utilizado',
+        codigo: 'TOKEN_VERIFICACION_INVALIDO',
+      },
+      { status: 400, statusText: 'Bad Request' },
+    );
+
+    await expect(promesa).rejects.toMatchObject({ codigo: 'TOKEN_VERIFICACION_INVALIDO' });
+  });
+
+  // HU-20 RF-5
+  it('solicita el reenvío de correo de verificación y resuelve exitosamente', async () => {
+    const promesa = servicio.reenviarVerificacion();
+
+    const peticion = http.expectOne('/api/auth/verificacion-correo/reenvio');
+    expect(peticion.request.method).toBe('POST');
+    expect(peticion.request.body).toBeNull();
+    peticion.flush({ mensaje: 'Hemos enviado un nuevo enlace de verificación a su correo electrónico.' });
+
+    await expect(promesa).resolves.toBeUndefined();
+  });
+
+  // HU-20 RF-6
+  it('rechaza con SOLICITUDES_EXCEDIDAS si se supera el límite de reenvíos', async () => {
+    const promesa = servicio.reenviarVerificacion();
+
+    http.expectOne('/api/auth/verificacion-correo/reenvio').flush(
+      {
+        type: 'about:blank',
+        title: 'Too Many Requests',
+        status: 429,
+        detail: 'Ya pidió esto varias veces. Espere unos minutos y vuelva a intentar.',
+        codigo: 'SOLICITUDES_EXCEDIDAS',
+      },
+      { status: 429, statusText: 'Too Many Requests' },
+    );
+
+    await expect(promesa).rejects.toMatchObject({ codigo: 'SOLICITUDES_EXCEDIDAS' });
   });
 });

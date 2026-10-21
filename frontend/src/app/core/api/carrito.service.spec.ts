@@ -39,6 +39,7 @@ function usuario(idUsuario: number, rol: Rol): Usuario {
     rol,
     estado: 'ACTIVA',
     fechaRegistro: '2026-10-17T09:00:00',
+    correoVerificado: true,
   };
 }
 

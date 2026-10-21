@@ -25,6 +25,7 @@ public class UsuarioService {
 	private final Clock clock;
 	private final TokenJwt tokenJwt;
 	private final LimiteRegistros limiteRegistros;
+	private final VerificacionCorreoService verificacionCorreoService;
 
 	// El registro cuenta para el límite antes de crear la cuenta (una ráfaga no pasa del máximo) y se anula si no se
 	// completa: solo cuentan los registros exitosos (decisiones.md → Registro)
@@ -33,6 +34,7 @@ public class UsuarioService {
 		limiteRegistros.registrarIntento(ip);
 		try {
 			Usuario usuario = crearCliente(solicitud);
+			verificacionCorreoService.iniciarVerificacion(usuario);
 			return new SesionIniciada(usuario, tokenJwt.emitir(usuario));
 		} catch (RuntimeException e) {
 			limiteRegistros.anularIntento(ip);

@@ -177,7 +177,11 @@ archivo versionado, como haría un `data.sql`.
 ### Registro
 
 - Todo usuario que se registra por sí mismo obtiene rol **Cliente**, y la
-  cuenta queda **activa**, sin confirmación por correo.
+  cuenta queda **activa**. *21/10/2026 (HU-20).* **Verificar para comprar, no para entrar:**
+  al registrarse, la persona entra directo y recibe un correo de confirmación con enlace.
+  Sin el correo verificado puede explorar y armar el carrito, pero no puede confirmar un
+  pedido (HU-12). Token seguro de 256 bits, vigencia de 24 horas y límite de 3 solicitudes
+  en 15 minutos. El Administrador inicial y las cuentas previas a HU-20 nacen verificadas.
 - El correo se guarda en minúsculas y sin espacios alrededor, y los duplicados
   se buscan igual: `Juan@mail.com` y `juan@mail.com` son la misma cuenta. El
   inicio de sesión lo normaliza del mismo modo.

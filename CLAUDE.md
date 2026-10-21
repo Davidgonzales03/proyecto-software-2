@@ -69,7 +69,8 @@ de asumir.
   o diga el cliente.
 
 ### Correos
-- Recuperación de contraseña. *(Sumar acá cada correo nuevo que decida el
+- Recuperación de contraseña.
+- Verificación de correo electrónico (HU-20). *(Sumar acá cada correo nuevo que decida el
   proyecto; no proponer correos que no estén en esta lista.)*
 
 *(Las reglas del negocio van acá, por tema, a medida que se deciden en las

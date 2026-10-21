@@ -23,6 +23,7 @@ function sesionCon(rol: Rol): Sesion {
       rol,
       estado: 'ACTIVA',
       fechaRegistro: '2026-09-14T10:00:00',
+      correoVerificado: true,
     },
   };
 }
@@ -165,6 +166,7 @@ describe('rutas', () => {
     expect(await navegarComo(null, '/inicio-sesion')).toBe('/inicio-sesion');
     expect(await navegarComo(null, '/registro')).toBe('/registro');
     expect(await navegarComo(null, '/recuperacion')).toBe('/recuperacion');
+    expect(await navegarComo(null, '/verificar-correo?token=abc')).toBe('/verificar-correo?token=abc');
   });
 
   it('una ruta desconocida vuelve a la portada', async () => {

@@ -37,4 +37,22 @@ class UsuarioTest {
 
 		assertThat(ana.getVersionSesion()).isEqualTo(desactivada);
 	}
+
+	// HU-20 RF-1
+	@Test
+	void nuevoClienteNaceConCorreoNoVerificadoYSePuedeVerificar() {
+		Usuario ana = ana();
+		assertThat(ana.isCorreoVerificado()).isFalse();
+
+		ana.marcarCorreoVerificado();
+		assertThat(ana.isCorreoVerificado()).isTrue();
+	}
+
+	// HU-20 RF-8
+	@Test
+	void administradorNaceConCorreoVerificado() {
+		Usuario admin = Usuario.crearAdministrador("Admin", "Tienda", "admin@tienda.test", "$2a$10$hash",
+				LocalDateTime.of(2026, 10, 10, 9, 0));
+		assertThat(admin.isCorreoVerificado()).isTrue();
+	}
 }

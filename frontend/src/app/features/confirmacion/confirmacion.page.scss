@@ -8,29 +8,29 @@
 	gap: var(--app-espacio-6);
 }
 
-h1 {
+h1,
+h2 {
 	margin: 0;
+	font-weight: 800;
+	text-transform: uppercase;
+	text-wrap: balance;
+}
+
+h1 {
 	padding-bottom: var(--app-espacio-3);
 	border-bottom: 3px solid var(--app-ambar);
 	color: var(--app-titulo);
 	font-size: clamp(34px, 5vw, 56px);
-	font-weight: 800;
 	line-height: 1;
-	text-transform: uppercase;
-	text-wrap: balance;
 }
 
 h2 {
 	display: flex;
 	align-items: center;
 	gap: var(--app-espacio-2);
-	margin: 0;
 	font-family: var(--app-familia-titulos);
 	font-size: 24px;
-	font-weight: 800;
 	line-height: 1.1;
-	text-transform: uppercase;
-	text-wrap: balance;
 }
 
 h2 svg {
@@ -99,11 +99,16 @@ h2 svg {
 	overflow-wrap: anywhere;
 }
 
+.detalle,
+.subtotal,
+.total strong {
+	font-variant-numeric: tabular-nums;
+}
+
 .detalle {
 	grid-area: detalle;
 	color: var(--app-sobre-lona-suave);
 	font-size: 14px;
-	font-variant-numeric: tabular-nums;
 }
 
 .subtotal {
@@ -111,7 +116,6 @@ h2 svg {
 	font-family: var(--app-familia-titulos);
 	font-size: 20px;
 	font-weight: 700;
-	font-variant-numeric: tabular-nums;
 	text-align: right;
 }
 
@@ -137,7 +141,6 @@ h2 svg {
 	text-transform: uppercase;
 }
 
-
 .total {
 	display: flex;
 	align-items: baseline;
@@ -154,7 +157,6 @@ h2 svg {
 	font-family: var(--app-familia-titulos);
 	font-size: clamp(32px, 4vw, 44px);
 	font-weight: 800;
-	font-variant-numeric: tabular-nums;
 	text-transform: none;
 }
 
@@ -254,10 +256,6 @@ textarea {
 	font: inherit;
 }
 
-textarea {
-	resize: vertical;
-}
-
 [aria-invalid='true'] {
 	border: 2px solid var(--app-error);
 }
@@ -293,9 +291,15 @@ textarea {
 	text-transform: uppercase;
 	cursor: pointer;
 	transform: skewX(var(--app-sesgo));
-	transition:
-		background-color var(--app-transicion),
-		transform var(--app-duracion-rapida) var(--app-curva-salida);
+	transition: background-color var(--app-transicion);
+
+	&:hover {
+		background: var(--app-ambar-fuerte);
+	}
+
+	&:active {
+		transform: skewX(var(--app-sesgo)) scale(0.97);
+	}
 }
 
 // Las puntas del sesgo no se salen del formulario
@@ -309,16 +313,6 @@ form .principal {
 .principal span {
 	display: inline-flex;
 	transform: skewX(calc(var(--app-sesgo) * -1));
-}
-
-@media (hover: hover) and (pointer: fine) {
-	.principal:hover {
-		background: var(--app-ambar-fuerte);
-	}
-}
-
-.principal:active {
-	transform: skewX(var(--app-sesgo)) scale(0.97);
 }
 
 // Confirmando: no se deshabilita (no pierde el foco), solo se apaga
@@ -340,10 +334,10 @@ form .principal {
 	background: var(--app-error-fondo);
 	color: var(--app-error);
 	animation: app-aparecer var(--app-duracion-media) var(--app-curva-salida);
-}
 
-.aviso p {
-	margin: 0;
+	p {
+		margin: 0;
+	}
 }
 
 .aviso a {
@@ -379,4 +373,14 @@ form .principal {
 	font: inherit;
 	font-weight: 600;
 	cursor: pointer;
+}
+
+.aviso-verificacion {
+	border-color: var(--app-ambar);
+	background: color-mix(in srgb, var(--app-ambar) 10%, var(--app-fondo-placa));
+	color: var(--app-texto);
+
+	.exito-reenvio {
+		color: #16a34a;
+	}
 }

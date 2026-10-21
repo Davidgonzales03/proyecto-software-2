@@ -1,0 +1,75 @@
+@use '../../../styles/formulario';
+
+:host {
+	display: block;
+}
+
+.cargando {
+	margin: 0;
+	color: var(--app-texto-suave);
+	font-size: 16px;
+}
+
+.estado-exito,
+.estado-error {
+	display: flex;
+	flex-direction: column;
+	gap: var(--app-espacio-4);
+}
+
+.icono {
+	color: var(--app-exito);
+	display: flex;
+	justify-content: center;
+	padding: var(--app-espacio-2) 0;
+
+	svg {
+		width: 48px;
+		height: 48px;
+	}
+}
+
+.descripcion {
+	margin: 0;
+	color: var(--app-texto);
+	font-size: 15px;
+	line-height: 1.5;
+}
+
+.acciones {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--app-espacio-3);
+	margin-top: var(--app-espacio-2);
+
+	.boton {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		text-decoration: none;
+	}
+
+	.boton.secundario {
+		background: transparent;
+		color: var(--app-texto);
+		border: 1px solid var(--app-borde-control);
+
+		&:hover {
+			background: var(--app-superficie-resaltada);
+		}
+	}
+}
+
+.acciones-reenvio {
+	display: flex;
+	flex-direction: column;
+	gap: var(--app-espacio-2);
+	margin-top: var(--app-espacio-2);
+
+	.exito-reenvio {
+		margin: 0;
+		color: var(--app-exito);
+		font-weight: 600;
+		font-size: 13.5px;
+	}
+}

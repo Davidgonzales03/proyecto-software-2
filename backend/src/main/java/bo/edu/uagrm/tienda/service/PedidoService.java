@@ -87,6 +87,10 @@ public class PedidoService {
 	@Transactional(isolation = Isolation.READ_COMMITTED)
 	public PedidoResponse confirmar(Long idUsuario, ConfirmacionRequest solicitud) {
 		Usuario cliente = bloquearCliente(idUsuario);
+		// HU-20 RF-4: un cliente con correo no verificado no puede confirmar pedidos
+		if (!cliente.isCorreoVerificado()) {
+			throw new bo.edu.uagrm.tienda.exception.CorreoNoVerificadoException();
+		}
 		LocalDateTime ahora = LocalDateTime.now(clock);
 		// Uno vencido no bloquea (RF-5): vence acá mismo y sus líneas vuelven al carrito antes de leerlo. Se leen sin
 		// bloquearlos: todo lo que cambia un pedido bloquea antes al cliente, y en MySQL un SELECT … FOR UPDATE sin

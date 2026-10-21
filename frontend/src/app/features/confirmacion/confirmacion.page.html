@@ -73,6 +73,21 @@
         <form (submit)="confirmar($event)" novalidate aria-labelledby="titulo-quien">
           <h2 id="titulo-quien">Quién lo retira</h2>
 
+          @if (!correoVerificado()) {
+            <div class="aviso aviso-verificacion" role="alert">
+              <p>Debe verificar su correo electrónico antes de poder confirmar un pedido.</p>
+              <button type="button" class="secundario" [disabled]="reenviando()" (click)="reenviarVerificacion()">
+                {{ reenviando() ? 'Enviando…' : 'Reenviar correo de verificación' }}
+              </button>
+              @if (reenvioExitoso()) {
+                <p class="exito-reenvio">Hemos enviado un nuevo enlace de verificación a su correo electrónico.</p>
+              }
+              @if (errorReenvio(); as error) {
+                <p class="error">{{ error }}</p>
+              }
+            </div>
+          }
+
           @if (mensajeDeRechazo(); as mensaje) {
             <div class="aviso" role="alert" tabindex="-1" #rechazo>
               <p>{{ mensaje }}</p>
@@ -132,7 +147,12 @@
             }
           </div>
 
-          <button type="submit" class="principal" [attr.aria-disabled]="confirmando() || recurso.isLoading() ? 'true' : null">
+          <button
+            type="submit"
+            class="principal"
+            [disabled]="!correoVerificado() || confirmando() || recurso.isLoading()"
+            [attr.aria-disabled]="!correoVerificado() || confirmando() || recurso.isLoading() ? 'true' : null"
+          >
             <span>{{ confirmando() ? 'Confirmando…' : recurso.isLoading() ? 'Actualizando…' : 'Confirmar pedido' }}</span>
           </button>
           <p class="plazo">Al confirmar, reservamos los productos por 30 minutos para que pague el pedido.</p>

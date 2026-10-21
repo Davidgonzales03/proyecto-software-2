@@ -13,6 +13,7 @@ import { form, FormField, schema, submit, validate } from '@angular/forms/signal
 import { Router, RouterLink } from '@angular/router';
 import { LucideArrowLeft, LucideCircleSlash, LucideClock, LucideMapPin, LucideStore } from '@lucide/angular';
 
+import { AutenticacionService } from '../../core/api/autenticacion.service';
 import { CarritoService } from '../../core/api/carrito.service';
 import { EstadoDelCampo, mensajeDeError, mensajeDelCampo, mensajeDelRechazo } from '../../core/api/mensajes-error';
 import { PedidosService } from '../../core/api/pedidos.service';
@@ -71,6 +72,13 @@ export class ConfirmacionPage {
 	private readonly elemento = inject(ElementRef<HTMLElement>);
 	private readonly injector = inject(Injector);
 	private readonly avisoDeRechazo = viewChild<ElementRef<HTMLElement>>('rechazo');
+	private readonly sesion = inject(SesionService);
+	private readonly autenticacion = inject(AutenticacionService);
+
+	protected readonly correoVerificado = computed(() => this.sesion.usuario()?.correoVerificado ?? true);
+	protected readonly reenviando = signal(false);
+	protected readonly reenvioExitoso = signal(false);
+	protected readonly errorReenvio = signal<string | null>(null);
 
 	protected readonly recurso = this.servicioCarrito.carrito;
 	protected readonly carrito = computed(() => (this.recurso.hasValue() ? this.recurso.value() : undefined));
@@ -95,7 +103,7 @@ export class ConfirmacionPage {
 	);
 
 	// Llenos con los de la cuenta; se pueden cambiar por los de otra persona (RF-1)
-	private readonly datos = signal<DatosDeRetiro>(datosDeLaCuenta(inject(SesionService)));
+	private readonly datos = signal<DatosDeRetiro>(datosDeLaCuenta(this.sesion));
 	protected readonly formulario = form(this.datos, esquema);
 
 	protected readonly confirmando = signal(false);
@@ -144,13 +152,30 @@ export class ConfirmacionPage {
 		return mensajeDelCampo(estado, campo, this.rechazo());
 	}
 
+	protected async reenviarVerificacion(): Promise<void> {
+		if (this.reenviando()) {
+			return;
+		}
+		this.reenviando.set(true);
+		this.reenvioExitoso.set(false);
+		this.errorReenvio.set(null);
+		try {
+			await this.autenticacion.reenviarVerificacion();
+			this.reenvioExitoso.set(true);
+		} catch (error: unknown) {
+			this.errorReenvio.set(mensajeDeError(comoError(error)));
+		} finally {
+			this.reenviando.set(false);
+		}
+	}
+
 	// Mientras confirma, el botón no se deshabilita (no pierde el foco): un
 	// segundo toque no manda otra confirmación
 	protected async confirmar(evento: Event): Promise<void> {
 		evento.preventDefault();
 		const carrito = this.carrito();
-		// Mientras el carrito recarga, el total que se ve puede ser el viejo (RF-15)
-		if (this.confirmando() || this.recurso.isLoading() || carrito === undefined) {
+		// Si el correo no está verificado o el carrito recarga, no confirma (HU-20 RF-4, RF-7)
+		if (!this.correoVerificado() || this.confirmando() || this.recurso.isLoading() || carrito === undefined) {
 			return;
 		}
 		this.rechazo.set(null);

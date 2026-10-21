@@ -39,6 +39,7 @@ import com.jayway.jsonpath.JsonPath;
 import bo.edu.uagrm.tienda.dto.RetiroResponse;
 import bo.edu.uagrm.tienda.entity.EstadoPedido;
 import bo.edu.uagrm.tienda.entity.TipoMovimiento;
+import bo.edu.uagrm.tienda.entity.Usuario;
 import bo.edu.uagrm.tienda.repository.CategoriaRepository;
 import bo.edu.uagrm.tienda.repository.CobroRepository;
 import bo.edu.uagrm.tienda.repository.LineaCarritoRepository;
@@ -158,6 +159,9 @@ class PedidoIntegracionTest {
 				.exchange();
 		assertThat(registro).hasStatus(HttpStatus.CREATED);
 		String token = JsonPath.read(registro.getResponse().getContentAsString(), "$.token");
+		Usuario usuario = usuarioRepository.findByCorreo(correo).orElseThrow();
+		usuario.marcarCorreoVerificado();
+		usuarioRepository.save(usuario);
 		if (rol != null) {
 			Integer idUsuario = JsonPath.read(registro.getResponse().getContentAsString(), "$.usuario.idUsuario");
 			assertThat(put("/api/usuarios/{id}/rol", admin, "{\"rol\":\"%s\"}".formatted(rol), idUsuario))

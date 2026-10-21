@@ -65,6 +65,11 @@ public class Usuario {
 	@Column(name = "version_sesion", nullable = false)
 	private int versionSesion;
 
+	// HU-20: verificación de correo para compras. Cuentas anteriores y administrador nacen verificadas por defecto
+	@ColumnDefault("true")
+	@Column(name = "correo_verificado", nullable = false)
+	private boolean correoVerificado = true;
+
 	public static Usuario registrarCliente(String nombre, String apellido, String correo, String contrasenaHash,
 			String telefono, LocalDateTime fechaRegistro) {
 		Usuario usuario = new Usuario();
@@ -76,6 +81,7 @@ public class Usuario {
 		usuario.fechaRegistro = Objects.requireNonNull(fechaRegistro);
 		usuario.rol = Rol.CLIENTE;
 		usuario.estado = EstadoCuenta.ACTIVA;
+		usuario.correoVerificado = false;
 		return usuario;
 	}
 
@@ -89,7 +95,16 @@ public class Usuario {
 		usuario.fechaRegistro = Objects.requireNonNull(fechaRegistro);
 		usuario.rol = Rol.ADMINISTRADOR;
 		usuario.estado = EstadoCuenta.ACTIVA;
+		usuario.correoVerificado = true;
 		return usuario;
+	}
+
+	public boolean isCorreoVerificado() {
+		return correoVerificado;
+	}
+
+	public void marcarCorreoVerificado() {
+		this.correoVerificado = true;
 	}
 
 	public static String normalizarCorreo(String correo) {

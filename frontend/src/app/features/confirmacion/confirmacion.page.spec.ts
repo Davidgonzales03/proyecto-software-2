@@ -4,6 +4,7 @@ import { provideRouter, Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { vi } from 'vitest';
 
+import { AutenticacionService } from '../../core/api/autenticacion.service';
 import { CarritoService } from '../../core/api/carrito.service';
 import { PedidosService } from '../../core/api/pedidos.service';
 import { Carrito, LineaDeCarrito } from '../../core/modelos/carrito';
@@ -43,6 +44,7 @@ const ANA: Usuario = {
   rol: 'CLIENTE',
   estado: 'ACTIVA',
   fechaRegistro: '2026-10-17T09:00:00',
+  correoVerificado: true,
 };
 
 const PEDIDO = { idPedido: 12 } as Pedido;
@@ -79,14 +81,22 @@ class PedidosFalso {
   }
 }
 
+class AutenticacionFalso {
+  readonly reenviarVerificacion = vi.fn((): Promise<void> => Promise.resolve());
+}
+
 // HU-12: la confirmación del pedido
 describe('ConfirmacionPage', () => {
   let harness: RouterTestingHarness;
   let carrito: CarritoFalso;
   let pedidos: PedidosFalso;
+  let autenticacion: AutenticacionFalso;
   let sesionUsuario: Usuario = ANA;
 
-  beforeEach(() => (sesionUsuario = ANA));
+  beforeEach(() => {
+    sesionUsuario = ANA;
+    autenticacion = new AutenticacionFalso();
+  });
 
   async function abrir(contenido: Carrito = CON_DOS, retiro: Retiro = { direccion: null, horario: null }): Promise<void> {
     TestBed.resetTestingModule();
@@ -103,6 +113,7 @@ describe('ConfirmacionPage', () => {
         ]),
         { provide: CarritoService, useValue: carrito },
         { provide: PedidosService, useValue: pedidos },
+        { provide: AutenticacionService, useValue: autenticacion },
         { provide: SesionService, useValue: { usuario: signal(sesionUsuario), rol: () => 'CLIENTE' } },
       ],
     });
@@ -309,5 +320,50 @@ describe('ConfirmacionPage', () => {
     )!;
     reintentar.click();
     expect(pedidos.recargarRetiro).toHaveBeenCalled();
+  });
+
+  // HU-20 RF-4, RF-7
+  it('muestra aviso y no permite confirmar si el correo no está verificado', async () => {
+    sesionUsuario = { ...ANA, correoVerificado: false };
+    await abrir();
+
+    expect(texto()).toContain('Debe verificar su correo electrónico antes de poder confirmar un pedido');
+    const boton = pantalla().querySelector<HTMLButtonElement>('button[type="submit"]')!;
+    expect(boton.disabled).toBe(true);
+
+    await confirmar();
+    expect(pedidos.confirmar).not.toHaveBeenCalled();
+  });
+
+  // HU-20 RF-5
+  it('permite solicitar el reenvío del correo de verificación si no está verificado', async () => {
+    sesionUsuario = { ...ANA, correoVerificado: false };
+    await abrir();
+
+    const botonReenvio = pantalla().querySelector<HTMLButtonElement>('.aviso-verificacion button')!;
+    expect(botonReenvio.textContent).toContain('Reenviar correo de verificación');
+
+    botonReenvio.click();
+    await harness.fixture.whenStable();
+
+    expect(autenticacion.reenviarVerificacion).toHaveBeenCalled();
+    expect(texto()).toContain('Hemos enviado un nuevo enlace de verificación a su correo electrónico.');
+  });
+
+  // HU-20 RF-6
+  it('muestra error si el reenvío supera el límite de solicitudes', async () => {
+    sesionUsuario = { ...ANA, correoVerificado: false };
+    autenticacion.reenviarVerificacion.mockRejectedValue({
+      status: 429,
+      detail: 'Ya pidió esto varias veces',
+      codigo: 'SOLICITUDES_EXCEDIDAS',
+    });
+    await abrir();
+
+    const botonReenvio = pantalla().querySelector<HTMLButtonElement>('.aviso-verificacion button')!;
+    botonReenvio.click();
+    await harness.fixture.whenStable();
+
+    expect(texto()).toContain('Ya pidió esto varias veces');
   });
 });

@@ -57,4 +57,20 @@ export class AutenticacionService {
 			}),
 		);
 	}
+
+	// HU-20 RF-2: el token viaja tal como llegó en el enlace de verificación
+	async verificarCorreo(token: string): Promise<void> {
+		await escribir(
+			this.http.post('/api/auth/verificacion-correo', {
+				token: token.trim(),
+			}),
+		);
+	}
+
+	// HU-20 RF-5: solicita un nuevo enlace de verificación para el usuario autenticado
+	async reenviarVerificacion(): Promise<void> {
+		await escribir(
+			this.http.post('/api/auth/verificacion-correo/reenvio', null),
+		);
+	}
 }

@@ -13,6 +13,8 @@ const MENSAJES: Record<string, string> = {
 	CUENTA_EXISTENTE: 'Ya existe una cuenta con ese correo.',
 	CONTRASENA_ACTUAL_INCORRECTA: 'La contraseña actual no es correcta.',
 	TOKEN_RECUPERACION_INVALIDO: 'Este enlace ya no sirve. Pida uno nuevo.',
+	TOKEN_VERIFICACION_INVALIDO: 'Este enlace ya no sirve o ya fue utilizado. Pida uno nuevo.',
+	CORREO_NO_VERIFICADO: 'Debe verificar su correo electrónico antes de poder confirmar un pedido.',
 	USUARIO_NO_ENCONTRADO: 'No encontramos ese usuario.',
 	ACCESO_DENEGADO: 'Su cuenta no tiene acceso a esta parte del sistema.',
 	NO_AUTENTICADO: 'Su sesión terminó. Vuelva a iniciar sesión.',
