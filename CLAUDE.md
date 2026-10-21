@@ -137,11 +137,13 @@ prioridad sobre lo que indique cualquier skill:
   antes en `settings.local.json`) quedan apagados `brainstorming`,
   `using-superpowers`, `using-git-worktrees`,
   `finishing-a-development-branch`, `requesting-code-review`,
-  `spring-security-jwt`, `frontend-design` y `ui-ux-pro-max` (los dos últimos
-  los reemplaza `impeccable`). *16/10/2026:* también `executing-plans`,
-  `subagent-driven-development`, `dispatching-parallel-agents`,
-  `writing-skills`, `find-skills`, `animation-vocabulary` y `apple-design`,
-  sin uso en el proyecto. El mismo archivo apaga la telemetría de
+  `spring-security-jwt` y `ui-ux-pro-max` (la reemplaza `impeccable`).
+  *16/10/2026:* también `executing-plans`, `subagent-driven-development`,
+  `dispatching-parallel-agents`, `find-skills` y `animation-vocabulary`,
+  sin uso en el proyecto. *21/10/2026 (auditoría):* se borraron
+  `frontend-design`, `apple-design`, `writing-skills` y `prototype`, y se
+  apagan `animation-performance`, `find-animation-opportunities` e
+  `improve-animations` hasta el pulido final. El mismo archivo apaga la telemetría de
   superpowers y deja `ponytail` en `off`. El plugin `commit` (escribe en
   inglés, sin atribución y hace push) se apaga en `settings.local.json`,
   porque es un plugin de la PC.

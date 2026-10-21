@@ -150,6 +150,16 @@ A través del `PasswordEncoder` de Spring Security. Mínimo 8 caracteres y
 **máximo 72 bytes en UTF-8**: BCrypt ignora lo que pasa de 72 bytes, y sin el
 máximo dos contraseñas largas distintas serían equivalentes.
 
+*21/10/2026 (auditoría, revisando la skill `spring-security-jwt`).* **Costo
+12** (`tienda.contrasenas.costo-bcrypt`; 4 en las pruebas): cada intento de
+adivinar una contraseña robada cuesta 4 veces más que con 10. Las guardadas con
+costo 10 siguen sirviendo (el costo va dentro del hash) y pasan a 12 cuando su
+dueño cambia la contraseña. No se vuelven a encriptar al iniciar sesión: el
+token lleva una huella del hash y cerraría las sesiones del usuario en sus
+otros dispositivos. Mientras queden cuentas con costo 10, el tiempo de
+respuesta del inicio de sesión las distingue de un correo inexistente (que se
+compara con costo 12); en un servidor nuevo no hay cuentas viejas.
+
 ### Administrador inicial al arrancar
 
 `AdministradorInicial`: al arrancar, si no existe ningún usuario con rol

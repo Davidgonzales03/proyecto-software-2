@@ -10,15 +10,15 @@
     "finishing-a-development-branch": "off",
     "requesting-code-review": "off",
     "spring-security-jwt": "off",
-    "frontend-design": "off",
     "ui-ux-pro-max": "off",
     "executing-plans": "off",
     "subagent-driven-development": "off",
     "dispatching-parallel-agents": "off",
-    "writing-skills": "off",
     "find-skills": "off",
     "animation-vocabulary": "off",
-    "apple-design": "off"
+    "animation-performance": "off",
+    "find-animation-opportunities": "off",
+    "improve-animations": "off"
   },
   "hooks": {
     "SessionStart": [
