@@ -38,6 +38,8 @@ cualquier cosa. El detalle del flujo para implementar una historia está en
 
 - Backend: `cd backend && ./mvnw test` (Java 21, sobre H2; no necesita MySQL).
 - Frontend: `cd frontend && npx ng test --watch=false && npx ng build` (Vitest).
+- Las dos suites, una después de la otra, nunca a la vez: juntas, el
+  frontend se queda sin tiempo y saltea pruebas (`docs/flujo-sdd.md`).
 - Todo junto: `docker compose up -d --build`.
 
 ## Tareas de David (`@Davidgonzales03`)
@@ -50,12 +52,6 @@ proponer en vez de hacer cuando la decisión es suya o de Fabio.
 Los datos de demostración y las pruebas manuales no tocan `backend/`
 ni `frontend/`. Programar sí, siempre con la revisión de Fabio. Nada de esto
 instala dependencias sin avisar.
-
-### Spike del visor 3D (issue #14)
-
-*14/10/2026.* Lo investiga Fabio, no David. Los productos del CSV de
-demostración que llevan modelo 3D salen de las herramientas de Poly Haven
-(ver «Datos de demostración»).
 
 ### Datos de demostración (issue #25)
 
@@ -80,7 +76,7 @@ cuando existan las categorías y los productos.
   comas** (tampoco la descripción); los decimales van con punto.
 - Entre 15 y 25 productos, en 4 a 6 categorías, con precios creíbles en
   bolivianos y descripciones cortas y propias (no copiadas de otra tienda).
-  Algunos productos (los del spike) llevan modelo 3D.
+  Algunos productos llevan modelo 3D (para HU-15 y HU-16).
 - **Imágenes:** fotos propias o con licencia libre (Unsplash, Pexels),
   en JPG, PNG o WebP de **2 MB como máximo** (es lo que acepta el backend,
   `docs/decisiones.md` → «Imágenes subidas»). Se guardan en la carpeta

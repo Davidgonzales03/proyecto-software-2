@@ -23,11 +23,11 @@ Integral del Norte, Montero, Santa Cruz, Bolivia. Metodología **Scrum**.
 |---|---|
 | Frontend | Angular 22 (Signal Forms, Vitest sobre jsdom) |
 | Backend | Java 21 / Spring Boot 4.1.1 |
-| Base de datos | MySQL 8.0; H2 en las pruebas |
+| Base de datos | MySQL 8.4 LTS (*20/10/2026*, antes 8.0, sin soporte desde abril de 2026); H2 en las pruebas |
 | Correo | Gmail por SMTP con una cuenta del proyecto y una contraseña de aplicación en `.env`; simulador por defecto en desarrollo y pruebas |
 | Pago | Detrás de la interfaz propia `IPago`, con simulador por defecto |
 | Contenedores | Docker Compose; Caddy con HTTPS en la nube |
-| CI | GitHub Actions (`.github/workflows/pruebas.yml`) en cada PR |
+| CI | GitHub Actions (`.github/workflows/pruebas.yml`) en cada PR y en cada push a `main` |
 
 ---
 
@@ -60,7 +60,8 @@ de asumir.
 
 ### Pago
 - Detrás de `IPago`, con un **simulador local** por defecto. El proveedor real
-  es **Libélula**: su adaptador va cuando exista la cuenta.
+  es **Libélula**: su adaptador existe desde HU-13 y se activa con
+  `TIENDA_PAGO_PROVEEDOR=libelula` y la appkey en `.env`.
 - **Sin facturación SIAT.**
 - El nombre del proveedor aparece **solo** en su adaptador y en su
   configuración; nunca en entidades, servicios, controladores ni en la API.
@@ -150,8 +151,8 @@ prioridad sobre lo que indique cualquier skill:
   dueña de **`DESIGN.md`** (todo el sistema visual) y de **`PRODUCT.md`** (a
   quién le habla la tienda y cómo se siente), los dos versionados; las reglas
   de negocio siguen acá y en `docs/decisiones.md`. Sus fichas de pantalla van
-  en `.impeccable/surfaces/` y sus subagentes en `.claude/agents/impeccable-*`
-  (ignorados por git).
+  en `.impeccable/surfaces/` (versionadas) y sus subagentes en
+  `.claude/agents/impeccable-*` (ignorados por git).
 - **Verificación en el navegador con `playwright-cli`** (Microsoft, instalado
   global con `npm install -g @playwright/cli`; su skill en `.claude/skills/`).
   Antes de pasar una pantalla a la prueba manual: abrirla sin ventana en
@@ -165,15 +166,16 @@ proyecto. Por defecto ganan estas (detalle y motivo en
 `docs/decisiones.md`); si una skill propone algo mejor, se avisa y se cambia
 la decisión (ver «Las reglas se pueden cambiar»):
 
-- **Signal Forms** para los formularios nuevos (`@angular/forms/signals`). La
-  guía de Angular de `ui-ux-pro-max` recomienda Reactive Forms: está
-  desactualizada.
+- **Signal Forms** para los formularios nuevos (`@angular/forms/signals`).
+  Si una guía recomienda Reactive Forms, está desactualizada.
 - **Iconos con Lucide.** Las animaciones simples van con CSS; una librería
   (de animación, carrusel, componentes) entra si mejora el proyecto y es
   compatible con Angular 22, avisando antes.
 - **Pruebas del backend sobre H2** con el perfil `test`. Sin Testcontainers.
 - **Pruebas del frontend con Vitest** sobre jsdom. Sin Karma ni Jasmine.
-- **IDs `Long` autoincrementales.** No UUID ni IDs asignados.
+- **IDs `Long` autoincrementales.** No UUID ni IDs asignados. Los ejemplos
+  de las skills de Spring (`layered-architecture`, `spring-data-jpa`…) usan
+  UUID: en eso no aplican.
 - **JWT sin refresh token.**
 - **Sin migraciones** (Flyway, Liquibase): el esquema lo genera Hibernate.
 

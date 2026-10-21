@@ -42,7 +42,7 @@ aplicación se conectaba a la base equivocada sin avisar.
 
 ### Despliegue con Docker y un solo origen
 
-`docker-compose.yml` levanta tres servicios: `base` (MySQL 8.0), `backend` (la
+`docker-compose.yml` levanta tres servicios: `base` (MySQL 8.4), `backend` (la
 API) y `frontend` (nginx con el Angular compilado). nginx reenvía `/api` a la
 API, así el navegador ve un solo origen: no hace falta CORS y el token viaja
 igual que en desarrollo, donde lo hace `proxy.conf.json`. Los secretos van en
@@ -72,8 +72,8 @@ en modo MySQL (perfil `test`), sin Testcontainers.
 ### Pago: interfaz propia con dos implementaciones
 
 `IPago` (`service/pago/`) tiene un **simulador local**, que se usa por defecto
-en desarrollo y pruebas, y un **adaptador del proveedor real**, que se escribe
-cuando exista la cuenta. Se elige con `tienda.pago.proveedor`
+en desarrollo y pruebas, y un **adaptador del proveedor real**
+(`AdaptadorLibelula`, desde HU-13; ver «Pagos»). Se elige con `tienda.pago.proveedor`
 (`simulador` | el nombre del proveedor), y las credenciales del adaptador van
 en variables `TIENDA_PAGO_*` del `.env`.
 
@@ -384,6 +384,13 @@ solo lugar por tema evita que se contradigan.
   pedidos), unas 10 a 15 en el CI. **Motivo:** por historia costarían de 10 a
   20 % más de trabajo cada una y se romperían con el rediseño; al final son un
   costo fijo (~4 min de CI) sobre pantallas que ya no cambian.
+- *20/10/2026 (auditoría).* **Un botón que espera una respuesta no se
+  deshabilita:** lleva `aria-disabled` y su manejador ignora un segundo toque.
+  Con `disabled` el navegador manda el foco al cuerpo de la página. `disabled`
+  queda para lo que no se puede usar (sin página anterior, producto agotado).
+  **`.solo-lectores` es global** (`styles.scss`), no una copia por
+  componente, y **`comoErrorApi` vive en `core/modelos/error-api.ts`**, junto
+  a `comoError`.
 
 ---
 
@@ -766,7 +773,7 @@ lectura) con `catalogo.csv` y sus imágenes. Lo hace `CatalogoDemo`.
   `categoria,nombre,descripcion,precio_bs,stock_inicial,imagenes,modelo_3d,destacado,unidad`.
   Separado por comas y sin comillas: **ningún campo lleva comas**. Precio y
   stock con punto decimal; `imagenes`, archivos de la carpeta separados por
-  `|`; `modelo_3d` se ignora hasta el spike #14; `destacado`, `si` o vacío
+  `|`; `modelo_3d` se ignora hasta HU-15 (el spike #14 ya se cerró); `destacado`, `si` o vacío
   (sale en «Destacados» de la portada); `unidad`, `unidad`, `metro`, `kilo`,
   `litro`, `caja`, `par` o `rollo`, y vacía es `unidad`.
 - **Las reglas de siempre:** categorías, productos, imágenes (2 MB, JPG, PNG o

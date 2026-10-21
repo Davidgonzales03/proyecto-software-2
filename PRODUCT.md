@@ -62,8 +62,8 @@ verdad, de obra) con toques modernos.
 - **Personalidad:** robusta, de obra; ordenada y fácil; local y confiable;
   clásica con toques modernos (3D, realidad aumentada).
 - **Tono:** se trata al cliente de **usted**, con frases cortas y claras,
-  sin jerga de marketing ni exageraciones. *(16/10/2026: las pantallas que ya
-  existen están escritas de tú y se pasan a usted aparte.)*
+  sin jerga de marketing ni exageraciones. *(21/10/2026: todas las pantallas
+  pasaron a usted.)*
 - **La interfaz no menciona la universidad** ni que es un trabajo académico.
 
 ## Evidence on Hand

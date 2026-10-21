@@ -12,9 +12,9 @@ historia por historia, con Scrum y el flujo SDD de `docs/flujo-sdd.md`.
 | Frontend | Angular 22 (Signal Forms, Vitest) |
 | Backend | Java 21 / Spring Boot 4.1.1 |
 | Comunicación | API REST |
-| Base de datos | MySQL 8.0 (H2 en las pruebas) |
+| Base de datos | MySQL 8.4 (H2 en las pruebas) |
 | Correo | Gmail por SMTP, con simulador por defecto |
-| Pago | Interfaz `IPago`, con simulador por defecto |
+| Pago | Interfaz `IPago`: simulador por defecto o Libélula (QR) |
 | Despliegue | Docker Compose; Caddy con HTTPS en la nube |
 | CI | GitHub Actions en cada PR y en cada push a `main` |
 
@@ -26,7 +26,7 @@ historia por historia, con Scrum y el flujo SDD de `docs/flujo-sdd.md`.
 ├── .github/   workflows/pruebas.yml  CODEOWNERS  pull_request_template.md
 ├── .claude/commands/sdd/   historia.md  analizar.md  cerrar.md
 ├── docs/      flujo-sdd.md  decisiones.md  historias/  planes/  proyecto/
-├── backend/   Spring Boot: JWT, roles, ManejadorErrores, correo SMTP, IPago + simulador
+├── backend/   Spring Boot: JWT, roles, ManejadorErrores, correo SMTP, IPago (simulador y Libélula)
 ├── frontend/  Angular: features/core/shared, interceptores, guards, tema claro/oscuro, tokens
 ├── docker-compose.yml  docker-compose.nube.yml  nube/Caddyfile
 └── scripts/instalar-servidor.sh
@@ -115,9 +115,25 @@ la API. Para enviarlos de verdad, con Gmail:
 
 Las credenciales van **solo en el `.env`**, que no se versiona.
 
+## Pago
+
+Por defecto, `TIENDA_PAGO_PROVEEDOR=simulador`: el pedido muestra un QR de
+prueba y los botones «Simular pago» y «Simular error» (solo existen con el
+simulador). Para cobrar de verdad con Libélula, en el `.env`:
+`TIENDA_PAGO_PROVEEDOR=libelula`, `TIENDA_PAGO_LIBELULA_APPKEY` (la de la
+cuenta) y `TIENDA_PAGO_LIBELULA_EMAIL` (el correo que exige en cada deuda); sin
+ellas la API no arranca. `TIENDA_PAGO_LIBELULA_URL` solo cambia para su entorno
+de pruebas. El aviso de pago de Libélula llega a `TIENDA_SITIO_URL`, así que
+solo funciona con el sitio publicado; en `localhost` alcanzan la pantalla y la
+revisión de cada minuto.
+
+Otras variables opcionales del `.env.example`: `TIENDA_RETIRO_DIRECCION` y
+`TIENDA_RETIRO_HORARIO` (dónde y cuándo se retiran los pedidos) y
+`TIENDA_DEMO_DIRECTORIO` (el catálogo de demostración).
+
 ## Despliegue con Docker
 
-Tres contenedores: MySQL 8.0, la API (perfil `prod`) y el cliente web servido
+Tres contenedores: MySQL 8.4, la API (perfil `prod`) y el cliente web servido
 por nginx, que además reenvía `/api` a la API. Solo nginx publica un puerto.
 
 ```bash
@@ -143,7 +159,7 @@ los datos del `.env`.
 `docker-compose.nube.yml` suma **Caddy**, que publica los puertos 80 y 443 y saca
 solo el certificado de Let's Encrypt: el sitio queda en
 `https://TIENDA_DOMINIO`. Sin dominio propio sirve uno de sslip.io armado con
-la IP (`64-176-27-4.sslip.io`), que no necesita DNS.
+la IP (por ejemplo `203-0-113-10.sslip.io`), que no necesita DNS.
 
 En un Ubuntu nuevo, con el repositorio clonado y como root:
 
