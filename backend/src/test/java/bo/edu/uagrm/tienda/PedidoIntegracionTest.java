@@ -40,6 +40,7 @@ import bo.edu.uagrm.tienda.dto.RetiroResponse;
 import bo.edu.uagrm.tienda.entity.EstadoPedido;
 import bo.edu.uagrm.tienda.entity.TipoMovimiento;
 import bo.edu.uagrm.tienda.repository.CategoriaRepository;
+import bo.edu.uagrm.tienda.repository.CobroRepository;
 import bo.edu.uagrm.tienda.repository.LineaCarritoRepository;
 import bo.edu.uagrm.tienda.repository.MovimientoStockRepository;
 import bo.edu.uagrm.tienda.repository.PedidoRepository;
@@ -86,6 +87,9 @@ class PedidoIntegracionTest {
 	private RelojDePrueba reloj;
 
 	@Autowired
+	private CobroRepository cobroRepository;
+
+	@Autowired
 	private LineaCarritoRepository lineaRepository;
 
 	@Autowired
@@ -128,6 +132,7 @@ class PedidoIntegracionTest {
 	@AfterEach
 	void limpiar() {
 		reloj.reiniciar();
+		cobroRepository.deleteAll();
 		lineaRepository.deleteAll();
 		movimientoRepository.deleteAll();
 		pedidoRepository.deleteAll();
@@ -768,6 +773,72 @@ class PedidoIntegracionTest {
 		assertThat(get(PEDIDOS + "/abc", ana)).hasStatus(HttpStatus.NOT_FOUND);
 		assertThat(get(PEDIDOS + "/99999999999999999999", ana)).hasStatus(HttpStatus.NOT_FOUND);
 		assertThat(post(PEDIDOS + "/abc/cancelacion", ana, "")).hasStatus(HttpStatus.NOT_FOUND);
+	}
+
+	// HU-14 RF-1, RF-2: el Cliente lista sus pedidos ordenados de más reciente a más antiguo
+	@Test
+	void clienteListaSusPedidosOrdenados() throws Exception {
+		agregar(ana, martillo, "1");
+		Integer idPrimero = confirmado(ana, "85.5");
+
+		// Cancela el primero para que quede CANCELADO y pueda confirmar un segundo
+		post(PEDIDOS + "/" + idPrimero + "/cancelacion", ana, "");
+
+		agregar(ana, cable, "2");
+		Integer idSegundo = confirmado(ana, "109.50");
+
+		MvcTestResult listado = get(PEDIDOS, ana);
+		assertThat(listado).hasStatus(HttpStatus.OK);
+		assertThat(listado).bodyJson().extractingPath("$.length()").isEqualTo(2);
+		assertThat(listado).bodyJson().extractingPath("$[0].idPedido").isEqualTo(idSegundo);
+		assertThat(listado).bodyJson().extractingPath("$[0].estado").isEqualTo("PENDIENTE_PAGO");
+		assertThat(listado).bodyJson().extractingPath("$[1].idPedido").isEqualTo(idPrimero);
+		assertThat(listado).bodyJson().extractingPath("$[1].estado").isEqualTo("CANCELADO");
+	}
+
+	// HU-14 RF-7: un cliente nunca ve los pedidos de otro cliente
+	@Test
+	void clienteNoVePedidosAjenos() throws Exception {
+		agregar(ana, martillo, "1");
+		confirmado(ana, "85.5");
+
+		MvcTestResult listadoBeto = get(PEDIDOS, beto);
+		assertThat(listadoBeto).hasStatus(HttpStatus.OK);
+		assertThat(listadoBeto).bodyJson().extractingPath("$.length()").isEqualTo(0);
+	}
+
+	// HU-14 RF-8: cliente sin pedidos recibe lista vacía
+	@Test
+	void clienteSinPedidosRecibeListaVacia() {
+		MvcTestResult listado = get(PEDIDOS, ana);
+		assertThat(listado).hasStatus(HttpStatus.OK);
+		assertThat(listado).bodyJson().extractingPath("$.length()").isEqualTo(0);
+	}
+
+	// HU-14 RF-5: sin token de sesión da 401
+	@Test
+	void listarPedidosSinSesionDa401() {
+		assertThat(mvc.get().uri(PEDIDOS).exchange()).hasStatus(HttpStatus.UNAUTHORIZED);
+	}
+
+	// HU-14 RF-6: otro rol (Administrador) da 403
+	@Test
+	void otroRolNoPuedeListarPedidosDeCliente() {
+		assertThat(get(PEDIDOS, admin)).hasStatus(HttpStatus.FORBIDDEN);
+	}
+
+	// HU-14 RF-9: si el pedido pendiente venció, al listar se actualiza a VENCIDO
+	@Test
+	void listarPedidosVenceElPendienteSiCorresponde() throws Exception {
+		agregar(ana, martillo, "1");
+		Integer idPedido = confirmado(ana, "85.5");
+
+		reloj.avanzar(Duration.ofMinutes(31));
+
+		MvcTestResult listado = get(PEDIDOS, ana);
+		assertThat(listado).hasStatus(HttpStatus.OK);
+		assertThat(listado).bodyJson().extractingPath("$[0].idPedido").isEqualTo(idPedido);
+		assertThat(listado).bodyJson().extractingPath("$[0].estado").isEqualTo("VENCIDO");
 	}
 
 	private static List<Object> aLaVez(Callable<?>... pedidos) throws Exception {

@@ -1,0 +1,78 @@
+<div class="cabecera">
+  <h1>Mis pedidos</h1>
+</div>
+
+@if (cargando()) {
+  <p class="cargando" role="status">Cargando sus pedidos…</p>
+} @else if (error()) {
+  <div class="tarjeta-error">
+    <p class="aviso" role="alert">{{ error() }}</p>
+    <button type="button" class="boton secundario" (click)="recurso.reload()">Reintentar</button>
+  </div>
+} @else if (pedidos().length === 0) {
+  <div class="vacio">
+    <svg lucideShoppingBag class="icono-vacio" aria-hidden="true"></svg>
+    <p class="mensaje-vacio">Aún no tiene pedidos realizados</p>
+    <a class="boton" routerLink="/catalogo">Explorar catálogo</a>
+  </div>
+} @else {
+  <ul class="lista-pedidos" aria-label="Historial de pedidos">
+    @for (pedido of pedidos(); track pedido.idPedido) {
+      <li class="tarjeta-pedido" [attr.data-id]="pedido.idPedido">
+        <header class="cabecera-pedido">
+          <div class="info-principal">
+            <span class="numero">Pedido N.º {{ pedido.idPedido }}</span>
+            <span class="fecha">{{ fecha(pedido.confirmado) }} a las {{ hora(pedido.confirmado) }}</span>
+          </div>
+          <span
+            class="estado"
+            [class.pendiente]="pedido.estado === 'PENDIENTE_PAGO' || pedido.estado === 'PAGO_A_DEVOLVER'"
+            [class.pagado]="pedido.estado === 'PAGADO'"
+            [class.cancelado]="pedido.estado === 'CANCELADO' || pedido.estado === 'VENCIDO'"
+          >
+            {{ nombresDeEstado[pedido.estado] }}
+          </span>
+        </header>
+
+        @if (pedido.estado === 'PENDIENTE_PAGO' && pedido.segundosParaPagar > 0) {
+          <div class="aviso-pendiente">
+            <svg lucideClock class="icono" aria-hidden="true"></svg>
+            <span>Tiene {{ tiempoRestante(pedido.segundosParaPagar) }} para completar el pago</span>
+          </div>
+        }
+
+        <div class="resumen-productos">
+          <ul class="lineas" aria-label="Productos del pedido">
+            @for (linea of pedido.lineas; track linea.idProducto) {
+              <li class="linea">
+                <span class="nombre">{{ linea.nombre }}</span>
+                <span class="detalle-cantidad">{{ cantidad(linea.cantidad) }} {{ linea.unidad.toLowerCase() }} × {{ precio(linea.precio) }}</span>
+                <span class="subtotal">{{ precio(linea.subtotal) }}</span>
+              </li>
+            }
+          </ul>
+        </div>
+
+        <footer class="pie-pedido">
+          <div class="total-pedido">
+            <span class="etiqueta-total">Total:</span>
+            <span class="monto-total">{{ precio(pedido.total) }}</span>
+          </div>
+          <div class="acciones">
+            @if (pedido.estado === 'PENDIENTE_PAGO') {
+              <a class="boton boton-pagar" [routerLink]="['/mis-pedidos', pedido.idPedido]">
+                Pagar ahora
+                <svg lucideArrowRight class="icono" aria-hidden="true"></svg>
+              </a>
+            } @else {
+              <a class="boton secundario" [routerLink]="['/mis-pedidos', pedido.idPedido]">
+                Ver detalle
+                <svg lucideArrowRight class="icono" aria-hidden="true"></svg>
+              </a>
+            }
+          </div>
+        </footer>
+      </li>
+    }
+  </ul>
+}

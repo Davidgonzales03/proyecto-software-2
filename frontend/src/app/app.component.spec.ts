@@ -49,6 +49,7 @@ describe('AppComponent', () => {
           { path: 'catalogo', component: PantallaVacia },
           { path: 'panel', component: PantallaVacia },
           { path: 'carrito', component: PantallaVacia },
+          { path: 'mis-pedidos', component: PantallaVacia },
         ]),
         { provide: CarritoService, useValue: { cantidadLineas: lineasEnElCarrito } },
       ],
@@ -185,14 +186,15 @@ describe('AppComponent', () => {
     });
 
     // Pedido en la prueba manual: una casa explícita para volver al inicio. HU-09
-    // RF-16, RF-17: el cliente no tiene panel
-    it('un cliente ve «Inicio» y «Catálogo», con el ícono de la casa', async () => {
+    // RF-16, RF-17: el cliente no tiene panel; HU-14 RF-10: ve Mis pedidos
+    it('un cliente ve «Inicio», «Catálogo» y «Mis pedidos», con el ícono de la casa', async () => {
       const fijo = await en('/', 'CLIENTE');
 
       const enlaces = enlacesDelMenu(fijo);
-      expect(nombres(enlaces)).toEqual(['Inicio', 'Catálogo']);
+      expect(nombres(enlaces)).toEqual(['Inicio', 'Catálogo', 'Mis pedidos']);
       expect(enlaces[0].getAttribute('href')).toBe('/');
       expect(enlaces[0].querySelector('svg')?.getAttribute('aria-hidden')).toBe('true');
+      expect(enlaces[2].getAttribute('href')).toBe('/mis-pedidos');
     });
 
     // HU-06 RF-1, HU-07 RF-1: la gestión de categorías y la de productos también son del administrador

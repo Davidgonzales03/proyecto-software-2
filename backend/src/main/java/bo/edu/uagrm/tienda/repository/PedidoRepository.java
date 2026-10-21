@@ -25,6 +25,9 @@ public interface PedidoRepository extends JpaRepository<Pedido, Long> {
 	// Los pendientes del cliente al confirmar, con el cliente ya bloqueado (RF-5)
 	List<Pedido> findByUsuario_IdUsuarioAndEstadoOrderByIdPedido(Long idUsuario, EstadoPedido estado);
 
+	// Todos los pedidos del cliente ordenados de más reciente a más antiguo (HU-14 RF-1)
+	List<Pedido> findByUsuario_IdUsuarioOrderByIdPedidoDesc(Long idUsuario);
+
 	// Los pendientes del cliente, para vencerlos o rechazar otra confirmación con el cliente ya bloqueado (RF-5, RF-10)
 	@Lock(LockModeType.PESSIMISTIC_WRITE)
 	List<Pedido> findConBloqueoByUsuario_IdUsuarioAndEstadoOrderByIdPedido(Long idUsuario, EstadoPedido estado);

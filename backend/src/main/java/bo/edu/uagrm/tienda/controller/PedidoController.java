@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 import bo.edu.uagrm.tienda.dto.CancelacionResponse;
 import bo.edu.uagrm.tienda.dto.ConfirmacionRequest;
 import bo.edu.uagrm.tienda.dto.PedidoResponse;
@@ -32,6 +34,11 @@ public class PedidoController {
 	@GetMapping("/retiro")
 	public RetiroResponse retiro() {
 		return pedidoService.retiro();
+	}
+
+	@GetMapping
+	public List<PedidoResponse> listar(@AuthenticationPrincipal Long idUsuario) {
+		return pedidoService.listar(idUsuario);
 	}
 
 	@PostMapping

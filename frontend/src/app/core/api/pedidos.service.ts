@@ -20,6 +20,11 @@ export class PedidosService {
 		return httpResource<Retiro>(() => `${PEDIDOS}/retiro`);
 	}
 
+	// Los pedidos del Cliente (HU-14 RF-1)
+	misPedidos(): HttpResourceRef<Pedido[] | undefined> {
+		return httpResource<Pedido[]>(() => PEDIDOS);
+	}
+
 	// Sin id válido no pide nada
 	pedido(idPedido: Signal<number | null>): HttpResourceRef<Pedido | undefined> {
 		return httpResource<Pedido>(() => {

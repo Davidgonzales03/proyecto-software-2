@@ -22,6 +22,7 @@ import { TemaService } from './core/tema/tema.service';
 // Los módulos del encabezado, además de Inicio (la tienda) y Catálogo, que los
 // ven todos. Ocultarlos según el rol es usabilidad: quien autoriza es el backend
 const MODULOS: readonly { ruta: string; nombre: string; roles: readonly Rol[] }[] = [
+  { ruta: '/mis-pedidos', nombre: 'Mis pedidos', roles: ['CLIENTE'] },
   { ruta: '/panel', nombre: 'Panel', roles: ['ADMINISTRADOR', 'EMPLEADO', 'CONTADOR'] },
   { ruta: '/usuarios', nombre: 'Usuarios', roles: ['ADMINISTRADOR'] },
   { ruta: '/categorias', nombre: 'Categorías', roles: ['ADMINISTRADOR'] },

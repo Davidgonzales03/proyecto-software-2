@@ -157,4 +157,17 @@ describe('PedidosService', () => {
     expect(pedido.value()).toEqual(PEDIDO);
     expect(retiro.value()).toEqual({ direccion: null, horario: null });
   });
+
+  // HU-14 RF-1
+  it('lee la lista de pedidos del cliente', async () => {
+    const pedidos = await servicio();
+    const injector = TestBed.inject(Injector);
+    const lista = runInInjectionContext(injector, () => pedidos.misPedidos());
+    TestBed.tick();
+
+    http.expectOne({ method: 'GET', url: '/api/pedidos' }).flush([PEDIDO]);
+    await estable();
+
+    expect(lista.value()).toEqual([PEDIDO]);
+  });
 });

@@ -146,6 +146,15 @@ public class PedidoService {
 		return respuesta(pedido, ahora);
 	}
 
+	// La lista de pedidos del Cliente (HU-14 RF-1, RF-9): de más reciente a más antiguo
+	@Transactional(isolation = Isolation.READ_COMMITTED)
+	public List<PedidoResponse> listar(Long idUsuario) {
+		LocalDateTime ahora = LocalDateTime.now(clock);
+		vencerSiCorresponde(idUsuario);
+		return pedidoRepository.findByUsuario_IdUsuarioOrderByIdPedidoDesc(idUsuario).stream()
+				.map(pedido -> respuesta(pedido, ahora)).toList();
+	}
+
 	@Transactional(isolation = Isolation.READ_COMMITTED)
 	public CancelacionResponse cancelar(Long idUsuario, Long idPedido) {
 		Pedido pedido = bloquear(idUsuario, idPedido);
