@@ -90,8 +90,11 @@ public class SecurityConfig {
 		return fuente;
 	}
 
+	// Costo 12 (decisiones.md → Contraseñas con BCrypt): cada intento de adivinar una contraseña robada cuesta 4 veces
+	// más que con 10. Las guardadas con otro costo siguen sirviendo, porque el costo va dentro del hash. En las pruebas
+	// es 4, para no hacerlas lentas
 	@Bean
-	PasswordEncoder passwordEncoder() {
-		return new BCryptPasswordEncoder();
+	PasswordEncoder passwordEncoder(@Value("${tienda.contrasenas.costo-bcrypt:12}") int costo) {
+		return new BCryptPasswordEncoder(costo);
 	}
 }
