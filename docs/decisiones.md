@@ -739,6 +739,16 @@ mismo equipo.
   «Simular error», marcados como herramienta de pruebas; con otro proveedor
   ni los botones ni su endpoint existen.
 
+- *20/10/2026 (revisión de HU-13).* **Lo que puede vencer un pedido va con
+  READ_COMMITTED** (`PedidoService` y `CarritoService.ver`, además de
+  `PagoService` y la conciliación): con REPEATABLE_READ, una lectura sin
+  bloqueo anterior al bloqueo del cliente fija la vista y no ve un cobro
+  recién guardado. **Dos hilos para las tareas programadas**
+  (`spring.task.scheduling.pool.size=2`): la conciliación espera al sistema
+  de pago y no demora el vencimiento, que **consulta siempre antes de
+  vencer**. **Cada línea del pedido guarda cuánto volvió al carrito**
+  (`cantidad_devuelta`): el pago tardío resta solo eso.
+
 **Motivo:** el pago por QR se hace en la app del banco, así que la tienda
 solo puede preguntar; consultar antes de vencer y aceptar el pago tardío
 evita cobrar sin entregar, y la deuda que vence por día deja pagar un QR
