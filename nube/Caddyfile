@@ -1,8 +1,17 @@
 # HTTPS en un servidor: Caddy saca y renueva solo el certificado de Let's Encrypt.
 # TIENDA_DOMINIO llega del .env: un dominio propio o uno de sslip.io armado con
-# la IP del servidor (64-176-27-4.sslip.io), que no necesita DNS.
+# la IP del servidor (por ejemplo 203-0-113-10.sslip.io), que no necesita DNS.
+# Las cabeceras de seguridad van acá: HTTPS siempre (HSTS), sin adivinar el tipo
+# de los archivos, sin mostrarse dentro de otro sitio y sin el nombre del servidor.
 
 {$TIENDA_DOMINIO} {
 	encode gzip
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
 	reverse_proxy frontend:80
 }

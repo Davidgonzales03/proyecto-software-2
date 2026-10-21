@@ -5,7 +5,9 @@
 
 services:
   base:
-    image: mysql:8.0
+    # 8.4 LTS: la línea 8.0 terminó su soporte en abril de 2026. Abre una base
+    # creada con 8.0 y la actualiza sola al arrancar (decisiones.md)
+    image: mysql:8.4
     restart: unless-stopped
     environment:
       MYSQL_DATABASE: tienda_db

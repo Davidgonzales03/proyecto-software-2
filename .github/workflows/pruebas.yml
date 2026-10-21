@@ -47,3 +47,13 @@ jobs:
       - run: npm ci
       - run: npx ng test --watch=false
       - run: npx ng build
+
+  # Que las imágenes se puedan construir: un Dockerfile roto no llega a main
+  imagenes:
+    name: Imágenes Docker
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - run: docker build --tag tienda-backend backend
+      - run: docker build --tag tienda-frontend frontend
